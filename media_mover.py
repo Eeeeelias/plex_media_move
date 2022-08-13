@@ -35,6 +35,12 @@ parser.add_argument('--sv', dest='special', nargs='*', help='special info about 
                                                             'aware that it\'s season two. You can add '
                                                             'as many of those as you want')
 
+strings_to_match = {'2nd Season ': 's02',
+                    'Season 2 ': 's02',
+                    'S2 ': 's02',
+                    '3 Episode ': 's03e0',
+                    'Episode ': 'e0'}
+
 # set path\\file seperator, thanks windows
 if platform == 'win32':
     seperator = "\\"
@@ -58,29 +64,25 @@ def rename_files(path, special):
 
     # rewrite this bit to be more clear?
     for title in video_titles:
+        print("Spotted: {}".format(title))
+
         special_season = [x for x in extra_episode_info.keys() if x in title]
-        if re.search('2nd Season', title) is not None:
-            video_titles_new.append(title.replace('2nd Season Episode ', 's02e0'))
+        if special_season:
+            title = title.replace('Episode ', 's{}e0'.format(extra_episode_info.get(special_season[0])))
 
-        elif re.search('Season 2', title) is not None:
-            video_titles_new.append(title.replace('Season 2 Episode ', 's02e0'))
+        for possible_match in strings_to_match.keys():
+            if re.search(possible_match, title) is not None:
+                title = title.replace(possible_match, strings_to_match[possible_match])
 
-        elif re.search('S2', title) is not None:
-            video_titles_new.append(title.replace('S2 Episode ', 's02e0'))
-
-        elif re.search(' 3 Episode', title) is not None:
-            video_titles_new.append(title.replace('3 Episode ', 's03e0'))
-
-        elif special_season:
-            video_titles_new.append(
-                title.replace('Episode ', 's{}e0'.format(extra_episode_info.get(special_season[0]))))
-
-        elif re.search('Episode', title) is not None:
-            video_titles_new.append(title.replace('Episode ', 's01e0'))
-
+        # mind the space at the beginning
+        if re.search(r' [eE]\d{2,4}', title) is not None:
+            # possible that e might be upper case
+            title = title.replace('e0', 's01e0')
+            title = title.replace('E0', 's01e0')
+            video_titles_new.append(title)
         else:
             video_titles_new.append(title)
-        print("Spotted: {}".format(title))
+
     return video_paths, video_titles_new
 
 
