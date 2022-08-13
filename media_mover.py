@@ -89,16 +89,22 @@ def sorted_alphanumeric(data):
 
 
 def move_files(path, video_paths, video_titles_new, plex_path):
-    print('\nDestination path:', path)
+    print('\nOrigin path:', path)
     for video_path, video_title in zip(video_paths, video_titles_new):
-        original_path = video_path
-        os.rename(original_path, path + video_title)
-
         print('Video title:', video_title)
 
-        # work on this so movies are moved to folders potentially
         if re.search('[sS][0-9]+[eE][0-9]+', video_title) is None:
-            shutil.move("{}".format(path + video_title), plex_path + "/Movies/" + video_title)
+            # If the movie is a specific version of that movie, make a new folder and put the movie in there
+            # as other versions of that movie might get added
+            if re.search(r'(?<=\(\d{4}\)) -.*(?=.mp4)', video_title) is not None:
+                movie_title = re.sub(r'(?<=\(\d{4}\)) -.*', '', video_title)
+                if not os.path.exists(plex_path + "/Movies/" + movie_title):
+                    os.makedirs(plex_path + "/Movies/" + movie_title)
+                    print('Made new folder:', movie_title)
+                shutil.move(video_path, plex_path + "/Movies/" + movie_title + "/" + video_title)
+            else:
+                shutil.move(video_path, plex_path + "/Movies/" + video_title)
+            print('Moved: ', video_title)
             continue
 
         show_name = re.sub(' [sS][0-9]+[eE][0-9]+.*', '', string=video_title)
@@ -115,7 +121,7 @@ def move_files(path, video_paths, video_titles_new, plex_path):
             print('New Season, making new folder ({}, Season {})'.format(show_name, season))
             os.makedirs(show_path)
 
-        shutil.move("{}".format(path + video_title), show_path + video_title)
+        shutil.move(video_path, show_path + video_title)
         print("Moved: {}".format(video_title))
 
 
