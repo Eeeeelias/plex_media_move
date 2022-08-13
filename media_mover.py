@@ -31,7 +31,8 @@ parser.add_argument('--sv', dest='special', nargs='*', help='special info about 
                                                             'episode (i.e. Better call saul) is named Better call '
                                                             'Saul Episode 20 but you want to mark it season 2. '
                                                             'Then you can write --sv Saul;2 [just one identifier '
-                                                            'is fine, using spaces will break it]. You can add '
+                                                            'is fine, using spaces will break it] to make the script '
+                                                            'aware that it\'s season two. You can add '
                                                             'as many of those as you want')
 
 # set path\\file seperator, thanks windows
@@ -55,6 +56,7 @@ def rename_files(path, special):
     video_titles_new = []
     extra_episode_info = special_info(special)
 
+    # rewrite this bit to be more clear?
     for title in video_titles:
         special_season = [x for x in extra_episode_info.keys() if x in title]
         if re.search('2nd Season', title) is not None:
@@ -104,7 +106,7 @@ def move_files(path, video_paths, video_titles_new, plex_path):
                 shutil.move(video_path, plex_path + "/Movies/" + movie_title + "/" + video_title)
             else:
                 shutil.move(video_path, plex_path + "/Movies/" + video_title)
-            print('Moved: ', video_title)
+            print('Moved (Movie): ', video_title)
             continue
 
         show_name = re.sub(' [sS][0-9]+[eE][0-9]+.*', '', string=video_title)
@@ -122,7 +124,7 @@ def move_files(path, video_paths, video_titles_new, plex_path):
             os.makedirs(show_path)
 
         shutil.move(video_path, show_path + video_title)
-        print("Moved: {}".format(video_title))
+        print("Moved (TV-Show): {}".format(video_title))
 
 
 def trash_video(path):

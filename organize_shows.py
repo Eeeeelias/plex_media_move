@@ -7,7 +7,7 @@ from sys import argv
 # This little script reads out episodes that are in "episode s0xe0x.mp4" format and puts them in a Season x folder
 # The input directory must be the one containing all the shows you want to order in that way.
 # Program usage: python3 organize_shows.py INPUT_DIR
-# Example: python3 organize_shows.py "P:\\Plex\TV Shows"
+# Example: python3 organize_shows.py "P:\Plex\TV Shows"
 
 wrong_episodes = []
 for path in glob.glob(argv[1] + "/**/"):

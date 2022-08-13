@@ -15,6 +15,18 @@ python3 media_mover.py --op "/path/to/files" --dp "/path/to/plex/library" [--sv 
 Alternatively, there is an example batch file ``run_mover.bat`` that you can fit to your needs 
 to make it easier to execute and change program arguments if needed.
 
+Your input directory structure should look like this (Assuming you're using Audials):
+```
+--/videoFiles
+----/Audials
+------/Audials TV Shows
+--------/coolShow s01e01.mp4
+------/Audials Movies
+----/someShow Episode 1.mp4
+----/someShow Season 2 Episode 1.mp4
+```
+Then you can just point the origin path to `/videoFiles` and the script will handle everything else
+
 ## rename.py
 
 A really small script to strip a leading "Watch" and tailing characters after the episode 
