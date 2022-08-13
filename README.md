@@ -59,4 +59,4 @@ Into this (better) structure:
 --------/The Office s02e02.mp4
 ```
 It will also inform you about shows that do not follow either of those structures. For those
-you will probably have to put some manual effort in.
+you will probably have to put in some manual effort.
