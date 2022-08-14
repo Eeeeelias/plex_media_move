@@ -17,7 +17,7 @@ for path in glob.glob(argv[1] + "/**/"):
     for show in glob.glob(path + "/*.mp4"):
 
         try:
-            season = re.search(r'\d(?=[eE]\d{1,4})', show).group()
+            season = re.search(r'\d{1,2}(?=[eE]\d{1,4})', show).group()
         except AttributeError:
             wrong_episodes.append(path)
             break

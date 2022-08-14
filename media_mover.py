@@ -25,7 +25,8 @@ from sys import platform
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-a', dest='audials', action='store_true', help='if your orig_path is an audials folder use this option')
+parser.add_argument('-a', dest='audials', action='store_true', help='if your orig_path is an audials folder use this '
+                                                                    'option')
 parser.add_argument('--op', dest='orig_path', help='path to the downloaded videos')
 parser.add_argument('--dp', dest='dest_path', help='path to the destination')
 parser.add_argument('--sv', dest='special', nargs='*', help='special info about a certain show; example: Your '
@@ -150,19 +151,21 @@ if __name__ == '__main__':
             special = []
 
         if args.audials:
-            paths = [orig_path + "/Audials TV Series", orig_path + "/Audials Movies"]
+            paths = [orig_path, orig_path + "/Audials TV Series", orig_path + "/Audials Movies"]
         else:
-            paths = [orig_path, orig_path + "/Audials/Audials TV Series", orig_path + "/Audials/Audials Movies"]
+            paths = [p for p in glob.glob(orig_path + "/**/", recursive=True)]
 
         for path in paths:
+            print(path)
             video_path_list, video_titles_renamed = rename_files(path, special)
             move_files(path, video_path_list, video_titles_renamed, plex_path)
 
         trash_video(orig_path + "/Audials/Audials Other Videos")
+        print('Everything done!')
     except FileNotFoundError:
         print("Please make sure your paths are written correctly! Remove trailing \\ if you added them.")
         exit(1)
     except TypeError:
         print("There was an error with some of the values you put in! Please double-check those and send me a message"
-              "if that doesn't help!")
+              " if that doesn't help!")
         exit(1)
