@@ -143,7 +143,8 @@ if __name__ == '__main__':
     orig_path = args.orig_path
     plex_path = args.dest_path
     special = args.special
-
+    if special is None:
+        special = []
     for path in [orig_path, orig_path + "/Audials/Audials TV Series", orig_path + "/Audials/Audials Movies"]:
         video_path_list, video_titles_renamed = rename_files(path, special)
         move_files(path, video_path_list, video_titles_renamed, plex_path)
