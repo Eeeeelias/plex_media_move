@@ -25,6 +25,7 @@ from sys import platform
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument('-a', dest='audials', action='store_true', help='if your orig_path is an audials folder use this option')
 parser.add_argument('--op', dest='orig_path', help='path to the downloaded videos')
 parser.add_argument('--dp', dest='dest_path', help='path to the destination')
 parser.add_argument('--sv', dest='special', nargs='*', help='special info about a certain show; example: Your '
@@ -93,7 +94,8 @@ def sorted_alphanumeric(data):
 
 
 def move_files(path, video_paths, video_titles_new, plex_path):
-    print('\nOrigin path:', path)
+    if len(video_titles_new) > 0:
+        print('\nOrigin path:', path)
     for video_path, video_title in zip(video_paths, video_titles_new):
         print('Video title:', video_title)
 
@@ -139,14 +141,28 @@ def trash_video(path):
 
 
 if __name__ == '__main__':
-    args = parser.parse_args()
-    orig_path = args.orig_path
-    plex_path = args.dest_path
-    special = args.special
-    if special is None:
-        special = []
-    for path in [orig_path, orig_path + "/Audials/Audials TV Series", orig_path + "/Audials/Audials Movies"]:
-        video_path_list, video_titles_renamed = rename_files(path, special)
-        move_files(path, video_path_list, video_titles_renamed, plex_path)
+    try:
+        args = parser.parse_args()
+        orig_path = args.orig_path
+        plex_path = args.dest_path
+        special = args.special
+        if special is None:
+            special = []
 
-    trash_video(orig_path + "/Audials/Audials Other Videos")
+        if args.audials:
+            paths = [orig_path + "/Audials TV Series", orig_path + "/Audials Movies"]
+        else:
+            paths = [orig_path, orig_path + "/Audials/Audials TV Series", orig_path + "/Audials/Audials Movies"]
+
+        for path in paths:
+            video_path_list, video_titles_renamed = rename_files(path, special)
+            move_files(path, video_path_list, video_titles_renamed, plex_path)
+
+        trash_video(orig_path + "/Audials/Audials Other Videos")
+    except FileNotFoundError:
+        print("Please make sure your paths are written correctly! Remove trailing \\ if you added them.")
+        exit(1)
+    except TypeError:
+        print("There was an error with some of the values you put in! Please double-check those and send me a message"
+              "if that doesn't help!")
+        exit(1)
