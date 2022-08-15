@@ -4,6 +4,7 @@ import shutil
 import re
 import argparse
 from sys import platform
+import time
 
 # This script renames, organizes and moves your downloaded media files
 # If you find bugs/issues or have feature requests send me a message
@@ -27,6 +28,10 @@ from sys import platform
 parser = argparse.ArgumentParser()
 parser.add_argument('-a', dest='audials', action='store_true', help='if your orig_path is an audials folder use this '
                                                                     'option')
+parser.add_argument('-o', dest='overwrite', action='store_true', help='define behaviour when file already exists. If'
+                                                                       ' this is set, files will be overwritten. '
+                                                                       'Otherwise, a numbered version will be moved')
+
 parser.add_argument('--op', dest='orig_path', help='path to the downloaded videos')
 parser.add_argument('--dp', dest='dest_path', help='path to the destination')
 parser.add_argument('--sv', dest='special', nargs='*', help='special info about a certain show; example: Your '
@@ -57,6 +62,20 @@ def special_info(info):
     return info_dict
 
 
+# Test Episode 1.mp4
+def file_ex_check(new_file, overwrite=False):
+    if os.path.isfile(new_file):
+        print("WARNING: File already exists!")
+        if not overwrite:
+            i = 2
+            new_file = re.sub(".mp4", "_{}.mp4".format(i), new_file)
+            while os.path.isfile(new_file):
+                new_file = re.sub(r"_\d*.mp4", "_{}.mp4".format(i), new_file)
+                i += 1
+            return i
+    return 0
+
+
 def rename_files(path, special):
     video_paths = glob.glob("{}".format(path) + "/*.mp4")
     video_paths = sorted_alphanumeric(video_paths)
@@ -64,7 +83,6 @@ def rename_files(path, special):
     video_titles_new = []
     extra_episode_info = special_info(special)
 
-    # rewrite this bit to be more clear?
     for title in video_titles:
         print("Spotted: {}".format(title))
 
@@ -79,8 +97,7 @@ def rename_files(path, special):
         # mind the space at the beginning
         if re.search(r' [eE]\d{2,4}', title) is not None:
             # possible that e might be upper case
-            title = title.replace('e0', 's01e0')
-            title = title.replace('E0', 's01e0')
+            title = title.replace('e0', 's01e0').replace('E0', 's01e0')
             video_titles_new.append(title)
         else:
             video_titles_new.append(title)
@@ -108,10 +125,23 @@ def move_files(path, video_paths, video_titles_new, plex_path):
                 if not os.path.exists(plex_path + "/Movies/" + movie_title):
                     os.makedirs(plex_path + "/Movies/" + movie_title)
                     print('Made new folder:', movie_title)
-                shutil.move(video_path, plex_path + "/Movies/" + movie_title + "/" + video_title)
+                # insert check for file existence here?
+                # make options available....as input modular
+                new_path = plex_path + "/Movies/" + movie_title + "/" + video_title
+                duplicate_num = file_ex_check(new_path, args.overwrite)
+                if duplicate_num != 0:
+                    new_path = re.sub(".mp4", "_{}.mp4".format(duplicate_num), new_path)
+                    time.sleep(5)
+                shutil.move(video_path, new_path)
+            # this part sucks but I'll redo it with more options!
             else:
-                shutil.move(video_path, plex_path + "/Movies/" + video_title)
-            print('Moved (Movie): ', video_title)
+                new_path = plex_path + "/Movies/" + video_title
+                duplicate_num = file_ex_check(new_path, args.overwrite)
+                if duplicate_num != 0:
+                    new_path = re.sub(".mp4", "_{}.mp4".format(duplicate_num), new_path)
+                    time.sleep(5)
+                shutil.move(video_path, new_path)
+            print('Moved (Movie):', new_path.split("/")[-1])
             continue
 
         show_name = re.sub(' [sS][0-9]+[eE][0-9]+.*', '', string=video_title)
@@ -127,10 +157,13 @@ def move_files(path, video_paths, video_titles_new, plex_path):
         if not os.path.exists(show_path):
             print('New Season, making new folder ({}, Season {})'.format(show_name, season))
             os.makedirs(show_path)
-
+        # if file exists (file_ex_check returns false) add 2 to the file
+        duplicate_num = file_ex_check(show_path + video_title, args.overwrite)
+        if duplicate_num != 0:
+            video_title = re.sub(".mp4", "_{}.mp4".format(duplicate_num), video_title)
+            time.sleep(5)
         shutil.move(video_path, show_path + video_title)
         print("Moved (TV-Show): {}".format(video_title))
-
 
 def trash_video(path):
     video_paths = glob.glob("{}".format(path) + "/*.mp4")
@@ -156,7 +189,6 @@ if __name__ == '__main__':
             paths = [p for p in glob.glob(orig_path + "/**/", recursive=True)]
 
         for path in paths:
-            print(path)
             video_path_list, video_titles_renamed = rename_files(path, special)
             move_files(path, video_path_list, video_titles_renamed, plex_path)
 
