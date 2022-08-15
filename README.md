@@ -9,8 +9,10 @@ The main script of this repo: it will rename, organize and move your media files
 appropriate folders for plex to scan and give back to you. For the script to work you have 
 to put in the `origin path` (where your files are currently), the `destination path` (the path
 that plex reads from) and optionally some `special values` for some hard to identify shows/seasons.
+The `-a` param will look at local Audials files but is more of a legacy feature. Using `-o` will result in
+possible duplicate files being overwritten, be careful with this!
 ```shell
-python3 media_mover.py --op "/path/to/files" --dp "/path/to/plex/library" [--sv "IDENTIFIER;SEASON"]
+python3 media_mover.py --op "/path/to/files" --dp "/path/to/plex/library" [--sv "IDENTIFIER;SEASON"] [-a] [-o]
 ```
 Alternatively, there is an example batch file ``run_mover.bat`` that you can fit to your needs 
 to make it easier to execute and change program arguments if needed.
