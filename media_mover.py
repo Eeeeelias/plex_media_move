@@ -145,7 +145,7 @@ def move_files(path, video_paths, video_titles_new, plex_path):
             continue
 
         show_name = re.sub(' [sS][0-9]+[eE][0-9]+.*', '', string=video_title)
-        season = re.search(r'\d(?=[eE]\d{1,4})', video_title).group()
+        season = re.search(r'\d+(?=[eE]\d{1,4})', video_title).group()
         show_path = plex_path + "/TV Shows/" + show_name + "/Season {}/".format(season)
 
         # make folder for show if it doesn't exist
