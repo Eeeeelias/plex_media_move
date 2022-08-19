@@ -5,7 +5,6 @@ import re
 import shutil
 import time
 from sys import platform
-
 from termcolor import colored, cprint
 
 # This script renames, organizes and moves your downloaded media files
@@ -100,53 +99,111 @@ def movie_checker(movie_title, path):
         title = re.sub(r"(?<=\(\d{4}\)).*", "", movie.split("\\")[-1])
         # check if there may already be versions of that movie
         if os.path.isdir(movie) and movie_title in movie:
-            cprint('[w] Versions of "{}" exist. Please name this version'.format(movie_title), "red")
+            cprint(
+                '[w] Versions of "{}" exist. Please name this version'.format(
+                    movie_title
+                ),
+                "red",
+            )
             version_name = input(colored("[a] Version name: ", "blue"))
             movie_title_version = movie_title + " - " + version_name + ".mp4"
             while os.path.isfile(movie + "/" + movie_title_version):
-                version_name = input(colored("[a] This version already exists! Give a valid name: ", "blue"))
+                version_name = input(
+                    colored(
+                        "[a] This version already exists! Give a valid name: ", "blue"
+                    )
+                )
                 movie_title_version = movie_title + " - " + version_name + ".mp4"
             cprint("[i] Movie is now called: {}".format(movie_title_version))
             movie_moves.append(movie + "/" + movie_title_version)
         # check if the movie exists already and move both to a folder with a given version name
         elif os.path.isfile(movie) and movie_title in movie:
-            cprint('[w] "{}" exists already. Do you want to add the current one as a version?'.format(movie_title),
-                   "red")
+            cprint(
+                '[w] "{}" exists already. Do you want to add the current one as a version?'.format(
+                    movie_title
+                ),
+                "red",
+            )
             version_name = input(
-                colored("[a] Put in the name of the version or press [ENTER] to skip this file: ", "blue"))
+                colored(
+                    "[a] Put in the name of the version or press [ENTER] to skip this file: ",
+                    "blue",
+                )
+            )
             # skip if wanted
-            if version_name == "": return []
+            if version_name == "":
+                return []
 
             movie_title_version = movie_title + " - " + version_name + ".mp4"
             movie_moves.append(path + "/" + movie_title + "/" + movie_title_version)
             print("[i] Movie is now called: {}".format(movie_title_version))
             print("[i] Now please also add a version name to the existing movie")
             version_name_existing = input(
-                colored("[a] Input the version name of the existing movie: ", "blue"))
+                colored("[a] Input the version name of the existing movie: ", "blue")
+            )
             exist_vers_name = movie_title + " - " + version_name_existing + ".mp4"
             while version_name == version_name_existing:
                 version_name_existing = input(
-                    colored("[a] Both movies can't have the same version name! Please enter a "
-                            "valid version name: ", "blue"))
-                exist_vers_name = (movie_title + " - " + version_name_existing + ".mp4")
-            print('[i] The existing Version will now have "{}" added'.format(version_name_existing))
+                    colored(
+                        "[a] Both movies can't have the same version name! Please enter a "
+                        "valid version name: ",
+                        "blue",
+                    )
+                )
+                exist_vers_name = movie_title + " - " + version_name_existing + ".mp4"
+            print(
+                '[i] The existing Version will now have "{}" added'.format(
+                    version_name_existing
+                )
+            )
             movie_moves.append(path + "/" + movie_title + "/" + exist_vers_name)
     return movie_moves
 
 
+def show_checker(path):
+    video_sizes = []
+    cleaned_video_paths = []
+    # do not check for movies or empty directories
+    if "Movies" in path or len(path) < 2:
+        return path
+
+    for video in path:
+        video_sizes.append(os.path.getsize(video))
+    avg_vid_size = sum(video_sizes) / len(video_sizes)
+
+    for video in path:
+        vid_size = os.path.getsize(video)
+        if avg_vid_size * 0.6 > vid_size:
+            cprint("[w] Video with name \"{}\" unusually small: {} MB".format(
+                video.split(seperator)[-1], round(vid_size / (1024 ** 2))), "red")
+            move = input(colored("[a] Do you want to [m]ove the file regardless, [s]kip it or [d]elete it?: ", "blue"))
+            if move.lower() == "" or move.lower() == "s":
+                break
+            elif move.lower() == "d":
+                os.remove(video)
+                cprint("[i] Deleted {}".format(video.split(seperator)[-1]))
+                break
+        cleaned_video_paths.append(video)
+    return cleaned_video_paths
+
+
 def rename_files(path, special):
     video_paths = glob.glob("{}".format(path) + "/*.mp4")
-    video_paths = sorted_alphanumeric(video_paths)
-    video_titles = [title.split(seperator)[-1] for title in video_paths]
+    if len(video_paths) > 0:
+        cprint("\n[i] Origin path: {}".format(path))
+    clean_paths = show_checker(sorted_alphanumeric(video_paths))
+    video_titles = [title.split(seperator)[-1] for title in clean_paths]
     video_titles_new = []
     extra_episode_info = special_info(special)
 
     for title in video_titles:
-        cprint("[i] Spotted: {}".format(title))
+        cprint("[i] Looking at: {}".format(title))
 
         special_season = [x for x in extra_episode_info.keys() if x in title]
         if special_season:
-            title = title.replace("Episode ", "s{}e0".format(extra_episode_info.get(special_season[0])))
+            title = title.replace(
+                "Episode ", "s{}e0".format(extra_episode_info.get(special_season[0]))
+            )
 
         for possible_match in strings_to_match.keys():
             if re.search(possible_match, title) is not None:
@@ -170,8 +227,6 @@ def sorted_alphanumeric(data):
 
 
 def move_files(path, video_paths, video_titles_new, plex_path):
-    if len(video_titles_new) > 0:
-        cprint("\n[i] Origin path: {}".format(path))
     for video_path, video_title in zip(video_paths, video_titles_new):
         cprint("[i] Video title: {}".format(video_title))
 
@@ -203,8 +258,12 @@ def move_files(path, video_paths, video_titles_new, plex_path):
                     shutil.move(video_path, movie_paths[0])
                 elif len(movie_paths) == 2:
                     os.makedirs(plex_path + "/Movies/{}".format(movie_title))
-                    shutil.move(plex_path + "/Movies/{}".format(video_title), movie_paths[1])
-                    cprint("[i] Moved (Movie): {}".format(movie_paths[1].split("/")[-1]))
+                    shutil.move(
+                        plex_path + "/Movies/{}".format(video_title), movie_paths[1]
+                    )
+                    cprint(
+                        "[i] Moved (Movie): {}".format(movie_paths[1].split("/")[-1])
+                    )
                     shutil.move(video_path, movie_paths[0])
                 else:
                     shutil.move(video_path, new_path)
@@ -222,7 +281,11 @@ def move_files(path, video_paths, video_titles_new, plex_path):
 
         # make folder for season if it doesn't exist
         if not os.path.exists(show_path):
-            cprint("[i] New Season, making new folder ({}, Season {})".format(show_name, season))
+            cprint(
+                "[i] New Season, making new folder ({}, Season {})".format(
+                    show_name, season
+                )
+            )
             os.makedirs(show_path)
         # if file exists (file_ex_check returns false) add 2 to the file
         duplicate_num = file_ex_check(show_path + video_title, args.overwrite)
@@ -260,8 +323,6 @@ if __name__ == "__main__":
         else:
             paths = [p for p in glob.glob(orig_path + "/**/", recursive=True)]
 
-        print(paths)
-
         for path in paths:
             video_path_list, video_titles_renamed = rename_files(path, special)
             move_files(path, video_path_list, video_titles_renamed, plex_path)
@@ -269,10 +330,15 @@ if __name__ == "__main__":
         trash_video(orig_path + "/Audials/Audials Other Videos")
         cprint("[i] Everything done!")
     except FileNotFoundError:
-        cprint("[w] Please make sure your paths are written correctly! Remove trailing \\ if you added them.", "red")
+        cprint(
+            "[w] Please make sure your paths are written correctly! Remove trailing \\ if you added them.",
+            "red",
+        )
         exit(1)
     except TypeError:
         cprint(
             "[i] There was an error with some of the values you put in! Please double-check those and send me a message"
-            " if that doesn't help!", "red")
+            " if that doesn't help!",
+            "red",
+        )
         exit(1)
