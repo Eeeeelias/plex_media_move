@@ -82,13 +82,14 @@ def special_info(info):
 def file_ex_check(new_file, overwrite=False):
     if os.path.isfile(new_file):
         cprint("[w] File already exists!", "red")
-        if not overwrite:
-            i = 2
-            new_file = re.sub(".mp4", "_{}.mp4".format(i), new_file)
-            while os.path.isfile(new_file):
-                i += 1
-                new_file = re.sub(r"_\d+.mp4", "_{}.mp4".format(i), new_file)
-            return i
+        if overwrite or input(colored("[a] Do you want to overwrite the file? [yN]: ", "blue")) == "y":
+            return 0
+        i = 2
+        new_file = re.sub(".mp4", "_{}.mp4".format(i), new_file)
+        while os.path.isfile(new_file):
+            i += 1
+            new_file = re.sub(r"_\d+.mp4", "_{}.mp4".format(i), new_file)
+        return i
     return 0
 
 
@@ -178,26 +179,26 @@ def show_checker(path):
                 video.split(seperator)[-1], round(vid_size / (1024 ** 2))), "red")
             move = input(colored("[a] Do you want to [m]ove the file regardless, [s]kip it or [d]elete it?: ", "blue"))
             if move.lower() == "" or move.lower() == "s":
-                break
+                continue
             elif move.lower() == "d":
                 os.remove(video)
                 cprint("[i] Deleted {}".format(video.split(seperator)[-1]))
-                break
+                continue
         cleaned_video_paths.append(video)
     return cleaned_video_paths
 
 
 def rename_files(path, special):
     video_paths = glob.glob("{}".format(path) + "/*.mp4")
-    if len(video_paths) > 0:
-        cprint("\n[i] Origin path: {}".format(path))
+    video_titles_new = []
+    if len(video_paths) < 1: return video_paths, video_titles_new
     clean_paths = show_checker(sorted_alphanumeric(video_paths))
     video_titles = [title.split(seperator)[-1] for title in clean_paths]
-    video_titles_new = []
     extra_episode_info = special_info(special)
+    cprint("\n[i] Origin path: {}".format(path))
 
     for title in video_titles:
-        cprint("[i] Looking at: {}".format(title))
+        cprint("[i] Found: {}".format(title))
 
         special_season = [x for x in extra_episode_info.keys() if x in title]
         if special_season:
@@ -216,7 +217,7 @@ def rename_files(path, special):
             video_titles_new.append(title)
         else:
             video_titles_new.append(title)
-
+    cprint("\n")
     return video_paths, video_titles_new
 
 
@@ -228,7 +229,7 @@ def sorted_alphanumeric(data):
 
 def move_files(path, video_paths, video_titles_new, plex_path):
     for video_path, video_title in zip(video_paths, video_titles_new):
-        cprint("[i] Video title: {}".format(video_title))
+        cprint("[i] Original title: {}".format(video_path.split(seperator)[-1]))
 
         if re.search("[sS][0-9]+[eE][0-9]+", video_title) is None:
             movie_title = re.sub(r"(?<=\(\d{4}\)).*", "", video_title)
