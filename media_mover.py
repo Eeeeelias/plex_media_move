@@ -218,7 +218,7 @@ def rename_files(path, special):
         else:
             video_titles_new.append(title)
     cprint("\n")
-    return video_paths, video_titles_new
+    return clean_paths, video_titles_new
 
 
 def sorted_alphanumeric(data):
@@ -227,7 +227,7 @@ def sorted_alphanumeric(data):
     return sorted(data, key=alphanum_key)
 
 
-def move_files(path, video_paths, video_titles_new, plex_path):
+def move_files(video_paths, video_titles_new, plex_path):
     for video_path, video_title in zip(video_paths, video_titles_new):
         cprint("[i] Original title: {}".format(video_path.split(seperator)[-1]))
 
@@ -326,7 +326,7 @@ if __name__ == "__main__":
 
         for path in paths:
             video_path_list, video_titles_renamed = rename_files(path, special)
-            move_files(path, video_path_list, video_titles_renamed, plex_path)
+            move_files(video_path_list, video_titles_renamed, plex_path)
 
         trash_video(orig_path + "/Audials/Audials Other Videos")
         cprint("[i] Everything done!")
