@@ -15,7 +15,7 @@ parser.add_argument("-o", dest="offset", nargs="?", help="manual offset of the a
                                                          "offset doesn't work")
 parser.add_argument("-p", dest="output", nargs="?", help="Specify the output directory")
 parser.add_argument("-i", dest="interactive", action="store_true", help="Use this flag exclusively to make "
-                                                                                   "the script interactive")
+                                                                        "the script interactive")
 if platform == "win32":
     seperator = "\\"
 else:
@@ -68,7 +68,15 @@ def interactive():
 
     lan_de = input(colored("[a] Again, please specify the language using ISO 639-2 codes:", "blue"))
     cprint("[i] Almost done, just two more questions")
-    destination = input(colored("[a] Where do you want your movie to be saved ([ENTER] to put it in $PWD):", "blue"))
+
+    destination = input(
+        colored("[a] Where do you want your movie to be saved ([ENTER] to put it in $PWD):", "blue")).lstrip(
+        "\"").rstrip("\"")
+    while not os.path.isdir(destination):
+        movie_de = input(
+            colored("[a] This is not a destination! Make sure you spelled everything correctly:", "blue")).lstrip(
+            "\"").rstrip("\"")
+
     offset = input(
         colored("[a] Lastly, put in the offset for the movie. Press [ENTER] to let the script handle this:", "blue"))
     cprint("\n")
