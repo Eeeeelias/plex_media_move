@@ -38,11 +38,9 @@ for combining movies with different languages (e.g. English and German). To use 
 ```
 Or python:
 ```shell
-python3 py_combine_movies.py -g "Movie (YYYY) - English.mp4" -b "Movie (YYYY) - Deutsch.mp4"
+python3 py_combine_movies.py -i
 ```
-There is an optional `-o` parameter that allows you to override the automatic offset. Mind that you have to
-specify a number and time fomrat e.g. `400ms`. Also, you can specify an output directory by adding `-p` with 
-the directory.
+To use an interactive version of the script. For more info on the non-interactive version use `-h`. 
 
 
 ## rename.py
