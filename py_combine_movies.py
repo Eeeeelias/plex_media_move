@@ -22,6 +22,16 @@ else:
     seperator = "/"
 
 
+def check_ffmpeg():
+    try:
+        status, _ = subprocess.getstatusoutput("ffmpeg -version")
+        if status == 0:
+            return True
+        return False
+    except Exception:
+        print("There was an error with ffmpeg checking, please try again.")
+
+
 def interactive():
     start = """
     [i] ===================================================================== [i]
@@ -77,6 +87,12 @@ def get_duration(filename):
 if __name__ == '__main__':
     args = parser.parse_args()
     destination = ""
+    if not check_ffmpeg():
+        cprint("[w] You don't have ffmpeg installed! Make sure it is installed and on your $PATH.\n"
+               "[w] On Windows, you can install ffmpeg using: choco install ffmpeg\n"
+               "[w] On Linux (with apt), type:                sudo apt install ffmpeg\n"
+               "[w] Visit https://ffmpeg.org/ for more information!", "red")
+        exit(1)
     if args.interactive:
         try:
             movie_en, movie_de, lan_en, lan_de, destination, offset = interactive()
