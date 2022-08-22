@@ -117,6 +117,7 @@ if __name__ == '__main__':
         offset = f"{diff}ms"
 
     combined_name = re.sub(r"(?<=\(\d{4}\)) -.*", ".mkv", movie_en.split(seperator)[-1])
+    combined_name = re.sub(r"(?<=[sS]\d{2}[eE]\d{2}).*", ".mkv", combined_name)
 
     if args.output is not None:
         combined_name = args.output + seperator + combined_name
