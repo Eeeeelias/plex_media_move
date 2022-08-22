@@ -1,7 +1,7 @@
 # Plex Media Move
 
 These are a few scripts to help with renaming and organizing video files to better work with
-Plex (or Jellyfin). So far there are 3 scripts, though more may be added in the future.
+Plex (or Jellyfin). So far there are a few scripts, though more may be added in the future.
 
 ## media_mover.py
 
@@ -28,6 +28,22 @@ Your input directory structure should look like this (Assuming you're using Audi
 ----/someShow Season 2 Episode 1.mp4
 ```
 Then you can just point the origin path to `/videoFiles` and the script will handle everything else
+
+
+## combine_movies.sh / py_combine_movies.py
+This script allows you to easily combine two movie files into one with two audio tracks. This is intended 
+for combining movies with different languages (e.g. English and German). To use in bash:
+```bash
+./combine_movies.sh "Movie (YYYY) - English.mp4" "Movie (YYYY) - Deutsch.mp4"
+```
+Or python:
+```shell
+python3 py_combine_movies.py -g "Movie (YYYY) - English.mp4" -b "Movie (YYYY) - Deutsch.mp4"
+```
+There is an optional `-o` parameter that allows you to override the automatic offset. Mind that you have to
+specify a number and time fomrat e.g. `400ms`. Also, you can specify an output directory by adding `-p` with 
+the directory.
+
 
 ## rename.py
 
