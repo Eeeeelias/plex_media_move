@@ -16,9 +16,9 @@ from termcolor import colored, cprint
 # ------/Audials TV Shows
 # ------/Audials Movies
 # ----someFile Episode 2.mp4
-# ----someOtherFile Season 3 Episode 1.mp4
+# ----someOtherFile Season 3 Episode 1.mkv
 #
-# Note that only .mp4 files are being considered.
+# Note that only .mp4 and .mkv files are being considered.
 #
 # Your destination folder should obviously follow the folder structure recommended by Plex.
 # To read about that go here:
@@ -82,19 +82,20 @@ def special_info(info):
 def file_ex_check(new_file, overwrite=False):
     if os.path.isfile(new_file):
         cprint("[w] File already exists!", "red")
+        ext = re.search(r"(\.mp4)|(\.mkv)", new_file).group()
         if overwrite or input(colored("[a] Do you want to overwrite the file? [yN]: ", "blue")) == "y":
             return 0
         i = 2
-        new_file = re.sub(".mp4", "_{}.mp4".format(i), new_file)
+        new_file = re.sub(ext, f"_{i}" + ext, new_file)
         while os.path.isfile(new_file):
             i += 1
-            new_file = re.sub(r"_\d+.mp4", "_{}.mp4".format(i), new_file)
+            new_file = re.sub(r"_\d+"+ext, f"_{i}" + ext, new_file)
         return i
     return 0
 
 
 # checks if movie exists already and gives options to add version names
-def movie_checker(movie_title, path):
+def movie_checker(movie_title, path, ext=".mp4"):
     movie_moves = []
     for movie in glob.glob(path + "/*"):
         title = re.sub(r"(?<=\(\d{4}\)).*", "", movie.split("\\")[-1])
@@ -107,14 +108,14 @@ def movie_checker(movie_title, path):
                 "red",
             )
             version_name = input(colored("[a] Version name: ", "blue"))
-            movie_title_version = movie_title + " - " + version_name + ".mp4"
+            movie_title_version = movie_title + " - " + version_name + ext
             while os.path.isfile(movie + "/" + movie_title_version):
                 version_name = input(
                     colored(
                         "[a] This version already exists! Give a valid name: ", "blue"
                     )
                 )
-                movie_title_version = movie_title + " - " + version_name + ".mp4"
+                movie_title_version = movie_title + " - " + version_name + ext
             cprint("[i] Movie is now called: {}".format(movie_title_version))
             movie_moves.append(movie + "/" + movie_title_version)
         # check if the movie exists already and move both to a folder with a given version name
@@ -135,14 +136,14 @@ def movie_checker(movie_title, path):
             if version_name == "":
                 return []
 
-            movie_title_version = movie_title + " - " + version_name + ".mp4"
+            movie_title_version = movie_title + " - " + version_name + ext
             movie_moves.append(path + "/" + movie_title + "/" + movie_title_version)
             print("[i] Movie is now called: {}".format(movie_title_version))
             print("[i] Now please also add a version name to the existing movie")
             version_name_existing = input(
                 colored("[a] Input the version name of the existing movie: ", "blue")
             )
-            exist_vers_name = movie_title + " - " + version_name_existing + ".mp4"
+            exist_vers_name = movie_title + " - " + version_name_existing + ext
             while version_name == version_name_existing:
                 version_name_existing = input(
                     colored(
@@ -151,7 +152,7 @@ def movie_checker(movie_title, path):
                         "blue",
                     )
                 )
-                exist_vers_name = movie_title + " - " + version_name_existing + ".mp4"
+                exist_vers_name = movie_title + " - " + version_name_existing + ext
             print(
                 '[i] The existing Version will now have "{}" added'.format(
                     version_name_existing
@@ -189,7 +190,7 @@ def show_checker(path):
 
 
 def rename_files(path, special):
-    video_paths = glob.glob("{}".format(path) + "/*.mp4")
+    video_paths = glob.glob(path + "/*.mp4") + glob.glob(path + "/*.mkv")
     video_titles_new = []
     if len(video_paths) < 1: return video_paths, video_titles_new
     clean_paths = show_checker(sorted_alphanumeric(video_paths))
@@ -233,22 +234,23 @@ def move_files(video_paths, video_titles_new, plex_path):
 
         if re.search("[sS][0-9]+[eE][0-9]+", video_title) is None:
             movie_title = re.sub(r"(?<=\(\d{4}\)).*", "", video_title)
+            ext = re.search(r"(\.mp4)|(\.mkv)", video_title).group()
             # If the movie is a specific version of that movie, make a new folder and put the movie in there
             # as other versions of that movie might get added
-            if re.search(r"(?<=\(\d{4}\)) -.*(?=.mp4)", video_title) is not None:
+            if re.search(r"(?<=\(\d{4}\)) -.*(?=(.mp4)|(.mkv))", video_title) is not None:
                 if not os.path.exists(plex_path + "/Movies/" + movie_title):
                     os.makedirs(plex_path + "/Movies/" + movie_title)
-                    cprint("[i] Made new folder:", movie_title)
+                    cprint("[i] Made new folder: {}".format(movie_title))
                 # insert check for file existence here?
                 new_path = plex_path + "/Movies/" + movie_title + "/" + video_title
                 duplicate_num = file_ex_check(new_path, args.overwrite)
                 if duplicate_num != 0:
-                    new_path = re.sub(".mp4", "_{}.mp4".format(duplicate_num), new_path)
+                    new_path = re.sub(ext, f"_{duplicate_num}" + ext, new_path)
                     time.sleep(2)
                 shutil.move(video_path, new_path)
             # this part sucks but I'll redo it with more options!
             else:
-                movie_paths = movie_checker(movie_title, plex_path + "/Movies")
+                movie_paths = movie_checker(movie_title, plex_path + "/Movies", ext=ext)
 
                 if len(movie_paths) > 0:
                     new_path = movie_paths[0]
@@ -291,7 +293,8 @@ def move_files(video_paths, video_titles_new, plex_path):
         # if file exists (file_ex_check returns false) add 2 to the file
         duplicate_num = file_ex_check(show_path + video_title, args.overwrite)
         if duplicate_num != 0:
-            video_title = re.sub(".mp4", "_{}.mp4".format(duplicate_num), video_title)
+            ext = re.search(r"(\.mp4)|(\.mkv)", video_title).group()
+            video_title = re.sub(ext, "_{}".format(duplicate_num) + ext, video_title)
             time.sleep(2)
         shutil.move(video_path, show_path + video_title)
         cprint("[i] Moved (TV-Show): {}".format(video_title))
