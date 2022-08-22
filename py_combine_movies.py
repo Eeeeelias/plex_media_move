@@ -46,7 +46,7 @@ def interactive():
         movie_en = input(colored("[a] This is not a file! Make sure you spelled the path correctly:", "blue")).lstrip(
             "\"").rstrip("\"")
 
-    lan_en = input(colored("[a] Please also specify the language using ISO 639-2 codes (e.g. eng, de, nl): ", "blue"))
+    lan_en = input(colored("[a] Please also specify the language using ISO 639-2 codes (e.g. eng, de, jpn): ", "blue"))
     cprint("\n[i] Great, now that we have the first movie let's get the second movie from which we will only take the "
            "audio.")
 
@@ -57,9 +57,12 @@ def interactive():
             "\"").rstrip("\"")
 
     lan_de = input(colored("[a] Again, please specify the language using ISO 639-2 codes:", "blue"))
+    cprint("[i] Almost done, just two more questions")
+    destination = input(colored("[a] Where do you want your movie to be saved ([ENTER] to put it in $PWD):", "blue"))
     offset = input(
         colored("[a] Lastly, put in the offset for the movie. Press [ENTER] to let the script handle this:", "blue"))
-    return movie_en, movie_de, lan_en, lan_de, offset
+    cprint("\n")
+    return movie_en, movie_de, lan_en, lan_de, destination, offset
 
 
 def get_duration(filename):
@@ -72,12 +75,11 @@ def get_duration(filename):
 
 
 if __name__ == '__main__':
-
     args = parser.parse_args()
-
+    destination = ""
     if args.interactive:
         try:
-            movie_en, movie_de, lan_en, lan_de, offset = interactive()
+            movie_en, movie_de, lan_en, lan_de, destination, offset = interactive()
         except KeyboardInterrupt:
             print("Aborting...")
             exit(0)
@@ -102,9 +104,11 @@ if __name__ == '__main__':
 
     if args.output is not None:
         combined_name = args.output + seperator + combined_name
+    if destination != "":
+        combined_name = destination + seperator + combined_name
 
-    print(f"[i] Input 1: {args.input1}, video length: {dur_en}ms")
-    print(f"[i] Input 2: {args.input2}, video length: {dur_de}ms")
+    print(f"[i] Input 1: {movie_en}, video length: {dur_en}ms")
+    print(f"[i] Input 2: {movie_de}, video length: {dur_de}ms")
     print(f"[i] File will be written to: {combined_name}")
     print(f"[i] Time difference: {diff}ms, offsetting by: {offset}")
 
