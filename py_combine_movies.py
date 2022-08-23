@@ -3,6 +3,7 @@
 import argparse
 import re
 import subprocess
+import sys
 import time
 from sys import platform
 from termcolor import colored, cprint
@@ -16,6 +17,11 @@ parser.add_argument("-o", dest="offset", nargs="?", help="manual offset of the a
 parser.add_argument("-p", dest="output", nargs="?", help="Specify the output directory")
 parser.add_argument("-i", dest="interactive", action="store_true", help="Use this flag exclusively to make "
                                                                         "the script interactive")
+parser.add_argument("-l", dest="langs", nargs='*', help="The langauges of the audio streams, not using this assumes "
+                                                        "English for the first and German for the second. Usage: "
+                                                        "-l jpn de to have audio stream one be Japanese and audio"
+                                                        " stream two be German")
+
 if platform == "win32":
     seperator = "\\"
 else:
@@ -78,7 +84,7 @@ def interactive():
             "\"").rstrip("\"")
 
     offset = input(
-        colored("[a] Lastly, put in the offset for the movie. Press [ENTER] to let the script handle this:", "blue"))
+        colored("[a] Lastly, put in the offset for the movie (e.g. 400ms). Press [ENTER] to let the script handle this:", "blue"))
     cprint("\n")
     return movie_en, movie_de, lan_en, lan_de, destination, offset
 
@@ -101,21 +107,29 @@ if __name__ == '__main__':
                "[w] On Linux (with apt), type:                sudo apt install ffmpeg\n"
                "[w] Visit https://ffmpeg.org/ for more information!", "red")
         exit(1)
-    if args.interactive:
+    if args.interactive or len(sys.argv) == 1:
         try:
             movie_en, movie_de, lan_en, lan_de, destination, offset = interactive()
         except KeyboardInterrupt:
             print("Aborting...")
             exit(0)
     else:
-        movie_en = args.input1
-        movie_de = args.input2
-        lan_en = "en"
-        lan_de = "de"
-        if args.offset is not None:
-            offset = args.offset
-        else:
-            offset = ""
+        try:
+            movie_en = args.input1
+            movie_de = args.input2
+            if args.langs is None:
+                lan_en = "en"
+                lan_de = "de"
+            else:
+                lan_en = args.langs[0]
+                lan_de = args.langs[1]
+            if args.offset is not None:
+                offset = args.offset
+            else:
+                offset = ""
+        except TypeError:
+            print("Please make sure you put in all necessary arguments!")
+            exit(1)
 
     dur_en = get_duration(movie_en)
     dur_de = get_duration(movie_de)
@@ -124,16 +138,19 @@ if __name__ == '__main__':
         print("[i] No offset given, using time diff")
         offset = f"{diff}ms"
 
-    combined_name = re.sub(r"(?<=\(\d{4}\)) -.*", ".mkv", movie_en.split(seperator)[-1])
-    combined_name = re.sub(r"(?<=[sS]\d{2}[eE]\d{2}).*", ".mkv", combined_name)
+    if re.search(r"[sS]\d{2}[eE]\d{2}", movie_en.split(seperator)[-1]) is None:
+        combined_name = re.sub(r"(?<=\(\d{4}\)).*", ".mkv", movie_en.split(seperator)[-1])
+    else:
+        print("Iamahere")
+        combined_name = re.sub(r"(?<=[sS]\d{2}[eE]\d{2}).*", ".mkv", movie_en.split(seperator)[-1])
 
     if args.output is not None:
         combined_name = args.output + seperator + combined_name
     if destination != "":
         combined_name = destination + seperator + combined_name
 
-    print(f"[i] Input 1: {movie_en}, video length: {dur_en}ms")
-    print(f"[i] Input 2: {movie_de}, video length: {dur_de}ms")
+    print(f"[i] Input 1: {movie_en}, video length: {dur_en}ms, language: {lan_en}")
+    print(f"[i] Input 2: {movie_de}, video length: {dur_de}ms, language: {lan_de}")
     print(f"[i] File will be written to: {combined_name}")
     print(f"[i] Time difference: {diff}ms, offsetting by: {offset}")
 

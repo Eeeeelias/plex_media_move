@@ -5,6 +5,7 @@ import re
 import shutil
 import time
 from sys import platform
+
 from termcolor import colored, cprint
 
 # This script renames, organizes and moves your downloaded media files
@@ -38,8 +39,8 @@ parser.add_argument(
     dest="overwrite",
     action="store_true",
     help="define behaviour when file already exists. If"
-         " this is set, files will be overwritten. "
-         "Otherwise, a numbered version will be moved",
+    " this is set, files will be overwritten. "
+    "Otherwise, a numbered version will be moved",
 )
 parser.add_argument("--op", dest="orig_path", help="path to the downloaded videos")
 parser.add_argument("--dp", dest="dest_path", help="path to the destination")
@@ -48,12 +49,12 @@ parser.add_argument(
     dest="special",
     nargs="*",
     help="special info about a certain show; example: Your "
-         "episode (i.e. Better call saul) is named Better call "
-         "Saul Episode 20 but you want to mark it season 2. "
-         "Then you can write --sv Saul;2 [just one identifier "
-         "is fine, using spaces will break it] to make the script "
-         "aware that it's season two. You can add "
-         "as many of those as you want",
+    "episode (i.e. Better call saul) is named Better call "
+    "Saul Episode 20 but you want to mark it season 2. "
+    "Then you can write --sv Saul;2 [just one identifier "
+    "is fine, using spaces will break it] to make the script "
+    "aware that it's season two. You can add "
+    "as many of those as you want",
 )
 
 strings_to_match = {
@@ -89,7 +90,7 @@ def file_ex_check(new_file, overwrite=False):
         new_file = re.sub(ext, f"_{i}" + ext, new_file)
         while os.path.isfile(new_file):
             i += 1
-            new_file = re.sub(r"_\d+"+ext, f"_{i}" + ext, new_file)
+            new_file = re.sub(r"_\d+" + ext, f"_{i}" + ext, new_file)
         return i
     return 0
 
@@ -176,9 +177,18 @@ def show_checker(path):
     for video in path:
         vid_size = os.path.getsize(video)
         if avg_vid_size * 0.6 > vid_size:
-            cprint("[w] Video with name \"{}\" unusually small: {} MB".format(
-                video.split(seperator)[-1], round(vid_size / (1024 ** 2))), "red")
-            move = input(colored("[a] Do you want to [m]ove the file regardless, [s]kip it or [d]elete it?: ", "blue"))
+            cprint(
+                '[w] Video with name "{}" unusually small: {} MB'.format(
+                    video.split(seperator)[-1], round(vid_size / (1024**2))
+                ),
+                "red",
+            )
+            move = input(
+                colored(
+                    "[a] Do you want to [m]ove the file regardless, [s]kip it or [d]elete it?: ",
+                    "blue",
+                )
+            )
             if move.lower() == "" or move.lower() == "s":
                 continue
             elif move.lower() == "d":
@@ -192,7 +202,8 @@ def show_checker(path):
 def rename_files(path, special):
     video_paths = glob.glob(path + "/*.mp4") + glob.glob(path + "/*.mkv")
     video_titles_new = []
-    if len(video_paths) < 1: return video_paths, video_titles_new
+    if len(video_paths) < 1:
+        return video_paths, video_titles_new
     clean_paths = show_checker(sorted_alphanumeric(video_paths))
     video_titles = [title.split(seperator)[-1] for title in clean_paths]
     extra_episode_info = special_info(special)
@@ -237,7 +248,10 @@ def move_files(video_paths, video_titles_new, plex_path):
             ext = re.search(r"(\.mp4)|(\.mkv)", video_title).group()
             # If the movie is a specific version of that movie, make a new folder and put the movie in there
             # as other versions of that movie might get added
-            if re.search(r"(?<=\(\d{4}\)) -.*(?=(.mp4)|(.mkv))", video_title) is not None:
+            if (
+                re.search(r"(?<=\(\d{4}\)) -.*(?=(.mp4)|(.mkv))", video_title)
+                is not None
+            ):
                 if not os.path.exists(plex_path + "/Movies/" + movie_title):
                     os.makedirs(plex_path + "/Movies/" + movie_title)
                     cprint("[i] Made new folder: {}".format(movie_title))
