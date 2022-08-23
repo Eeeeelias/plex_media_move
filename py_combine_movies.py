@@ -78,8 +78,8 @@ def interactive():
     destination = input(
         colored("[a] Where do you want your movie to be saved ([ENTER] to put it in $PWD):", "blue")).lstrip(
         "\"").rstrip("\"")
-    while not os.path.isdir(destination):
-        movie_de = input(
+    while not os.path.isdir(destination) or destination == "":
+        destination = input(
             colored("[a] This is not a destination! Make sure you spelled everything correctly:", "blue")).lstrip(
             "\"").rstrip("\"")
 
