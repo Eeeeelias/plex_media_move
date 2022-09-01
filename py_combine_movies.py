@@ -8,7 +8,16 @@ import sys
 import time
 from sys import platform
 
-from termcolor import colored, cprint
+
+def install(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+
+try:
+    from prompt_toolkit import prompt, HTML, print_formatted_text
+    from prompt_toolkit.completion import PathCompleter
+except ModuleNotFoundError:
+    install("prompt_toolkit")
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -26,7 +35,7 @@ parser.add_argument(
     dest="offset",
     nargs="?",
     help="manual offset of the audio files in case the automatic "
-    "offset doesn't work",
+         "offset doesn't work",
 )
 parser.add_argument("-p", dest="output", nargs="?", help="Specify the output directory")
 parser.add_argument(
@@ -40,9 +49,9 @@ parser.add_argument(
     dest="langs",
     nargs="*",
     help="The langauges of the audio streams, not using this assumes "
-    "English for the first and German for the second. Usage: "
-    "-l jpn de to have audio stream one be Japanese and audio"
-    " stream two be German",
+         "English for the first and German for the second. Usage: "
+         "-l jpn de to have audio stream one be Japanese and audio"
+         " stream two be German",
 )
 
 if platform == "win32":
@@ -78,97 +87,71 @@ def interactive():
     [i] ===================================================================== [i] 
     """
 
-    cprint(start)
+    print_formatted_text(start)
     if os.path.isfile(os.path.expanduser("~/prev")):
-        prev = input(
-            colored(
-                "[a] Do you want to use the previous movie with a different offset? [y/N]",
-                "blue",
-            )
-        )
+        prev = prompt(
+            HTML("<ansiblue>[a] Do you want to use the previous movie with a different offset? [y/N]</ansiblue>"))
+
         if prev == "y":
             return get_prev(os.path.expanduser("~/prev"))
-    movie_en = (
-        input(colored("[a] Firstly, give the path of the first movie:", "blue"))
-        .lstrip('"')
-        .rstrip('"')
-    )
+
+    movie_en = prompt(HTML("<ansiblue>[a] Firstly, give the path of the first movie:</ansiblue>"),
+                      completer=PathCompleter()).lstrip('"').rstrip('"')
 
     while not os.path.isfile(movie_en):
         movie_en = (
-            input(
-                colored(
-                    "[a] This is not a file! Make sure you spelled the path correctly:",
-                    "blue",
-                )
-            )
-            .lstrip('"')
-            .rstrip('"')
+            prompt(HTML("<ansiblue>[a] This is not a file! Make sure you spelled the path correctly:</ansiblue>"),
+                   completer=PathCompleter())
+                .lstrip('"')
+                .rstrip('"')
         )
 
-    lan_en = input(
-        colored(
-            "[a] Please also specify the language using ISO 639-2 codes (e.g. eng, de, jpn): ",
-            "blue",
-        )
-    )
-    cprint(
+    lan_en = prompt(
+        HTML("<ansiblue>[a] Please also specify the language using ISO 639-2 codes (e.g. eng, de, jpn): </ansiblue>"))
+    print_formatted_text(
         "\n[i] Great, now that we have the first movie let's get the second movie from which we will only take the "
-        "audio."
-    )
+        "audio.")
 
     movie_de = (
-        input(colored("[a] Please also give the path of this movie:", "blue"))
-        .lstrip('"')
-        .rstrip('"')
+        prompt(HTML("<ansiblue>[a] Please also give the path of this movie:</ansiblue>"), completer=PathCompleter())
+            .lstrip('"')
+            .rstrip('"')
     )
 
     while not os.path.isfile(movie_de):
         movie_de = (
-            input(
-                colored(
-                    "[a] This is not a file! Make sure you spelled the path correctly:",
-                    "blue",
-                )
-            )
-            .lstrip('"')
-            .rstrip('"')
+            prompt(HTML("<ansiblue>[a] This is not a file! Make sure you spelled the path correctly:</ansiblue>"),
+                   completer=PathCompleter())
+                .lstrip('"')
+                .rstrip('"')
         )
 
-    lan_de = input(
-        colored("[a] Again, please specify the language using ISO 639-2 codes:", "blue")
+    lan_de = prompt(
+        HTML("<ansiblue>[a] Again, please specify the language using ISO 639-2 codes:</ansiblue>")
     )
-    cprint("[i] Almost done, just two more questions")
+    print_formatted_text("[i] Almost done, just two more questions")
 
     destination = (
-        input(
-            colored(
-                "[a] Where do you want your movie to be saved ([ENTER] to put it in $PWD):",
-                "blue",
-            )
-        )
-        .lstrip('"')
-        .rstrip('"')
+        prompt(HTML("<ansiblue>[a] Where do you want your movie to be saved ([ENTER] to put it in $PWD):</ansiblue>"),
+               completer=PathCompleter())
+            .lstrip('"')
+            .rstrip('"')
     )
     while not os.path.isdir(destination) or destination == "":
         destination = (
-            input(
-                colored(
-                    "[a] This is not a destination! Make sure you spelled everything correctly:",
-                    "blue",
-                )
-            )
-            .lstrip('"')
-            .rstrip('"')
+            prompt(
+                HTML("<ansiblue>[a] This is not a destination! Make sure you spelled everything correctly:</ansiblue>"),
+                completer=PathCompleter())
+                .lstrip('"')
+                .rstrip('"')
         )
 
-    offset = input(
-        colored(
-            "[a] Lastly, put in the offset for the movie (e.g. 400ms). Press [ENTER] to let the script handle this:",
-            "blue",
-        )
+    offset = prompt(
+        HTML(
+            "<ansiblue>[a] Lastly, put in the offset for the movie (e.g. 400ms). Press [ENTER] to let the script "
+            "handle this:</ansiblue>")
     )
-    cprint("\n")
+    print_formatted_text("\n")
     return movie_en, movie_de, lan_en, lan_de, destination, offset
 
 
@@ -177,13 +160,11 @@ def get_prev(path):
     with open(path, "r") as f:
         for line in f.readlines():
             vals[line.split("\t")[0]] = line.split("\t")[1].strip("\n")
-        f.close
-    cprint(
-        f'Using:\nMovie1: {vals["mv_en"]}\nMovie2: {vals["mv_de"]}\nLanguage1: {vals["ln_en"]}\nLanguage2 {vals["ln_de"]}\nDestination: {vals["dst"]}'
+        f.close()
+    print_formatted_text(
+        f'Using:\nMovie1: {vals["mv_en"]}\nMovie2: {vals["mv_de"]}\nLanguage1: {vals["ln_en"]}\nLanguage2: {vals["ln_de"]}\nDestination: {vals["dst"]}'
     )
-    vals["off"] = input(
-        colored("[a] Okay great, now please specify a new offset: ", "blue")
-    )
+    vals["off"] = prompt(HTML("<ansiblue>[a] Okay great, now please specify a new offset: </ansiblue>"))
     return (
         vals["mv_en"],
         vals["mv_de"],
@@ -216,7 +197,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     destination = ""
     if not check_ffmpeg():
-        cprint(
+        print_formatted_text(
             "[w] You don't have ffmpeg installed! Make sure it is installed and on your $PATH.\n"
             "[w] On Windows, you can install ffmpeg using: choco install ffmpeg\n"
             "[w] On Linux (with apt), type:                sudo apt install ffmpeg\n"
@@ -309,5 +290,12 @@ if __name__ == "__main__":
             combined_name,
         ]
     )
-    print("[i] Success!")
+    print("[i] Success? Check for sync issues. Now starting the movie...")
+    time.sleep(1.5)
+    try:
+        os.startfile(combined_name)
+    except FileNotFoundError:
+        print_formatted_text(
+            HTML("<ansired>[w] Something went wrong when combining the files. File could not be found.</ansired>"))
+        exit(1)
     exit(0)

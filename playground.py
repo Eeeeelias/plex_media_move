@@ -1,17 +1,18 @@
-# testing stuff out
-import subprocess
+import os
+from pathlib import Path
+from prompt_toolkit import prompt, HTML, print_formatted_text
+from prompt_toolkit.completion import PathCompleter
+
+path = "sdf"
 
 
-def check_ffmpeg():
+while 1:
     try:
-        status, _ = subprocess.getstatusoutput("ffmpeg -version")
-        print(status)
-        if status == 0:
-            return True
-        return False
-    except Exception:
-        print("error")
-
-
-if __name__ == '__main__':
-    print(check_ffmpeg())
+        print_formatted_text("TEST")
+        print_formatted_text(HTML("<ansired>[w] This is a warning!</ansired>"))
+        user_input = prompt(HTML("<ansiblue>Please enter text: </ansiblue>"), completer=PathCompleter())
+        us = prompt(HTML("<ansiblue>Please do {} things: </ansiblue>".format(path)))
+        path = user_input
+        print(user_input)
+    except KeyboardInterrupt:
+        exit(0)
