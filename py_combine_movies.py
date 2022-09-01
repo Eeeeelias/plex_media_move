@@ -1,26 +1,49 @@
 # This is an alternative to the combine_movies.sh script
 # written in python for better compatability (e.g. windows)
 import argparse
+import os
 import re
 import subprocess
 import sys
 import time
 from sys import platform
+
 from termcolor import colored, cprint
-import os
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-g", dest="input1", help="The version of the movie with better image quality, usually English")
-parser.add_argument("-b", dest="input2", help="The version from which you only want the audio, usually German")
-parser.add_argument("-o", dest="offset", nargs="?", help="manual offset of the audio files in case the automatic "
-                                                         "offset doesn't work")
+parser.add_argument(
+    "-g",
+    dest="input1",
+    help="The version of the movie with better image quality, usually English",
+)
+parser.add_argument(
+    "-b",
+    dest="input2",
+    help="The version from which you only want the audio, usually German",
+)
+parser.add_argument(
+    "-o",
+    dest="offset",
+    nargs="?",
+    help="manual offset of the audio files in case the automatic "
+    "offset doesn't work",
+)
 parser.add_argument("-p", dest="output", nargs="?", help="Specify the output directory")
-parser.add_argument("-i", dest="interactive", action="store_true", help="Use this flag exclusively to make "
-                                                                        "the script interactive")
-parser.add_argument("-l", dest="langs", nargs='*', help="The langauges of the audio streams, not using this assumes "
-                                                        "English for the first and German for the second. Usage: "
-                                                        "-l jpn de to have audio stream one be Japanese and audio"
-                                                        " stream two be German")
+parser.add_argument(
+    "-i",
+    dest="interactive",
+    action="store_true",
+    help="Use this flag exclusively to make " "the script interactive",
+)
+parser.add_argument(
+    "-l",
+    dest="langs",
+    nargs="*",
+    help="The langauges of the audio streams, not using this assumes "
+    "English for the first and German for the second. Usage: "
+    "-l jpn de to have audio stream one be Japanese and audio"
+    " stream two be German",
+)
 
 if platform == "win32":
     seperator = "\\"
@@ -56,60 +79,161 @@ def interactive():
     """
 
     cprint(start)
-    movie_en = input(colored("[a] Firstly, give the path of the first movie:", "blue")).lstrip("\"").rstrip("\"")
+    if os.path.isfile(os.path.expanduser("~/prev")):
+        prev = input(
+            colored(
+                "[a] Do you want to use the previous movie with a different offset? [y/N]",
+                "blue",
+            )
+        )
+        if prev == "y":
+            return get_prev(os.path.expanduser("~/prev"))
+    movie_en = (
+        input(colored("[a] Firstly, give the path of the first movie:", "blue"))
+        .lstrip('"')
+        .rstrip('"')
+    )
 
     while not os.path.isfile(movie_en):
-        movie_en = input(colored("[a] This is not a file! Make sure you spelled the path correctly:", "blue")).lstrip(
-            "\"").rstrip("\"")
+        movie_en = (
+            input(
+                colored(
+                    "[a] This is not a file! Make sure you spelled the path correctly:",
+                    "blue",
+                )
+            )
+            .lstrip('"')
+            .rstrip('"')
+        )
 
-    lan_en = input(colored("[a] Please also specify the language using ISO 639-2 codes (e.g. eng, de, jpn): ", "blue"))
-    cprint("\n[i] Great, now that we have the first movie let's get the second movie from which we will only take the "
-           "audio.")
+    lan_en = input(
+        colored(
+            "[a] Please also specify the language using ISO 639-2 codes (e.g. eng, de, jpn): ",
+            "blue",
+        )
+    )
+    cprint(
+        "\n[i] Great, now that we have the first movie let's get the second movie from which we will only take the "
+        "audio."
+    )
 
-    movie_de = input(colored("[a] Please also give the path of this movie:", "blue")).lstrip("\"").rstrip("\"")
+    movie_de = (
+        input(colored("[a] Please also give the path of this movie:", "blue"))
+        .lstrip('"')
+        .rstrip('"')
+    )
 
     while not os.path.isfile(movie_de):
-        movie_de = input(colored("[a] This is not a file! Make sure you spelled the path correctly:", "blue")).lstrip(
-            "\"").rstrip("\"")
+        movie_de = (
+            input(
+                colored(
+                    "[a] This is not a file! Make sure you spelled the path correctly:",
+                    "blue",
+                )
+            )
+            .lstrip('"')
+            .rstrip('"')
+        )
 
-    lan_de = input(colored("[a] Again, please specify the language using ISO 639-2 codes:", "blue"))
+    lan_de = input(
+        colored("[a] Again, please specify the language using ISO 639-2 codes:", "blue")
+    )
     cprint("[i] Almost done, just two more questions")
 
-    destination = input(
-        colored("[a] Where do you want your movie to be saved ([ENTER] to put it in $PWD):", "blue")).lstrip(
-        "\"").rstrip("\"")
+    destination = (
+        input(
+            colored(
+                "[a] Where do you want your movie to be saved ([ENTER] to put it in $PWD):",
+                "blue",
+            )
+        )
+        .lstrip('"')
+        .rstrip('"')
+    )
     while not os.path.isdir(destination) or destination == "":
-        destination = input(
-            colored("[a] This is not a destination! Make sure you spelled everything correctly:", "blue")).lstrip(
-            "\"").rstrip("\"")
+        destination = (
+            input(
+                colored(
+                    "[a] This is not a destination! Make sure you spelled everything correctly:",
+                    "blue",
+                )
+            )
+            .lstrip('"')
+            .rstrip('"')
+        )
 
     offset = input(
-        colored("[a] Lastly, put in the offset for the movie (e.g. 400ms). Press [ENTER] to let the script handle this:", "blue"))
+        colored(
+            "[a] Lastly, put in the offset for the movie (e.g. 400ms). Press [ENTER] to let the script handle this:",
+            "blue",
+        )
+    )
     cprint("\n")
     return movie_en, movie_de, lan_en, lan_de, destination, offset
 
 
+def get_prev(path):
+    vals = {}
+    with open(path, "r") as f:
+        for line in f.readlines():
+            vals[line.split("\t")[0]] = line.split("\t")[1].strip("\n")
+        f.close
+    cprint(
+        f'Using:\nMovie1: {vals["mv_en"]}\nMovie2: {vals["mv_de"]}\nLanguage1: {vals["ln_en"]}\nLanguage2 {vals["ln_de"]}\nDestination: {vals["dst"]}'
+    )
+    vals["off"] = input(
+        colored("[a] Okay great, now please specify a new offset: ", "blue")
+    )
+    return (
+        vals["mv_en"],
+        vals["mv_de"],
+        vals["ln_en"],
+        vals["ln_de"],
+        vals["dst"],
+        vals["off"],
+    )
+
+
 def get_duration(filename):
-    result = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
-                             "format=duration", "-of",
-                             "default=noprint_wrappers=1:nokey=1", filename],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
+    result = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            filename,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
     return round(float(result.stdout) * 1000)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parser.parse_args()
     destination = ""
     if not check_ffmpeg():
-        cprint("[w] You don't have ffmpeg installed! Make sure it is installed and on your $PATH.\n"
-               "[w] On Windows, you can install ffmpeg using: choco install ffmpeg\n"
-               "[w] On Linux (with apt), type:                sudo apt install ffmpeg\n"
-               "[w] Visit https://ffmpeg.org/ for more information!", "red")
+        cprint(
+            "[w] You don't have ffmpeg installed! Make sure it is installed and on your $PATH.\n"
+            "[w] On Windows, you can install ffmpeg using: choco install ffmpeg\n"
+            "[w] On Linux (with apt), type:                sudo apt install ffmpeg\n"
+            "[w] Visit https://ffmpeg.org/ for more information!",
+            "red",
+        )
         exit(1)
     if args.interactive or len(sys.argv) == 1:
         try:
             movie_en, movie_de, lan_en, lan_de, destination, offset = interactive()
+            with open(os.path.expanduser("~/prev"), "w") as f:
+                f.write(f"mv_en\t{movie_en}\n")
+                f.write(f"mv_de\t{movie_de}\n")
+                f.write(f"ln_en\t{lan_en}\n")
+                f.write(f"ln_de\t{lan_de}\n")
+                f.write(f"dst\t{destination}")
+                f.close()
         except KeyboardInterrupt:
             print("Aborting...")
             exit(0)
@@ -139,10 +263,13 @@ if __name__ == '__main__':
         offset = f"{diff}ms"
 
     if re.search(r"[sS]\d{2}[eE]\d{2}", movie_en.split(seperator)[-1]) is None:
-        combined_name = re.sub(r"(?<=\(\d{4}\)).*", ".mkv", movie_en.split(seperator)[-1])
+        combined_name = re.sub(
+            r"(?<=\(\d{4}\)).*", ".mkv", movie_en.split(seperator)[-1]
+        )
     else:
-        print("Iamahere")
-        combined_name = re.sub(r"(?<=[sS]\d{2}[eE]\d{2}).*", ".mkv", movie_en.split(seperator)[-1])
+        combined_name = re.sub(
+            r"(?<=[sS]\d{2}[eE]\d{2}).*", ".mkv", movie_en.split(seperator)[-1]
+        )
 
     if args.output is not None:
         combined_name = args.output + seperator + combined_name
@@ -156,8 +283,31 @@ if __name__ == '__main__':
 
     time.sleep(3)
     print("[i] Combining movies. This might take a while...")
-    subprocess.run(["ffmpeg", "-loglevel", "warning", "-i", movie_en, "-itsoffset", offset, "-i", movie_de,
-                    "-map", "0:0", "-map", "0:a", "-map", "1:a", "-metadata:s:a:0", f"language={lan_en}",
-                    "-metadata:s:a:1", f"language={lan_de}", "-c", "copy", combined_name])
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-loglevel",
+            "warning",
+            "-i",
+            movie_en,
+            "-itsoffset",
+            offset,
+            "-i",
+            movie_de,
+            "-map",
+            "0:0",
+            "-map",
+            "0:a",
+            "-map",
+            "1:a",
+            "-metadata:s:a:0",
+            f"language={lan_en}",
+            "-metadata:s:a:1",
+            f"language={lan_de}",
+            "-c",
+            "copy",
+            combined_name,
+        ]
+    )
     print("[i] Success!")
     exit(0)
