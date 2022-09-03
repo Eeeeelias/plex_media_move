@@ -118,7 +118,10 @@ def movie_checker(movie_title, path, ext=".mp4"):
             print_formatted_text(
                 HTML('<ansired>[w] Versions of "{}" exist. Please name this version</ansired>'.format(movie_title)))
             version_name = prompt(HTML("<ansiblue>[a] Version name: </ansiblue>"))
-            movie_title_version = movie_title + " - " + version_name + ext
+            if version_name == "":
+                movie_title_version = movie_title + ext
+            else:
+                movie_title_version = movie_title + " - " + version_name + ext
             while os.path.isfile(movie + "/" + movie_title_version):
                 version_name = prompt(HTML("<ansiblue>[a] This version already exists! Give a valid name: </ansiblue>"))
                 movie_title_version = movie_title + " - " + version_name + ext
@@ -145,7 +148,8 @@ def movie_checker(movie_title, path, ext=".mp4"):
             exist_vers_name = movie_title + " - " + version_name_existing + ext
             while version_name == version_name_existing:
                 version_name_existing = prompt(HTML(
-                    "<ansiblue>[a] Both movies can't have the same version name! Please enter a valid version name: </ansiblue>"))
+                    "<ansiblue>[a] Both movies can't have the same version name! Please enter a valid version name: "
+                    "</ansiblue>"))
                 exist_vers_name = movie_title + " - " + version_name_existing + ext
             print(
                 '[i] The existing Version will now have "{}" added'.format(

@@ -90,7 +90,7 @@ def interactive():
     print_formatted_text(start)
     if os.path.isfile(os.path.expanduser("~/prev")):
         prev = prompt(
-            HTML("<ansiblue>[a] Do you want to use the previous movie with a different offset? [y/N]</ansiblue>"))
+            HTML("<ansiblue>[a] Do you want to use the previous movie with a different offset? [y/N]: </ansiblue>"))
 
         if prev == "y":
             return get_prev(os.path.expanduser("~/prev"))
@@ -191,6 +191,16 @@ def get_duration(filename):
         stderr=subprocess.STDOUT,
     )
     return round(float(result.stdout) * 1000)
+
+
+def delete_movies(movie_en, movie_de):
+    delete = prompt(HTML("<ansiblue>[a] Do you want to delete the two versions you just combined? [y/N]: </ansiblue>"))
+    if delete.lower() == "y":
+        print_formatted_text(HTML("[i] Now deleting movies..."))
+        time.sleep(2)
+        os.remove(movie_en)
+        os.remove(movie_de)
+    return
 
 
 if __name__ == "__main__":
@@ -294,6 +304,7 @@ if __name__ == "__main__":
     time.sleep(1.5)
     try:
         os.startfile(combined_name)
+        delete_movies(movie_en, movie_de)
     except FileNotFoundError:
         print_formatted_text(
             HTML("<ansired>[w] Something went wrong when combining the files. File could not be found.</ansired>"))
