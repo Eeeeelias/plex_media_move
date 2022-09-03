@@ -258,9 +258,7 @@ if __name__ == "__main__":
             r"(?<=\(\d{4}\)).*", ".mkv", movie_en.split(seperator)[-1]
         )
     else:
-        combined_name = re.sub(
-            r"(?<=[sS]\d{2}[eE]\d{2}).*", ".mkv", movie_en.split(seperator)[-1]
-        )
+        combined_name = re.sub(r".mp4", ".mkv", movie_en.split(seperator)[-1])
 
     if args.output is not None:
         combined_name = args.output + seperator + combined_name
@@ -300,13 +298,16 @@ if __name__ == "__main__":
             combined_name,
         ]
     )
-    print("[i] Success? Check for sync issues. Now starting the movie...")
-    time.sleep(1.5)
-    try:
-        os.startfile(combined_name)
-        delete_movies(movie_en, movie_de)
-    except FileNotFoundError:
-        print_formatted_text(
-            HTML("<ansired>[w] Something went wrong when combining the files. File could not be found.</ansired>"))
-        exit(1)
+    if args.input1 is None:
+        print("[i] Success? Check for sync issues. Now starting the movie...")
+        time.sleep(1.5)
+        try:
+            os.startfile(combined_name)
+            delete_movies(movie_en, movie_de)
+        except FileNotFoundError:
+            print_formatted_text(
+                HTML("<ansired>[w] Something went wrong when combining the files. File could not be found.</ansired>"))
+            exit(1)
+    else:
+        print("[i] Files combined!")
     exit(0)
