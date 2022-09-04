@@ -329,7 +329,8 @@ if __name__ == "__main__":
                 orig_path + "/Audials Movies",
             ]
         else:
-            paths = [p for p in glob.glob(orig_path + "/**/", recursive=True)]
+            paths = [p for p in glob.glob(orig_path + "/**/", recursive=True) if not os.path.isfile(p + "/.ignore")]
+
 
         trash_video(orig_path + "/Audials/Audials Other Videos")
         for path in paths:
