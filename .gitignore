@@ -1,4 +1,6 @@
 teamspeak_shutdown.py
 test.txt
 ts3_active_clients.log
-.venv
+venv
+ts3server_2022-08-02__15_10_30.234475_1.log
+connected_users.log
