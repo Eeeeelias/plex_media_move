@@ -3,7 +3,7 @@ import glob
 import re
 from sys import platform
 from itertools import dropwhile
-from typing import AnyStr, List
+from typing import AnyStr, List, Dict
 import os
 
 if platform == "win32":
@@ -40,13 +40,17 @@ def get_infos(plex_path: AnyStr, shows=True):
             size += os.path.getsize(media)
 
             continue
-        show_infos.append({"show_nr": show_nr, "show_name": show, "seasons": seasons, "episodes": episodes, "show_size": size})
+        show_infos.append(
+            {"show_nr": show_nr, "show_name": show, "seasons": seasons, "episodes": episodes, "show_size": size})
         print(f"Show: {parts[0]}")
         show_nr += 1
         show = parts[0]
         seasons = 1
         episodes = 1
         size = os.path.getsize(media)
+    show_infos.append(
+        {"show_nr": show_nr, "show_name": show, "seasons": seasons, "episodes": episodes, "show_size": size})
+
     return show_infos
 
 
