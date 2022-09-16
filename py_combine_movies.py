@@ -65,6 +65,13 @@ def check_ffmpeg():
         status, _ = subprocess.getstatusoutput("ffmpeg -version")
         if status == 0:
             return True
+        print_formatted_text(
+            "[w] You don't have ffmpeg installed! Make sure it is installed and on your $PATH.\n"
+            "[w] On Windows, you can install ffmpeg using: choco install ffmpeg\n"
+            "[w] On Linux (with apt), type:                sudo apt install ffmpeg\n"
+            "[w] Visit https://ffmpeg.org/ for more information!",
+            "red",
+        )
         return False
     except Exception:
         print("There was an error with ffmpeg checking, please try again.")
@@ -207,13 +214,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     destination = ""
     if not check_ffmpeg():
-        print_formatted_text(
-            "[w] You don't have ffmpeg installed! Make sure it is installed and on your $PATH.\n"
-            "[w] On Windows, you can install ffmpeg using: choco install ffmpeg\n"
-            "[w] On Linux (with apt), type:                sudo apt install ffmpeg\n"
-            "[w] Visit https://ffmpeg.org/ for more information!",
-            "red",
-        )
         exit(1)
     if args.interactive or len(sys.argv) == 1:
         try:

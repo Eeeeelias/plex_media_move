@@ -7,11 +7,14 @@ from itertools import dropwhile
 from sys import platform
 from typing import AnyStr, List
 
+import py_combine_movies
+
 if platform == "win32":
     sep = "\\"
 else:
     sep = "/"
 
+# add duration of videos/shows
 
 def get_show_infos(plex_path: AnyStr):
     drop = 'TV Shows'
@@ -108,6 +111,8 @@ def write_to_csv(show_infos: List, filename="show_infos"):
 
 def fetch_all(overall_path):
     overall_path = overall_path.rstrip(sep)
+    if not py_combine_movies.check_ffmpeg():
+        exit(1)
     info_shows = get_show_infos(overall_path + f"{sep}TV Shows")
     info_movies = get_movie_infos(overall_path + f"{sep}Movies")
     return info_shows, info_movies
@@ -116,8 +121,8 @@ def fetch_all(overall_path):
 if __name__ == '__main__':
     # P:\\Plex Shows
     # P:\\script_testing
-    info_shows, info_movies = fetch_all("P:\\script_testing")
-    write_to_csv(info_shows)
+    #info_shows, info_movies = fetch_all("P:\\Plex Shows")
+    info_movies = get_movie_infos("P:\\Plex Shows\\Movies")
     write_to_csv(info_movies, filename='movie_infos')
     # print(f"Total size: {round(playground.sum_files(info_movies) / (1024 ** 3), 2)} GB")
     # write_to_csv(info)
