@@ -366,8 +366,8 @@ def trash_video(path):
 if __name__ == "__main__":
     try:
         args = parser.parse_args()
-        orig_path = args.orig_path
-        plex_path = args.dest_path
+        orig_path = args.orig_path.rstrip(seperator)
+        plex_path = args.dest_path.rstrip(seperator)
         special = args.special
         if special is None:
             special = []
