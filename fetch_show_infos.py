@@ -88,7 +88,7 @@ def get_movie_infos(plex_path: AnyStr) -> List[tuple]:
 
 
 # possibly borked
-def write_to_csv(show_infos: List, filename="show_infos"):
+def write_to_csv(show_infos: List, filename="show_infos") -> None:
     filename = filename.rstrip('.csv')
     with open(filename + '.csv', 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
@@ -100,7 +100,7 @@ def write_to_csv(show_infos: List, filename="show_infos"):
             csvwriter.writerow(show.values())
 
 
-def print_show_infos(show_infos: List):
+def print_show_infos(show_infos: List) -> None:
     for show in show_infos:
         print(f"===== SHOW ======")
         print(f"Name: {show(1)}")
@@ -112,7 +112,7 @@ def print_show_infos(show_infos: List):
     return
 
 
-def print_movie_infos(movie_infos: List):
+def print_movie_infos(movie_infos: List) -> None:
     for movie in movie_infos:
         print(f"===== MOVIE ======")
         print(f"Name: {movie(1)}")
@@ -125,7 +125,7 @@ def print_movie_infos(movie_infos: List):
         print(f"File type: {movie(8)}\n")
 
 
-def fetch_all(overall_path):
+def fetch_all(overall_path) -> tuple[List[tuple], List[tuple]]:
     overall_path = overall_path.rstrip(sep)
     if not check_ffmpeg():
         exit(1)
@@ -138,4 +138,3 @@ if __name__ == '__main__':
     info_shows, info_movies = fetch_all("P:\\Plex Shows")
     write_to_csv(info_shows)
     write_to_csv(info_movies, filename='movie_infos')
-

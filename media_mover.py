@@ -394,6 +394,7 @@ if __name__ == "__main__":
         for path in paths:
             video_path_list, video_titles_renamed = rename_files(path, special)
             move_files(video_path_list, video_titles_renamed, plex_path)
+            # make db updates here
 
         print_formatted_text("[i] Everything done!")
     except FileNotFoundError:

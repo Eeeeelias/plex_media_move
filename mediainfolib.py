@@ -3,21 +3,17 @@ import subprocess
 import sys
 import os
 import csv
-import pycountry
-
-def install(package):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-
 
 try:
+    import pycountry
     from prompt_toolkit import prompt, HTML, print_formatted_text
     from prompt_toolkit.completion import PathCompleter
 except ModuleNotFoundError:
-    install("prompt_toolkit")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "requirements.txt"])
 
 
 # checks if ffmpeg is installed on the system
-def check_ffmpeg():
+def check_ffmpeg() -> bool:
     try:
         status, _ = subprocess.getstatusoutput("ffmpeg -version")
         if status == 0:
@@ -35,7 +31,7 @@ def check_ffmpeg():
 
 
 # returns the duration of a video file in milliseconds
-def get_duration(filename):
+def get_duration(filename) -> int:
     try:
         result = subprocess.run(
             [
@@ -58,14 +54,14 @@ def get_duration(filename):
 
 
 # converts milliseconds to minutes and hours
-def convert_millis(millis):
+def convert_millis(millis) -> str:
     minutes = (millis / (1000 * 60)) % 60
     hours = (millis / (1000 * 60 * 60)) % 24
     return "%dh %dm" % (hours, minutes)
 
 
 # check if files were skipped
-def completeness_check(path, infos_path):
+def completeness_check(path, infos_path) -> None:
     name_list = []
     shows_list = [x for x in os.listdir(path)]
 
@@ -79,7 +75,8 @@ def completeness_check(path, infos_path):
             print(f"{i} not in your list!")
 
 
-def get_language(filename):
+# returns the audio language of the given file
+def get_language(filename) -> list:
     audio_info = subprocess.check_output(
         ["ffprobe", "-loglevel", "0", "-show_streams", "-select_streams", "a", filename]).decode()
     langs = re.findall(r"(?<=language=).*(?=\n)", audio_info)
@@ -87,11 +84,28 @@ def get_language(filename):
     return [lang.rstrip("\r") for lang in langs]
 
 
+# checks if database exists
 def check_database_ex(path) -> bool:
     return os.path.isfile(path)
 
 
-def convert_country(alpha):
-    if alpha != "und":
-        return pycountry.countries.get(alpha_2=alpha).name
-    return 'Undefined'
+# convert ISO 639-2 into normal names
+def convert_country(alpha: str) -> str:
+    alpha = alpha.split(";")
+    langs = []
+    if alpha[0] != "und":
+        for al in alpha:
+            if len(al) == 2:
+                langs.append(pycountry.languages.get(alpha_2=al).name)
+                break
+            langs.append(pycountry.languages.get(alpha_3=al).name)
+        return ";".join(langs)
+    return "Undefined"
+
+
+# for database pretty print
+def cut_movie_name(name):
+    if len(name) >= 50:
+        return name[:47] + "..."
+    else:
+        return name

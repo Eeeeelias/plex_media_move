@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlite3 import Error
 from typing import List
 
-from mediainfolib import convert_millis, convert_country
+from mediainfolib import convert_millis, convert_country, cut_movie_name
 
 
 def create_connection(db_file):
@@ -16,7 +16,7 @@ def create_connection(db_file):
     return conn
 
 
-def create_table(conn, sql_table):
+def create_table(conn, sql_table) -> bool:
     try:
         curse = conn.cursor()
         curse.execute(sql_table)
@@ -26,7 +26,7 @@ def create_table(conn, sql_table):
     return 1
 
 
-def add_to_db(conn, type, media):
+def add_to_db(conn, type, media) -> tuple:
     if type == "show":
         sql = """INSERT INTO shows(id, name, seasons, episodes, runtime, size, modified)
                  VALUES(?,?,?,?,?,?,?)"""
@@ -39,7 +39,7 @@ def add_to_db(conn, type, media):
     return curse.lastrowid
 
 
-def create_database(db_path, info_shows: List[tuple], info_movies: List[tuple]):
+def create_database(db_path, info_shows: List[tuple], info_movies: List[tuple]) -> None:
     if not os.path.exists(db_path):
         open(db_path, 'a').close()
     sql_create_shows = """ CREATE TABLE IF NOT EXISTS shows (
@@ -87,21 +87,33 @@ def update_database(additions: List):
     pass
 
 
-def get_item(id, db_path):
+def add_minus():
+    return "-"
+
+
+def get_item(search, db_path) -> None:
+    sql = f"SELECT * FROM movies WHERE name like '%{search}%' ORDER BY name"
     conn = create_connection(db_path)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM movies WHERE id=?", (id,))
+    cur.execute(sql)
     rows = cur.fetchall()
+    # aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    print("".join([add_minus() for i in range(146)]))
+    print(
+        "| ID  | Name{:47}| Year | Language{:7} | Version    | Runtime | Size     | Added{:12} | Type |".format("", "" ,""))
+    print("".join([add_minus() for i in range(146)]))
     for row in rows:
-        print(f"""
-======= MOVIE =======
-id: {row[0]}
-name: {row[1]}
-year: {row[2]}
-language: {convert_country(row[3])}
-version: {row[4]}
-runtime: {convert_millis(row[5])}
-size: {round(row[6] / (1024 ** 3), 2)} GB
-modified: {datetime.fromtimestamp(row[7]).strftime('%Y-%m-%d, %H:%M')}
-type: {row[8]}
-        """)
+        print("| {0:3} | {1:50} | {2} | {3:15} | {4:10} | {5:6}  | {6:5} GB | {7} | {8}  |".format(row[0],
+                                                                                               cut_movie_name(row[1]),
+                                                                                               row[2],
+                                                                                               convert_country(row[3]),
+                                                                                               row[4],
+                                                                                               convert_millis(row[5]),
+                                                                                               round(
+                                                                                                   row[6] / (1024 ** 3),
+                                                                                                   2),
+                                                                                               datetime.fromtimestamp(
+                                                                                                   row[7]).strftime(
+                                                                                                   '%Y-%m-%d, %H:%M'),
+                                                                                               row[8]))
+    print("".join([add_minus() for i in range(146)]))
