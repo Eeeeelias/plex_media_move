@@ -3,21 +3,11 @@ import glob
 import os
 import re
 import shutil
-import subprocess
-import sys
 import time
 from sys import platform
+from mediainfolib import create_database, check_database_ex
+from prompt_toolkit import prompt, HTML, print_formatted_text
 
-
-def install(package):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-
-
-try:
-    from prompt_toolkit import HTML, print_formatted_text, prompt
-    from prompt_toolkit.completion import PathCompleter
-except ModuleNotFoundError:
-    install("prompt-toolkit")
 
 # This script renames, organizes and moves your downloaded media files
 # If you find bugs/issues or have feature requests send me a message
@@ -38,35 +28,38 @@ except ModuleNotFoundError:
 # https://support.plex.tv/articles/naming-and-organizing-your-movie-media-files/
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "-a",
-    dest="audials",
-    action="store_true",
-    help="if your orig_path is an audials folder use this " "option",
-)
-parser.add_argument(
-    "-o",
-    dest="overwrite",
-    action="store_true",
-    help="define behaviour when file already exists. If"
-    " this is set, files will be overwritten. "
-    "Otherwise, a numbered version will be moved",
-)
-parser.add_argument("--op", dest="orig_path", help="path to the downloaded videos")
-parser.add_argument("--dp", dest="dest_path", help="path to the destination")
-parser.add_argument(
-    "--sv",
-    dest="special",
-    nargs="*",
-    help="special info about a certain show; example: Your "
-    "episode (i.e. Better call saul) is named Better call "
-    "Saul Episode 20 but you want to mark it season 2. "
-    "Then you can write --sv Saul;2 [just one identifier "
-    "is fine, using spaces will break it] to make the script "
-    "aware that it's season two. You can add "
-    "as many of those as you want",
-)
+def make_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-a",
+        dest="audials",
+        action="store_true",
+        help="if your orig_path is an audials folder use this " "option",
+    )
+    parser.add_argument(
+        "-o",
+        dest="overwrite",
+        action="store_true",
+        help="define behaviour when file already exists. If"
+             " this is set, files will be overwritten. "
+             "Otherwise, a numbered version will be moved",
+    )
+    parser.add_argument("--op", dest="orig_path", help="path to the downloaded videos")
+    parser.add_argument("--dp", dest="dest_path", help="path to the destination")
+    parser.add_argument(
+        "--sv",
+        dest="special",
+        nargs="*",
+        help="special info about a certain show; example: Your "
+             "episode (i.e. Better call saul) is named Better call "
+             "Saul Episode 20 but you want to mark it season 2. "
+             "Then you can write --sv Saul;2 [just one identifier "
+             "is fine, using spaces will break it] to make the script "
+             "aware that it's season two. You can add "
+             "as many of those as you want",
+    )
+    return parser
+
 
 strings_to_match = {
     "2nd Season ": "s02",
@@ -97,13 +90,13 @@ def file_ex_check(new_file, overwrite=False):
         print_formatted_text(HTML("<ansired>[w] File already exists!</ansired>"))
         ext = re.search(r"(\.mp4)|(\.mkv)", new_file).group()
         if (
-            overwrite
-            or prompt(
-                HTML(
-                    "<ansiblue>[a] Do you want to overwrite the file? [yN]: </ansiblue>"
-                )
+                overwrite
+                or prompt(
+            HTML(
+                "<ansiblue>[a] Do you want to overwrite the file? [yN]: </ansiblue>"
             )
-            == "y"
+        )
+                == "y"
         ):
             return 0
         i = 2
@@ -209,7 +202,7 @@ def show_checker(path):
             print_formatted_text(
                 HTML(
                     '<ansired>[w] Video with name "{}" unusually small: {} MB</ansired>'.format(
-                        video.split(seperator)[-1], round(vid_size / (1024**2))
+                        video.split(seperator)[-1], round(vid_size / (1024 ** 2))
                     )
                 )
             )
@@ -282,8 +275,8 @@ def move_files(video_paths, video_titles_new, plex_path):
             # If the movie is a specific version of that movie, make a new folder and put the movie in there
             # as other versions of that movie might get added
             if (
-                re.search(r"(?<=\(\d{4}\)) -.*(?=(.mp4)|(.mkv))", video_title)
-                is not None
+                    re.search(r"(?<=\(\d{4}\)) -.*(?=(.mp4)|(.mkv))", video_title)
+                    is not None
             ):
                 if args.overwrite:
                     print_formatted_text("[i] Overwriting existing version of movie")
@@ -365,13 +358,13 @@ def trash_video(path):
 
 if __name__ == "__main__":
     try:
+        parser = make_parser()
         args = parser.parse_args()
         orig_path = args.orig_path.rstrip(seperator)
         plex_path = args.dest_path.rstrip(seperator)
         special = args.special
         if special is None:
             special = []
-
         if args.audials:
             paths = [
                 orig_path,
@@ -384,6 +377,9 @@ if __name__ == "__main__":
                 for p in glob.glob(orig_path + "/**/", recursive=True)
                 if not os.path.isfile(p + "/.ignore")
             ]
+        if not check_database_ex("$PWD/media_database.db"):
+            print_formatted_text("[i] Database not found! Creating...")
+            pass
 
         trash_video(orig_path + "/Audials/Audials Other Videos")
         for path in paths:

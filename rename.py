@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 from sys import argv
 
-shift = True
+shift = False
 # change this num_shift param to specify with what number to start
 num_shift = 13
 offset = -1
@@ -13,7 +13,7 @@ offset = -1
 def shift_numbers(file, off, start=1):
     dirname, name = os.path.split(file)
     print(name)
-    episode_nr = re.findall(r"\d+", name)[1]
+    episode_nr = re.search(r"(?<=[eE])\d+", name).group()
     episode_nr_int = int(episode_nr)
     if off == -1:
         off = episode_nr_int - start

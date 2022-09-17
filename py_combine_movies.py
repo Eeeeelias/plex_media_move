@@ -7,6 +7,7 @@ import subprocess
 import sys
 import time
 from sys import platform
+from mediainfolib import check_ffmpeg, get_duration
 
 
 def install(package):
@@ -58,23 +59,6 @@ if platform == "win32":
     seperator = "\\"
 else:
     seperator = "/"
-
-
-def check_ffmpeg():
-    try:
-        status, _ = subprocess.getstatusoutput("ffmpeg -version")
-        if status == 0:
-            return True
-        print_formatted_text(
-            "[w] You don't have ffmpeg installed! Make sure it is installed and on your $PATH.\n"
-            "[w] On Windows, you can install ffmpeg using: choco install ffmpeg\n"
-            "[w] On Linux (with apt), type:                sudo apt install ffmpeg\n"
-            "[w] Visit https://ffmpeg.org/ for more information!",
-            "red",
-        )
-        return False
-    except Exception:
-        print("There was an error with ffmpeg checking, please try again.")
 
 
 def interactive():
@@ -180,24 +164,6 @@ def get_prev(path):
         vals["dst"],
         vals["off"],
     )
-
-
-def get_duration(filename):
-    result = subprocess.run(
-        [
-            "ffprobe",
-            "-v",
-            "error",
-            "-show_entries",
-            "format=duration",
-            "-of",
-            "default=noprint_wrappers=1:nokey=1",
-            filename,
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
-    return round(float(result.stdout) * 1000)
 
 
 def delete_movies(movie_en, movie_de):
