@@ -3,7 +3,7 @@ import subprocess
 import sys
 import os
 import csv
-
+import pycountry
 
 def install(package):
     subprocess.check_call([sys.executable, "-m", "pip", "install", package])
@@ -36,21 +36,25 @@ def check_ffmpeg():
 
 # returns the duration of a video file in milliseconds
 def get_duration(filename):
-    result = subprocess.run(
-        [
-            "ffprobe",
-            "-v",
-            "error",
-            "-show_entries",
-            "format=duration",
-            "-of",
-            "default=noprint_wrappers=1:nokey=1",
-            filename,
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
-    return round(float(result.stdout) * 1000)
+    try:
+        result = subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                filename,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        duration = round(float(result.stdout) * 1000)
+    except ValueError:
+        return 0
+    return duration
 
 
 # converts milliseconds to minutes and hours
@@ -60,6 +64,7 @@ def convert_millis(millis):
     return "%dh %dm" % (hours, minutes)
 
 
+# check if files were skipped
 def completeness_check(path, infos_path):
     name_list = []
     shows_list = [x for x in os.listdir(path)]
@@ -82,9 +87,11 @@ def get_language(filename):
     return [lang.rstrip("\r") for lang in langs]
 
 
-def create_database(info_shows="", info_movies=""):
-    pass
-
-
-def check_database_ex(path):
+def check_database_ex(path) -> bool:
     return os.path.isfile(path)
+
+
+def convert_country(alpha):
+    if alpha != "und":
+        return pycountry.countries.get(alpha_2=alpha).name
+    return 'Undefined'

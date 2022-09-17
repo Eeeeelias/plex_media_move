@@ -5,9 +5,10 @@ import re
 import shutil
 import time
 from sys import platform
-from mediainfolib import create_database, check_database_ex
+import manage_db
+import fetch_show_infos
+from mediainfolib import check_database_ex
 from prompt_toolkit import prompt, HTML, print_formatted_text
-
 
 # This script renames, organizes and moves your downloaded media files
 # If you find bugs/issues or have feature requests send me a message
@@ -26,6 +27,30 @@ from prompt_toolkit import prompt, HTML, print_formatted_text
 # To read about that go here:
 # https://support.plex.tv/articles/naming-and-organizing-your-tv-show-files/
 # https://support.plex.tv/articles/naming-and-organizing-your-movie-media-files/
+
+
+# when I did this I did not know that pathlib existed. Now I do.
+# windows/linux diffs
+if platform == "win32":
+    seperator = "\\"
+    env = "LOCALAPPDATA"
+    folder = "pmm"
+else:
+    seperator = "/"
+    env = "HOME"
+    folder = ".pmm"
+
+data_path = os.getenv(env) + seperator + folder
+if not os.path.exists(data_path):
+    os.mkdir(data_path)
+
+strings_to_match = {
+    "2nd Season ": "s02",
+    "Season 2 ": "s02",
+    "S2 ": "s02",
+    "3 Episode ": "s03e0",
+    "Episode ": "e0",
+}
 
 
 def make_parser():
@@ -59,22 +84,6 @@ def make_parser():
              "as many of those as you want",
     )
     return parser
-
-
-strings_to_match = {
-    "2nd Season ": "s02",
-    "Season 2 ": "s02",
-    "S2 ": "s02",
-    "3 Episode ": "s03e0",
-    "Episode ": "e0",
-}
-
-# when I did this I did not know that pathlib existed. Now I do.
-# set path\\file seperator, thanks windows
-if platform == "win32":
-    seperator = "\\"
-else:
-    seperator = "/"
 
 
 def special_info(info):
@@ -362,9 +371,7 @@ if __name__ == "__main__":
         args = parser.parse_args()
         orig_path = args.orig_path.rstrip(seperator)
         plex_path = args.dest_path.rstrip(seperator)
-        special = args.special
-        if special is None:
-            special = []
+        special = [] if args.special is None else args.special
         if args.audials:
             paths = [
                 orig_path,
@@ -377,9 +384,11 @@ if __name__ == "__main__":
                 for p in glob.glob(orig_path + "/**/", recursive=True)
                 if not os.path.isfile(p + "/.ignore")
             ]
-        if not check_database_ex("$PWD/media_database.db"):
+        db_path = data_path + f"{seperator}media_database.db"
+        if not check_database_ex(db_path):
             print_formatted_text("[i] Database not found! Creating...")
-            pass
+            info_shows, info_movies = fetch_show_infos.fetch_all(plex_path)
+            manage_db.create_database(db_path, info_shows, info_movies)
 
         trash_video(orig_path + "/Audials/Audials Other Videos")
         for path in paths:
@@ -389,8 +398,7 @@ if __name__ == "__main__":
         print_formatted_text("[i] Everything done!")
     except FileNotFoundError:
         print_formatted_text(
-            "<ansired>[w] Please make sure your paths are written correctly! Remove trailing \\ if you added "
-            "them.</ansired>",
+            "<ansired>[w] Please make sure your paths are written correctly! Couldn't find files</ansired>",
         )
         exit(1)
     except TypeError:
@@ -400,3 +408,5 @@ if __name__ == "__main__":
             " if that doesn't help! </ansired>"
         )
         exit(1)
+    except AttributeError:
+        print_formatted_text("<ansired>[w] Make sure you put in the proper arguments! </ansired>")

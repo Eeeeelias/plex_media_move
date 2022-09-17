@@ -1,6 +1,8 @@
 import csv
 import glob
 import os
+from pathlib import Path
+import manage_db
 
 def sum_files(file_list):
     sum = 0
@@ -8,6 +10,6 @@ def sum_files(file_list):
         sum += file['show_size']
     return sum
 
+db_path = os.getenv('LOCALAPPDATA') + "\\pmm\\media_database.db"
 
-if __name__ == '__main__':
-    sum_files(glob.glob("P:\\script_testing\\TV Shows\\*.mp4"))
+manage_db.get_item(4, db_path)

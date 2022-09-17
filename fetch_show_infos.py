@@ -14,7 +14,7 @@ else:
     sep = "/"
 
 
-def get_show_infos(plex_path: AnyStr):
+def get_show_infos(plex_path: AnyStr) -> List[tuple]:
     drop = 'TV Shows'
 
     show_infos = []
@@ -43,9 +43,8 @@ def get_show_infos(plex_path: AnyStr):
             last_modified = os.path.getmtime(media) if last_modified < os.path.getmtime(media) else last_modified
             runtime += get_duration(media)
             continue
-        show_infos.append(
-            {"show_nr": show_nr, "show_name": show, "seasons": seasons, "episodes": episodes, "runtime": runtime, "show_size": size,
-             "last_modified": last_modified})
+        show_infos.append((show_nr, show, seasons, episodes, runtime, size, last_modified))
+        last_modified = 0
         print(f"Show: {parts[0]}")
         show_nr += 1
         show = parts[0]
@@ -54,14 +53,11 @@ def get_show_infos(plex_path: AnyStr):
         last_modified = os.path.getmtime(media) if last_modified < os.path.getmtime(media) else last_modified
         size = os.path.getsize(media)
         runtime = get_duration(media)
-    show_infos.append(
-        {"show_nr": show_nr, "show_name": show, "seasons": seasons, "episodes": episodes, "runtime": runtime, "show_size": size,
-         "last_modified": last_modified})
-
+    show_infos.append((show_nr, show, seasons, episodes, runtime, size, last_modified))
     return show_infos
 
 
-def get_movie_infos(plex_path: AnyStr):
+def get_movie_infos(plex_path: AnyStr) -> List[tuple]:
     movie_infos = []
     movie_nr = 1
     movie_name = ""
@@ -80,22 +76,26 @@ def get_movie_infos(plex_path: AnyStr):
         try:
             version = re.search(r"(?<=\(\d{4}\) - ).*(?=(.mp4)|(.mkv))", filename).group()
         except AttributeError:
-            pass
-        language = get_language(media)
+            version = "unique"
+        language = ";".join(get_language(media))
+        runtime = get_duration(media)
         size = os.path.getsize(media)
         last_modified = os.path.getmtime(media)
         file_type = re.search(r"(?<=\.).+", filename).group()
-        movie_infos.append(
-            {"movie_nr": movie_nr, "movie_name": movie_name, "year": year,"language": language, "version": version, "size": size,
-             "last_modified": last_modified, "file_type": file_type})
+        movie_infos.append((movie_nr, movie_name, year, language, version, runtime, size, last_modified, file_type))
         movie_nr += 1
     return movie_infos
 
 
+# possibly borked
 def write_to_csv(show_infos: List, filename="show_infos"):
+    filename = filename.rstrip('.csv')
     with open(filename + '.csv', 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(['Number', 'Name', 'Seasons', 'Episodes', 'Show size'])
+        head = ['Number', 'Name', 'Seasons', 'Episodes', 'Runtime', 'Size', 'Last Updated']
+        if filename != "show_infos":
+            head = ['Number', 'Name', 'Year', 'Language', 'Version', 'Size', 'Last Updated', 'Filetype']
+        csvwriter.writerow(head)
         for show in show_infos:
             csvwriter.writerow(show.values())
 
@@ -103,25 +103,26 @@ def write_to_csv(show_infos: List, filename="show_infos"):
 def print_show_infos(show_infos: List):
     for show in show_infos:
         print(f"===== SHOW ======")
-        print(f"Name: {show['show_name']}")
-        print(f"Seasons: {show['seasons']}")
-        print(f"Episodes: {show['episodes']}")
-        print(f"Runtime: {convert_millis(show['runtime'])}")
-        print(f"Last modified: {datetime.datetime.fromtimestamp(show['last_modified']).strftime('%Y-%m-%d, %H:%M')}")
-        print(f"Show size: {round(show['show_size'] / (1024 ** 3), 2)} GB\n")
+        print(f"Name: {show(1)}")
+        print(f"Seasons: {show(2)}")
+        print(f"Episodes: {show(3)}")
+        print(f"Runtime: {convert_millis(show(4))}")
+        print(f"Last modified: {datetime.datetime.fromtimestamp(show(6)).strftime('%Y-%m-%d, %H:%M')}")
+        print(f"Show size: {round(show(5) / (1024 ** 3), 2)} GB\n")
     return
 
 
 def print_movie_infos(movie_infos: List):
     for movie in movie_infos:
         print(f"===== MOVIE ======")
-        print(f"Name: {movie['movie_name']}")
-        print(f"Year: {movie['year']}")
-        print(f"Language: {movie['language']}")
-        print(f"Version: {movie['version']}")
-        print(f"Last modified: {datetime.datetime.fromtimestamp(movie['last_modified']).strftime('%Y-%m-%d, %H:%M')}")
-        print(f"Movie size: {round(movie['size'] / (1024 ** 3), 2)} GB")
-        print(f"File type: {movie['file_type']}\n")
+        print(f"Name: {movie(1)}")
+        print(f"Year: {movie(2)}")
+        print(f"Language: {movie(3)}")
+        print(f"Version: {movie(4)}")
+        print(f"Runtime: {convert_millis(movie(5))}")
+        print(f"Last modified: {datetime.datetime.fromtimestamp(movie(7)).strftime('%Y-%m-%d, %H:%M')}")
+        print(f"Movie size: {round(movie(6) / (1024 ** 3), 2)} GB")
+        print(f"File type: {movie(8)}\n")
 
 
 def fetch_all(overall_path):
@@ -134,11 +135,7 @@ def fetch_all(overall_path):
 
 
 if __name__ == '__main__':
-    # P:\\Plex Shows
-    # P:\\script_testing
-    # info_shows, info_movies = fetch_all("P:\\Plex Shows")
-    info_movies = get_movie_infos("P:\\Plex Shows\\Movies")
-    # write_to_csv(info_movies, filename='movie_infos')
-    print_movie_infos(info_movies)
-    # print(f"Total size: {round(playground.sum_files(info_movies) / (1024 ** 3), 2)} GB")
-    # write_to_csv(info)
+    info_shows, info_movies = fetch_all("P:\\Plex Shows")
+    write_to_csv(info_shows)
+    write_to_csv(info_movies, filename='movie_infos')
+
