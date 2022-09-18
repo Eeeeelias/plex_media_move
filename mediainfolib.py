@@ -67,7 +67,7 @@ def get_duration(filename) -> int:
 # converts milliseconds to minutes and hours
 def convert_millis(millis) -> str:
     minutes = (millis / (1000 * 60)) % 60
-    hours = (millis / (1000 * 60 * 60)) % 24
+    hours = (millis / (1000 * 60 * 60))
     return "%dh %dm" % (hours, minutes)
 
 
@@ -105,12 +105,15 @@ def convert_country(alpha: str) -> str:
     alpha = alpha.split(";")
     langs = []
     if alpha[0] != "und":
-        for al in alpha:
-            if len(al) == 2:
-                langs.append(pycountry.languages.get(alpha_2=al).name)
-                break
-            langs.append(pycountry.languages.get(alpha_3=al).name)
-        return ";".join(langs)
+        try:
+            for al in alpha:
+                if len(al) == 2:
+                    langs.append(pycountry.languages.get(alpha_2=al).name)
+                    break
+                langs.append(pycountry.languages.get(alpha_3=al).name)
+                return ";".join(langs)
+        except AttributeError:
+            return "Undefined"
     return "Undefined"
 
 

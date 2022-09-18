@@ -224,18 +224,11 @@ def print_movies(rows: List[tuple]) -> None:
     print("".join([add_minus() for i in range(146)]))
     for row in rows:
         print("| {0:3} | {1:50} | {2} | {3:15} | {4:10} | {5:6}  | {6:5} GB | {7} | {8}  |".format(row[0],
-                                                                                                   cut_name(
-                                                                                                       row[1]),
+                                                                                                   cut_name(row[1]),
                                                                                                    row[2],
-                                                                                                   convert_country(
-                                                                                                       row[3]),
-                                                                                                   row[4],
-                                                                                                   convert_millis(
-                                                                                                       row[5]),
-                                                                                                   round(
-                                                                                                       row[6] / (
-                                                                                                               1024 ** 3),
-                                                                                                       2),
+                                                                                                   convert_country(row[3]),
+                                                                                                   row[4], convert_millis(row[5]),
+                                                                                                   round(row[6] / (1024 ** 3),2),
                                                                                                    datetime.fromtimestamp(
                                                                                                        row[7]).strftime(
                                                                                                        '%Y-%m-%d, %H:%M'),
