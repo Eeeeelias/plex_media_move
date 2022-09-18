@@ -10,6 +10,7 @@ from mediainfolib import convert_millis, convert_country, cut_name, convert_size
 
 def create_connection(db_file) -> sqlite3.Connection:
     conn = None
+    print(f"[i] Opening: {db_file}")
     try:
         conn = sqlite3.connect(db_file)
     except Error as e:
