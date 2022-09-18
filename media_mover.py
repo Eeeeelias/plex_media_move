@@ -232,6 +232,20 @@ def show_checker(path):
     return cleaned_video_paths
 
 
+def get_movie_year(filename):
+    filename_with_year = filename
+    filename_split = os.path.splitext(filename)
+    if re.search(r"\(\d{4}\)", filename_split[0]) is None:
+        year = prompt(HTML('<ansiblue>[a] This movie appears to not have a proper year! Please specify the year the '
+                           'movie came out: </ansiblue>'))
+        if re.search(r"\d{4}", year) is None:
+            year = 1900
+        # get rid of () in case Audials adds it (i.e. when it cant find the year for a movie)
+        filename_clear = re.sub(r" \(\)", "", filename_split[0])
+        filename_with_year = filename_clear + f" ({year})" + filename_split[1]
+    return filename_with_year
+
+
 def rename_files(path, special):
     video_paths = glob.glob(path + "/*.mp4") + glob.glob(path + "/*.mkv")
     video_titles_new = []
@@ -261,7 +275,8 @@ def rename_files(path, special):
             title = title.replace("e0", "s01e0").replace("E0", "s01e0")
             video_titles_new.append(title)
         else:
-            video_titles_new.append(title)
+            title_with_year = get_movie_year(title)
+            video_titles_new.append(title_with_year)
     print_formatted_text("\n")
     return clean_paths, video_titles_new
 
@@ -396,6 +411,7 @@ if __name__ == "__main__":
                 if not os.path.isfile(p + "/.ignore")
             ]
         db_path = data_path + f"{seperator}media_database.db"
+        print(f"[i] Opening: {db_path}")
         if not check_database_ex(db_path):
             print_formatted_text("[i] Database not found! Creating...")
             info_shows, info_movies = fetch_infos.fetch_all(plex_path)
@@ -409,16 +425,17 @@ if __name__ == "__main__":
 
         print_formatted_text("[i] Everything done!")
     except FileNotFoundError:
-        print_formatted_text(
-            "<ansired>[w] Please make sure your paths are written correctly! Couldn't find files</ansired>",
+        print_formatted_text(HTML(
+            "<ansired>[w] Please make sure your paths are written correctly! Couldn't find files</ansired>")
         )
         exit(1)
     except TypeError as e:
-        print_formatted_text(
+        print_formatted_text(HTML(
             "<ansired>[w] There was an error with some of the values you put in! Please double-check those and send "
             "me a message "
-            " if that doesn't help! </ansired>"
+            " if that doesn't help! </ansired>")
         )
         exit(1)
-    except AttributeError:
-        print_formatted_text("<ansired>[w] Make sure you put in the proper arguments! </ansired>")
+    except AttributeError as e:
+        print(e)
+        print_formatted_text(HTML("<ansired>[w] Make sure you put in the proper arguments! </ansired>"))

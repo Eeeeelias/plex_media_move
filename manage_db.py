@@ -10,7 +10,6 @@ from mediainfolib import convert_millis, convert_country, cut_name, convert_size
 
 def create_connection(db_file) -> sqlite3.Connection:
     conn = None
-    print(f"[i] Opening: {db_file}")
     try:
         conn = sqlite3.connect(db_file)
     except Error as e:
@@ -211,6 +210,12 @@ def get_newest(type: str, search: float, db_path: str):
         cur.execute(sql_movie)
     elif type == "shows":
         cur.execute(sql_show)
+    return cur.fetchall()
+
+
+def get_specific(db_path: str, sql: str):
+    cur = create_connection(db_path).cursor()
+    cur.execute(sql)
     return cur.fetchall()
 
 
