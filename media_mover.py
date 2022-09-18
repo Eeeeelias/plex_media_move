@@ -275,7 +275,9 @@ def rename_files(path, special):
             title = title.replace("e0", "s01e0").replace("E0", "s01e0")
             video_titles_new.append(title)
         else:
-            title_with_year = get_movie_year(title)
+            title_with_year = title
+            if re.search(r"[sS]\d+[eE]\d+", title) is None:
+                title_with_year = get_movie_year(title)
             video_titles_new.append(title_with_year)
     print_formatted_text("\n")
     return clean_paths, video_titles_new
