@@ -4,8 +4,8 @@ from datetime import datetime
 from sqlite3 import Error
 from typing import List
 
-import fetch_show_infos
-from mediainfolib import convert_millis, convert_country, cut_name, seperator, convert_size
+import fetch_infos
+from mediainfolib import convert_millis, convert_country, cut_name, convert_size
 
 
 def create_connection(db_file) -> sqlite3.Connection:
@@ -76,10 +76,10 @@ def create_database(db_path, info_shows: List[tuple], info_movies: List[tuple]) 
         print("[i] There was an error!")
     for show in info_shows:
         last_show_id = add_to_db(connection, "show", show)
-        print(f"[i] Show {show[1]} added!")
+        # print(f"[i] Show {show[1]} added!")
     for movie in info_movies:
         last_movie_id = add_to_db(connection, "movie", movie)
-        print(f"[i] Movie {movie[1]} added!")
+        # print(f"[i] Movie {movie[1]} added!")
     print(f"[i] {last_show_id} Shows now in the database!")
     print(f"[i] {last_movie_id} Movies now in the database!")
 
@@ -91,7 +91,7 @@ def update_database(additions: set[str], db) -> None:
     sho_new_cha = float('inf')
     for added in additions:
         if f"Movies" in added:
-            info = fetch_show_infos.get_movie_infos(added, nr=get_max_id("movies", cur)[0])[0]
+            info = fetch_infos.get_movie_infos(added, nr=get_max_id("movies", cur)[0] + 1)[0]
             mov_new_cha = info[7] if mov_new_cha > info[7] else mov_new_cha
             pos_ex = check_entry_ex("movies", cur, info)
             if pos_ex is not None:
@@ -102,7 +102,7 @@ def update_database(additions: set[str], db) -> None:
                 continue
             add_sql("movies", cur, info)
         else:
-            info = fetch_show_infos.get_show_infos(added, nr=get_max_id("shows", cur)[0])[0]
+            info = fetch_infos.get_show_infos(added, nr=get_max_id("shows", cur)[0] + 1)[0]
             sho_new_cha = info[6] if sho_new_cha > info[6] else sho_new_cha
 
             pos_ex = check_entry_ex("shows", cur, info)
@@ -140,7 +140,7 @@ def check_entry_ex(type: str, cursor: sqlite3.Cursor, info: tuple):
     if type == "movies":
         possible_ex = cursor.execute(f"SELECT * FROM movies WHERE name='{info[1]}' AND version='{info[4]}'").fetchone()
     elif type == "shows":
-        possible_ex = cursor.execute(f"SELECT * FROM movies WHERE name='{info[1]}'").fetchone()
+        possible_ex = cursor.execute(f"SELECT * FROM shows WHERE name='{info[1]}'").fetchone()
     if possible_ex is not None:
         print("[i] Entry already found, updating existing")
         return possible_ex[0]

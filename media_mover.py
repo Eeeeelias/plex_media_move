@@ -6,7 +6,7 @@ import shutil
 import time
 from sys import platform
 import manage_db
-import fetch_show_infos
+import fetch_infos
 from mediainfolib import check_database_ex
 from prompt_toolkit import prompt, HTML, print_formatted_text
 
@@ -338,7 +338,7 @@ def move_files(video_paths, video_titles_new, plex_path) -> set[str]:
         season = re.search(r"\d+(?=[eE]\d{1,4})", video_title).group()
         show_path = plex_path + "/TV Shows/" + show_name + "/Season {}/".format(season)
         # for db check
-        show_path_without_season = plex_path + "/TV Shows/" + show_name
+        show_path_without_season = plex_path + f"{seperator}TV Shows{seperator}" + show_name
 
         # make folder for show if it doesn't exist
         if not os.path.exists(plex_path + "/TV Shows/" + show_name):
@@ -392,13 +392,13 @@ if __name__ == "__main__":
         else:
             paths = [
                 p
-                for p in glob.glob(orig_path + "/**/", recursive=True)
+                for p in glob.glob(orig_path + f"/**/", recursive=True)
                 if not os.path.isfile(p + "/.ignore")
             ]
         db_path = data_path + f"{seperator}media_database.db"
         if not check_database_ex(db_path):
             print_formatted_text("[i] Database not found! Creating...")
-            info_shows, info_movies = fetch_show_infos.fetch_all(plex_path)
+            info_shows, info_movies = fetch_infos.fetch_all(plex_path)
             manage_db.create_database(db_path, info_shows, info_movies)
 
         trash_video(orig_path + "/Audials/Audials Other Videos")
