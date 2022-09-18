@@ -215,37 +215,42 @@ def get_newest(type: str, search: float, db_path: str):
 
 
 def print_movies(rows: List[tuple]) -> None:
-    # aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-    print("".join([add_minus() for i in range(146)]))
-    print(
-        "| ID  | Name{:47}| Year | Language{:7} | Version{:3} | Runtime | Size{:4} | Added{:12} | Type |".format("", "",
-                                                                                                                 "", "",
-                                                                                                                 ""))
-    print("".join([add_minus() for i in range(146)]))
+    stopper = "".join([add_minus() for i in range(146)])
+    head = "| ID  | Name{:47}| Year | Language{:7} | Version{:3} | Runtime | Size{:4} | Added{:12} | Type |"
+    empty_res = "| {:4}   {:50}   {:7}   {:8}   {:9}   {:17}   {:26}    |"
+    movie_row = "| {0:3} | {1:50} | {2} | {3:15} | {4:10} | {5:6}  | {6:5} GB | {7} | {8} |"
+    error_row = "| {0:3} | {1:50} | {2} | {3:15} | {4:10} | {5:6}  | {6:5} GB | {7} | {8} |"
+    print(stopper)
+    print(head.format("", "", "", "", ""))
+    print(stopper)
+    if len(rows) == 0:
+        print(empty_res.format("None", "", "", "", "", "", ""))
     for row in rows:
-        print("| {0:3} | {1:50} | {2} | {3:15} | {4:10} | {5:6}  | {6:5} GB | {7} | {8}  |".format(row[0],
-                                                                                                   cut_name(row[1]),
-                                                                                                   row[2],
-                                                                                                   convert_country(row[3]),
-                                                                                                   row[4], convert_millis(row[5]),
-                                                                                                   round(row[6] / (1024 ** 3),2),
-                                                                                                   datetime.fromtimestamp(
-                                                                                                       row[7]).strftime(
-                                                                                                       '%Y-%m-%d, %H:%M'),
-                                                                                                   row[8]))
-    print("".join([add_minus() for i in range(146)]))
+        try:
+            print(movie_row.format(row[0], cut_name(row[1]), row[2], convert_country(row[3]), row[4],
+                                   convert_millis(row[5]), round(row[6] / (1024 ** 3), 2),
+                                   datetime.fromtimestamp(row[7]).strftime('%Y-%m-%d, %H:%M'), row[8]))
+        except OSError:
+            print(error_row.format("N/A", "ERROR", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A"))
+    print(stopper)
 
 
 def print_shows(rows: List[tuple]) -> None:
-    # aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-    print("".join([add_minus() for i in range(125)]))
-    print(
-        "| ID  | Name{:47}| Seasons | Episodes | Runtime{:2} | Added{:12} | Size{:5} |".format("", "", "", ""))
-    print("".join([add_minus() for i in range(125)]))
+    stopper = "".join([add_minus() for i in range(125)])
+    head = "| ID  | Name{:47}| Seasons | Episodes | Runtime{:2} | Added{:12} | Size{:5} |"
+    empty_res = "| {:4}   {:50}   {:7}   {:8}   {:9}   {:17}   {:5}    |"
+    show_row = "| {0:3} | {1:50} | {2:7} | {3:8} | {4:9} | {5:17} | {6:6} GB |"
+    error_row = "| {:3} | {:50} | {:7} | {:8} | {:9} | {:17} | {:6} GB |"
+    print(stopper)
+    print(head.format("", "", "", ""))
+    print(stopper)
+    if len(rows) == 0:
+        print(empty_res.format("None", "", "", "", "", "", ""))
     for row in rows:
-        print("| {0:3} | {1:50} | {2:7} | {3:8} | {4:9} | {5} | {6:6} GB |".format(row[0], cut_name(row[1]), row[2],
-                                                                               row[3], convert_millis(row[4]),
-                                                                               datetime.fromtimestamp(row[6]).strftime(
-                                                                                   '%Y-%m-%d, %H:%M'),
-                                                                               convert_size(row[5])))
-    print("".join([add_minus() for i in range(125)]))
+        try:
+            print(show_row.format(row[0], cut_name(row[1]), row[2], row[3], convert_millis(row[4]),
+                                  datetime.fromtimestamp(row[6]).strftime('%Y-%m-%d, %H:%M'), convert_size(row[5])))
+        except OSError:
+            print(error_row.format("N/A", "ERROR", "N/A", "N/A", "N/A", "N/A", "N/A"))
+            continue
+    print(stopper)
