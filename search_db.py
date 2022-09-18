@@ -28,7 +28,8 @@ def search_other():
     while inp2 not in correct_vals:
         inp2 = prompt(HTML("<ansiblue>This is not a valid option!</ansiblue>\nOptions are: {}\n Your choice: ".format(
             ", ".join(correct_vals.keys())))).lower()
-    inp3 = prompt(HTML("<ansiblue>Now specify the value you're searching for: </ansiblue>")).lower()
+    inp3 = prompt(HTML("<ansiblue>Now specify the value you're searching for (for integer based values, you can do "
+                       "e.g. >4 to search for all entries with values greater than 4): </ansiblue>")).lower()
     inp4 = prompt(HTML("<ansiblue>What do you want to order by? Valid are the same values from above: </ansiblue>"))
     while inp4 not in correct_vals:
         inp4 = prompt(HTML("<ansiblue>This is not a valid option!\nOptions are: {} </ansiblue>".format(
