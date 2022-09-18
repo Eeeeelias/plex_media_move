@@ -6,33 +6,30 @@ import re
 from itertools import dropwhile
 from sys import platform
 from typing import AnyStr, List
-from mediainfolib import convert_millis, get_duration, check_ffmpeg, get_language
 
-if platform == "win32":
-    sep = "\\"
-else:
-    sep = "/"
+from mediainfolib import convert_millis, get_duration, check_ffmpeg, get_language, seperator
+
+sep = seperator
 
 
-def get_show_infos(plex_path: AnyStr) -> List[tuple]:
+def get_show_infos(plex_path: AnyStr, nr=1) -> List[tuple]:
     drop = 'TV Shows'
 
     show_infos = []
-    show_nr = 0
+    show_nr = nr
     show = ""
     seasons = 0
     episodes = 0
     size = 0.0
     last_modified = 0
     runtime = 0
-    for media in glob.glob(plex_path + f"{sep}**{sep}*.mp4", recursive=True) + \
-                 glob.glob(plex_path + f"{sep}**{sep}*.mkv", recursive=True):
+    for media in glob.glob(plex_path + f"{sep}**{sep}*.mp4", recursive=True) + glob.glob(
+            plex_path + f"{sep}**{sep}*.mkv", recursive=True):
         # parts gives [show, season, episode]
         parts = list(dropwhile(lambda x: x != drop, media.split(sep)))[1:]
         if show == "":
-            print(f"Show: {parts[0]}")
+            print(f"[i] Show: {parts[0]}")
             show = parts[0]
-            show_nr = 1
         if show == parts[0]:
             try:
                 seasons = int(re.search(r"\d+", parts[1]).group())
@@ -45,7 +42,7 @@ def get_show_infos(plex_path: AnyStr) -> List[tuple]:
             continue
         show_infos.append((show_nr, show, seasons, episodes, runtime, size, last_modified))
         last_modified = 0
-        print(f"Show: {parts[0]}")
+        print(f"[i] Show: {parts[0]}")
         show_nr += 1
         show = parts[0]
         seasons = 1
@@ -57,21 +54,26 @@ def get_show_infos(plex_path: AnyStr) -> List[tuple]:
     return show_infos
 
 
-def get_movie_infos(plex_path: AnyStr) -> List[tuple]:
+def get_movie_infos(plex_path: AnyStr, nr=1) -> List[tuple]:
     movie_infos = []
-    movie_nr = 1
+    movie_nr = nr
     movie_name = ""
     year = 0
     version = "unique"
-    for media in glob.glob(plex_path + f"{sep}**{sep}*.mp4", recursive=True) + \
-                 glob.glob(plex_path + f"{sep}**{sep}*.mkv", recursive=True):
+    # make it possible to check just a single media
+    if os.path.isfile(plex_path):
+        paths_to_check = [plex_path]
+    else:
+        paths_to_check = glob.glob(plex_path + f"{sep}**{sep}*.mp4", recursive=True) + glob.glob(
+            plex_path + f"{sep}**{sep}*.mkv", recursive=True)
+    for media in paths_to_check:
         filename = os.path.basename(media)
-        print(f"Movie: {os.path.splitext(filename)[0]}")
+        print(f"[i] Movie: {os.path.splitext(filename)[0]}")
         try:
             movie_name = re.search(r".+(?= \(\d{4}\))", filename).group()
             year = re.search(r"(?<=\()\d{4}(?=\))", filename).group()
         except AttributeError:
-            print(f"Movie {filename} not properly named! Make sure its in 'Movie name (Year) - Version.ext' format.")
+            print(f"[w] Movie {filename} not properly named! Make sure its in 'Movie name (Year) - Version.ext' format.")
             exit(1)
         try:
             version = re.search(r"(?<=\(\d{4}\) - ).*(?=(.mp4)|(.mkv))", filename).group()

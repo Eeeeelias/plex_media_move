@@ -272,7 +272,8 @@ def sorted_alphanumeric(data):
     return sorted(data, key=alphanum_key)
 
 
-def move_files(video_paths, video_titles_new, plex_path):
+def move_files(video_paths, video_titles_new, plex_path) -> set[str]:
+    moved_videos = set()
     for video_path, video_title in zip(video_paths, video_titles_new):
         print_formatted_text(
             "[i] Original title: {}".format(video_path.split(seperator)[-1])
@@ -289,18 +290,20 @@ def move_files(video_paths, video_titles_new, plex_path):
             ):
                 if args.overwrite:
                     print_formatted_text("[i] Overwriting existing version of movie")
-                    shutil.move(video_path, plex_path + "/Movies/" + video_title)
+                    new_path = plex_path + "/Movies/" + video_title
+                    shutil.move(video_path, new_path)
+                    moved_videos.add(new_path)
                     continue
                 if not os.path.exists(plex_path + "/Movies/" + movie_title):
                     os.makedirs(plex_path + "/Movies/" + movie_title)
                     print_formatted_text("[i] Made new folder: {}".format(movie_title))
-                # insert check for file existence here?
                 new_path = plex_path + "/Movies/" + movie_title + "/" + video_title
                 duplicate_num = file_ex_check(new_path, args.overwrite)
                 if duplicate_num != 0:
                     new_path = re.sub(ext, f"_{duplicate_num}" + ext, new_path)
                     time.sleep(2)
                 shutil.move(video_path, new_path)
+                moved_videos.add(new_path)
             else:
                 movie_paths = movie_checker(movie_title, plex_path + "/Movies", ext=ext)
 
@@ -311,17 +314,21 @@ def move_files(video_paths, video_titles_new, plex_path):
 
                 if len(movie_paths) == 1:
                     shutil.move(video_path, movie_paths[0])
+                    moved_videos.add(movie_paths[0])
                 elif len(movie_paths) == 2:
                     os.makedirs(plex_path + "/Movies/{}".format(movie_title))
                     shutil.move(
                         plex_path + "/Movies/{}".format(video_title), movie_paths[1]
                     )
+                    moved_videos.add(movie_paths[1])
                     print_formatted_text(
                         "[i] Moved (Movie): {}".format(movie_paths[1].split("/")[-1])
                     )
                     shutil.move(video_path, movie_paths[0])
+                    moved_videos.add(movie_paths[0])
                 else:
                     shutil.move(video_path, new_path)
+                    moved_videos.add(new_path)
             print_formatted_text(
                 "[i] Moved (Movie): {}".format(new_path.split("/")[-1])
             )
@@ -330,6 +337,8 @@ def move_files(video_paths, video_titles_new, plex_path):
         show_name = re.sub(" [sS][0-9]+[eE][0-9]+.*", "", string=video_title)
         season = re.search(r"\d+(?=[eE]\d{1,4})", video_title).group()
         show_path = plex_path + "/TV Shows/" + show_name + "/Season {}/".format(season)
+        # for db check
+        show_path_without_season = plex_path + "/TV Shows/" + show_name
 
         # make folder for show if it doesn't exist
         if not os.path.exists(plex_path + "/TV Shows/" + show_name):
@@ -353,7 +362,9 @@ def move_files(video_paths, video_titles_new, plex_path):
             video_title = re.sub(ext, "_{}".format(duplicate_num) + ext, video_title)
             time.sleep(2)
         shutil.move(video_path, show_path + video_title)
+        moved_videos.add(show_path_without_season)
         print_formatted_text("[i] Moved (TV-Show): {}".format(video_title))
+    return moved_videos
 
 
 def trash_video(path):
@@ -393,8 +404,8 @@ if __name__ == "__main__":
         trash_video(orig_path + "/Audials/Audials Other Videos")
         for path in paths:
             video_path_list, video_titles_renamed = rename_files(path, special)
-            move_files(video_path_list, video_titles_renamed, plex_path)
-            # make db updates here
+            moved_files = move_files(video_path_list, video_titles_renamed, plex_path)
+            manage_db.update_database(moved_files, db_path)
 
         print_formatted_text("[i] Everything done!")
     except FileNotFoundError:
@@ -402,7 +413,7 @@ if __name__ == "__main__":
             "<ansired>[w] Please make sure your paths are written correctly! Couldn't find files</ansired>",
         )
         exit(1)
-    except TypeError:
+    except TypeError as e:
         print_formatted_text(
             "<ansired>[w] There was an error with some of the values you put in! Please double-check those and send "
             "me a message "

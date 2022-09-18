@@ -3,6 +3,7 @@ import subprocess
 import sys
 import os
 import csv
+from sys import platform
 
 try:
     import pycountry
@@ -10,6 +11,16 @@ try:
     from prompt_toolkit.completion import PathCompleter
 except ModuleNotFoundError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "requirements.txt"])
+
+global seperator
+if platform == "win32":
+    seperator = "\\"
+    env = "LOCALAPPDATA"
+    folder = "pmm"
+else:
+    seperator = "/"
+    env = "HOME"
+    folder = ".pmm"
 
 
 # checks if ffmpeg is installed on the system
@@ -104,8 +115,12 @@ def convert_country(alpha: str) -> str:
 
 
 # for database pretty print
-def cut_movie_name(name):
+def cut_name(name):
     if len(name) >= 50:
         return name[:47] + "..."
     else:
         return name
+
+
+def convert_size(size):
+    return round(size / (1024 ** 3), 2)
