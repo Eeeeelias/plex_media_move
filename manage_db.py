@@ -119,7 +119,7 @@ def update_database(additions: set[str], db) -> None:
         print_movies(get_newest("movies", mov_new_cha, db))
     if sho_new_cha < float('inf'):
         print("[i] New/Changed shows in the database:\n")
-        print_shows(get_newest("shows", mov_new_cha, db))
+        print_shows(get_newest("shows", sho_new_cha, db))
     return
 
 
@@ -204,8 +204,8 @@ def get_shows(search: str, db_path: str, order='name', desc=True) -> list[tuple]
 
 def get_newest(type: str, search: float, db_path: str):
     cur = create_connection(db_path).cursor()
-    sql_show = f"SELECT * FROM shows WHERE modified = '{search}' ORDER BY modified"
-    sql_movie = f"SELECT * FROM movies WHERE modified = '{search}' ORDER BY modified"
+    sql_show = f"SELECT * FROM shows WHERE modified >= '{search}' ORDER BY modified"
+    sql_movie = f"SELECT * FROM movies WHERE modified >= '{search}' ORDER BY modified"
     if type == "movies":
         cur.execute(sql_movie)
     elif type == "shows":
