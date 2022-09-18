@@ -1,11 +1,4 @@
-import os
-from datetime import datetime
-
-import pycountry
-
-import fetch_infos
 import manage_db
-import sys
 from media_mover import data_path
 from mediainfolib import seperator, convert_millis
 

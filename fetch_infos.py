@@ -39,7 +39,6 @@ def get_show_infos(plex_path: AnyStr, nr=1) -> List[tuple]:
             size += os.path.getsize(media)
             last_modified = os.path.getmtime(media) if last_modified < os.path.getmtime(media) else last_modified
             runtime += get_duration(media)
-            print("runtime is: {}".format(runtime))
             continue
         show_infos.append((show_nr, show, seasons, episodes, runtime, size, last_modified))
         last_modified = 0
@@ -51,7 +50,6 @@ def get_show_infos(plex_path: AnyStr, nr=1) -> List[tuple]:
         last_modified = os.path.getmtime(media) if last_modified < os.path.getmtime(media) else last_modified
         size = os.path.getsize(media)
         runtime = get_duration(media)
-    print("runtime is: {}".format(runtime))
     show_infos.append((show_nr, show, seasons, episodes, runtime, size, last_modified))
     return show_infos
 
