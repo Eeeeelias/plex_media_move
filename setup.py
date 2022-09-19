@@ -1,12 +1,10 @@
 import json
 import os
-
+from mediainfolib import data_path, seperator
 from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
-
 import fetch_infos
 import manage_db
-from mediainfolib import data_path, seperator
 
 config_path = data_path + f"{seperator}config.json"
 

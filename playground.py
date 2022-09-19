@@ -1,7 +1,5 @@
 # just for testing I swear
-import glob
 import os
-
 import mediainfolib
 from mediainfolib import seperator, data_path
 import manage_db
@@ -27,4 +25,4 @@ print(len(special))
 data_path = conf['database']['db_path']
 db_path = data_path + f"{seperator}media_database.db"
 
-print(os.path.isfile(""))
+print(os.path.isdir("\\\\192.168.153.59\\Plex_files"))

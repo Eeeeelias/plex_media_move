@@ -7,7 +7,6 @@ import sys
 import time
 from sys import platform
 import manage_db
-import fetch_infos
 import mediainfolib
 from mediainfolib import check_database_ex, sorted_alphanumeric
 from prompt_toolkit import prompt, HTML, print_formatted_text
@@ -425,7 +424,6 @@ if __name__ == "__main__":
             video_path_list, video_titles_renamed = rename_files(path, special)
             moved_files = move_files(video_path_list, video_titles_renamed, plex_path, overwrite)
             if check_database_ex(db_path):
-                print_formatted_text("[i] Updating database")
                 manage_db.update_database(moved_files, db_path)
 
         print_formatted_text("[i] Everything done!")

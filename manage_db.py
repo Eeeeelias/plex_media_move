@@ -3,9 +3,8 @@ import sqlite3
 from datetime import datetime
 from sqlite3 import Error
 from typing import List
-
-import fetch_infos
 from mediainfolib import convert_millis, convert_country, cut_name, convert_size, add_minus
+import fetch_infos
 
 
 def create_connection(db_file) -> sqlite3.Connection:
@@ -116,10 +115,12 @@ def update_database(additions: set[str], db) -> None:
     conn.commit()
     if mov_new_cha < float('inf'):
         print("[i] New/Changed movies in the database:\n")
-        prettify_movies(get_newest("movies", mov_new_cha, db))
+        res = prettify_out("movies", get_newest("movies", mov_new_cha, db))
+        print(res)
     if sho_new_cha < float('inf'):
         print("[i] New/Changed shows in the database:\n")
-        prettify_shows(get_newest("shows", sho_new_cha, db))
+        res = prettify_out("shows", get_newest("shows", sho_new_cha, db))
+        print(res)
     return
 
 
