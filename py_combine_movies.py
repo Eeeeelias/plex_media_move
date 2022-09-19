@@ -117,7 +117,8 @@ def interactive():
     )
     print_formatted_text("[i] Almost done, just two more questions")
 
-    if conf['combiner']['default_out'] is None:
+    destination = ""
+    if conf['combiner']['default_out'] is None or conf['combiner']['ask_again']:
         destination = (
             prompt(
                 HTML("<ansiblue>[a] Where do you want your movie to be saved ([ENTER] to put it in $PWD):</ansiblue>"),
@@ -133,7 +134,7 @@ def interactive():
                         "correctly:</ansiblue>"),
                     completer=PathCompleter()).lstrip('"').rstrip('"')
             )
-    else:
+    if destination == "":
         destination = conf['combiner']['default_out']
 
     offset = prompt(

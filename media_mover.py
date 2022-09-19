@@ -250,7 +250,7 @@ def rename_files(path, special):
     if len(video_paths) < 1:
         return video_paths, video_titles_new
     clean_paths = show_checker(sorted_alphanumeric(video_paths))
-    video_titles = [title.split(seperator)[-1] for title in clean_paths]
+    video_titles = [os.path.basename(title) for title in clean_paths]
     extra_episode_info = special_info(special)
     print_formatted_text("\n[i] Origin path: {}".format(path))
 
@@ -285,7 +285,7 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
     moved_videos = set()
     for video_path, video_title in zip(video_paths, video_titles_new):
         print_formatted_text(
-            "[i] Original title: {}".format(video_path.split(seperator)[-1])
+            "[i] Original title: {}".format(os.path.basename(video_path))
         )
 
         if re.search("[sS][0-9]+[eE][0-9]+", video_title) is None:

@@ -73,7 +73,7 @@ while 1:
             db_table = "shows"
         elif inp == "m":
             movie = prompt(HTML("<ansiblue>Put in a name for your movie search: </ansiblue>"))
-            res = manage_db.get_movies(search=movie, db_path=db_path, order='id', desc=False)
+            res = manage_db.get_movies(search=movie, db_path=db_path, order='id')
             db_table = "movies"
         elif inp == "c":
             res, db_table = search_other()

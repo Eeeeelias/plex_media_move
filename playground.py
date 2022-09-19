@@ -12,8 +12,7 @@ env = 'LOCALAPPDATA'
 folder = 'pmm'
 data_path = os.getenv(env) + seperator + folder
 
-conf_path = "C:\\Users\\gooog\\AppData\\Local\\pmm\\config.json"
-# conf_path = data_path + f"{seperator}config.json"
+conf_path = data_path + f"{seperator}config.json"
 plex_path = "P:\\Plex Shows\\TV Shows"
 
 

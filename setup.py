@@ -1,5 +1,7 @@
 import json
 import os
+import sys
+
 from mediainfolib import data_path, seperator
 from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
@@ -74,8 +76,22 @@ def set_config():
     exit(0)
 
 
+def redo_db():
+    _plex_path = prompt(HTML("<ansiblue>Put in the path to your plex files: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
+    plex_path = ensure_path_ex(_plex_path)
+    conf = json.load(open(data_path, 'r'))
+    db_path = conf['database']['db_path']
+    os.remove(db_path)
+    info_shows, info_movies = fetch_infos.fetch_all(plex_path)
+    manage_db.create_database(db_path, info_shows, info_movies)
+
+
 if __name__ == '__main__':
     try:
-        set_config()
+        if len(sys.argv) > 1:
+            if sys.argv[1] == '-db':
+                redo_db()
+        else:
+            set_config()
     except KeyboardInterrupt:
         print("Exiting")
