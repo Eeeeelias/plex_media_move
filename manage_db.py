@@ -5,7 +5,7 @@ from sqlite3 import Error
 from typing import List
 
 import fetch_infos
-from mediainfolib import convert_millis, convert_country, cut_name, convert_size
+from mediainfolib import convert_millis, convert_country, cut_name, convert_size, add_minus
 
 
 def create_connection(db_file) -> sqlite3.Connection:
@@ -116,15 +116,11 @@ def update_database(additions: set[str], db) -> None:
     conn.commit()
     if mov_new_cha < float('inf'):
         print("[i] New/Changed movies in the database:\n")
-        print_movies(get_newest("movies", mov_new_cha, db))
+        prettify_movies(get_newest("movies", mov_new_cha, db))
     if sho_new_cha < float('inf'):
         print("[i] New/Changed shows in the database:\n")
-        print_shows(get_newest("shows", sho_new_cha, db))
+        prettify_shows(get_newest("shows", sho_new_cha, db))
     return
-
-
-def add_minus():
-    return "-"
 
 
 def get_max_id(type, cursor: sqlite3.Cursor) -> tuple[int]:
@@ -219,43 +215,57 @@ def get_specific(db_path: str, sql: str):
     return cur.fetchall()
 
 
-def print_movies(rows: List[tuple]) -> None:
-    stopper = "".join([add_minus() for i in range(146)])
-    head = "| ID  | Name{:47}| Year | Language{:7} | Version{:3} | Runtime | Size{:4} | Added{:12} | Type |"
-    empty_res = "| {:4}   {:50}   {:7}   {:8}   {:9}   {:17}   {:26}    |"
-    movie_row = "| {0:3} | {1:50} | {2} | {3:15} | {4:10} | {5:6}  | {6:5} GB | {7} | {8} |"
-    error_row = "| {0:3} | {1:50} | {2} | {3:15} | {4:10} | {5:6}  | {6:5} GB | {7} | {8} |"
-    print(stopper)
-    print(head.format("", "", "", "", ""))
-    print(stopper)
-    if len(rows) == 0:
-        print(empty_res.format("None", "", "", "", "", "", ""))
-    for row in rows:
-        try:
-            print(movie_row.format(row[0], cut_name(row[1]), row[2], convert_country(row[3]), row[4],
-                                   convert_millis(row[5]), round(row[6] / (1024 ** 3), 2),
-                                   datetime.fromtimestamp(row[7]).strftime('%Y-%m-%d, %H:%M'), row[8]))
-        except OSError:
-            print(error_row.format("N/A", "ERROR", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A"))
-    print(stopper)
+def prettify_out(table: str, rows: List[tuple]) -> str:
+    if table == 'movies':
+        return prettify_movies(rows)
+    elif table == 'shows':
+        return prettify_shows(rows)
+    return ""
 
 
-def print_shows(rows: List[tuple]) -> None:
-    stopper = "".join([add_minus() for i in range(125)])
-    head = "| ID  | Name{:47}| Seasons | Episodes | Runtime{:2} | Added{:12} | Size{:5} |"
-    empty_res = "| {:4}   {:50}   {:7}   {:8}   {:9}   {:17}   {:5}    |"
-    show_row = "| {0:3} | {1:50} | {2:7} | {3:8} | {4:9} | {5:17} | {6:6} GB |"
-    error_row = "| {:3} | {:50} | {:7} | {:8} | {:9} | {:17} | {:6} GB |"
-    print(stopper)
-    print(head.format("", "", "", ""))
-    print(stopper)
+def prettify_movies(rows: List[tuple]) -> str:
+    max_len_names = os.get_terminal_size().columns - 96
+    db_out = ""
+    stopper = "".join([add_minus() for i in range(max_len_names + 96)]) + "\n"
+    head = "| ID  | Name{:%d}| Year | Language{:7} | Version{:3} | Runtime | Size{:4} | Added{:12} | Type |\n" % (max_len_names - 3)
+    empty_res = "| {:4}   {:%d}   {:7}   {:8}   {:9}   {:17}   {:26}    |\n" % max_len_names
+    movie_row = "| {0:3} | {1:%d} | {2} | {3:15} | {4:10} | {5:6}  | {6:5} GB | {7} | {8} |\n" % max_len_names
+    error_row = "| {0:3} | {1:%d} | {2} | {3:15} | {4:10} | {5:6}  | {6:5} GB | {7} | {8} |\n" % max_len_names
+    db_out += stopper
+    db_out += head.format("", "", "", "", "")
+    db_out += stopper
     if len(rows) == 0:
-        print(empty_res.format("None", "", "", "", "", "", ""))
+        db_out += empty_res.format("None", "", "", "", "", "", "")
     for row in rows:
         try:
-            print(show_row.format(row[0], cut_name(row[1]), row[2], row[3], convert_millis(row[4]),
-                                  datetime.fromtimestamp(row[6]).strftime('%Y-%m-%d, %H:%M'), convert_size(row[5])))
+            db_out += movie_row.format(row[0], cut_name(row[1], max_len_names), row[2], convert_country(row[3]), row[4],
+                                       convert_millis(row[5]), round(row[6] / (1024 ** 3), 2),
+                                       datetime.fromtimestamp(row[7]).strftime('%Y-%m-%d, %H:%M'), row[8])
         except OSError:
-            print(error_row.format("N/A", "ERROR", "N/A", "N/A", "N/A", "N/A", "N/A"))
+            db_out += error_row.format("N/A", "ERROR", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A")
+    db_out += stopper
+    return db_out
+
+
+def prettify_shows(rows: List[tuple]) -> str:
+    max_len_names = os.get_terminal_size().columns - 96
+    db_out = ""
+    stopper = "".join([add_minus() for i in range(max_len_names + 75)]) + "\n"
+    head = "| ID  | Name{:%d}| Seasons | Episodes | Runtime{:2} | Added{:12} | Size{:5} |\n" % (max_len_names - 3)
+    empty_res = "| {:4}   {:%d}   {:7}   {:8}   {:9}   {:17}   {:5}    |\n" % max_len_names
+    show_row = "| {0:3} | {1:%d} | {2:7} | {3:8} | {4:9} | {5:17} | {6:6} GB |\n" % max_len_names
+    error_row = "| {:3} | {:%d} | {:7} | {:8} | {:9} | {:17} | {:6} GB |\n" % max_len_names
+    db_out += stopper
+    db_out += head.format("", "", "", "")
+    db_out += stopper
+    if len(rows) == 0:
+        db_out += empty_res.format("None", "", "", "", "", "", "")
+    for row in rows:
+        try:
+            db_out += show_row.format(row[0], cut_name(row[1], max_len_names), row[2], row[3], convert_millis(row[4]),
+                                      datetime.fromtimestamp(row[6]).strftime('%Y-%m-%d, %H:%M'), convert_size(row[5]))
+        except OSError:
+            db_out += error_row.format("N/A", "ERROR", "N/A", "N/A", "N/A", "N/A", "N/A")
             continue
-    print(stopper)
+    db_out += stopper
+    return db_out

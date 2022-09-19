@@ -118,12 +118,16 @@ def convert_country(alpha: str) -> str:
 
 
 # for database pretty print
-def cut_name(name):
-    if len(name) >= 50:
-        return name[:47] + "..."
+def cut_name(name, cut):
+    if len(name) >= cut:
+        return name[:cut-3] + "..."
     else:
         return name
 
 
 def convert_size(size):
     return round(size / (1024 ** 3), 2)
+
+
+def add_minus():
+    return "-"

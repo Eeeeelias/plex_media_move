@@ -1,8 +1,6 @@
 import os
 import re
-
 from prompt_toolkit import prompt, HTML, print_formatted_text
-
 import manage_db
 from media_mover import data_path
 from mediainfolib import seperator
@@ -61,26 +59,24 @@ def search_other():
 print("Looking at: {}".format(db_path))
 while 1:
     try:
+        db_table = ""
         inp = prompt(
             HTML("<ansiblue>Would you like to look for a [s]how, a [m]ovie or a [c]ustom search? </ansiblue>")).lower()
         if inp == "s":
             show = prompt(HTML("<ansiblue>Put in a name for your search: </ansiblue>"))
             res = manage_db.get_shows(search=show, db_path=db_path)
-            manage_db.print_shows(res)
+            db_table = "shows"
         elif inp == "m":
             movie = prompt(HTML("<ansiblue>Put in a name for your movie search: </ansiblue>"))
             res = manage_db.get_movies(search=movie, db_path=db_path, order='id', desc=False)
-            manage_db.print_movies(res)
+            db_table = "movies"
         elif inp == "c":
             res, db_table = search_other()
             if res == "":
                 continue
-            if db_table == "movies":
-                manage_db.print_movies(res)
-            elif db_table == "shows":
-                manage_db.print_shows(res)
         else:
             continue
+        print(manage_db.prettify_out(db_table, res))
         next = prompt(HTML("<ansiblue>Would you like to make another search? [y/N] </ansiblue>"))
         if next.lower() == "n":
             exit(0)

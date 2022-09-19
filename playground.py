@@ -1,5 +1,9 @@
 # just for testing I swear
+import os
 
-input = input("int or string?")
+import manage_db
 
-print(type(int(input)))
+test = os.get_terminal_size()
+print(test.columns)
+
+print("".join([manage_db.add_minus() for i in range(189)]))

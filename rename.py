@@ -4,9 +4,7 @@ import re
 from pathlib import Path
 from sys import argv
 
-shift = False
 # change this num_shift param to specify with what number to start
-num_shift = 13
 offset = -1
 
 
@@ -23,15 +21,32 @@ def shift_numbers(file, off, start=1):
     return start + 1, off
 
 
-# Renaming some specific weird format
-for path in glob.glob(argv[1] + "/*.mp4"):
-    new_path = ""
-    if re.search(r"Watch ", path) is not None:
-        new_path = re.sub(r"Watch ", "", path)
-    if re.search(r"(?<=S0\dE\d{2}).+", path) is not None:
-        new_path = re.sub(r"(?<=[sS]0\d[eE]\d{2}).+", ".mp4", new_path)
-    if new_path != "":
-        os.rename(path, new_path)
-        print("Renamed:", path)
-    if shift:
-        num_shift, offset = shift_numbers(path, start=num_shift, off=offset)
+def rename_weird_format(rename_path):
+    # Renaming some specific weird format
+    for path in glob.glob(rename_path + "/*.mp4"):
+        new_path = ""
+        if re.search(r"Watch ", path) is not None:
+            new_path = re.sub(r"Watch ", "", path)
+        if re.search(r"(?<=S0\dE\d{2}).+", path) is not None:
+            new_path = re.sub(r"(?<=[sS]0\d[eE]\d{2}).+", ".mp4", new_path)
+        if new_path != "":
+            os.rename(path, new_path)
+            print("Renamed:", path)
+
+
+if __name__ == '__main__':
+    if len(argv) == 1:
+        print("Please put in flags.")
+    try:
+        if argv[1] == '-r':
+            rename_weird_format(argv[2])
+        if argv[1] == '-s':
+            num_shift = int(argv[3])
+            for file in glob.glob(argv[2] + "/*.mp4"):
+                num_shift, offset = shift_numbers(file, start=num_shift, off=offset)
+    except IndexError:
+        print("You haven't supplied enough arguments. Please put in the right arguments")
+    except TypeError:
+        print("Make sure all arguments are put in properly")
+    except ValueError:
+        print("Make sure all arguments are put in properly")
