@@ -78,9 +78,12 @@ def set_config():
 
 
 def redo_db():
-    _plex_path = prompt(HTML("<ansiblue>Put in the path to your plex files: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
-    plex_path = ensure_path_ex(_plex_path)
     conf = mediainfolib.get_config()
+    if conf['mover']['dest_path'] is not None:
+        plex_path = conf['mover']['dest_path']
+    else:
+        _plex_path = prompt(HTML("<ansiblue>Put in the path to your plex files: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
+        plex_path = ensure_path_ex(_plex_path)
     db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
     os.remove(db_path)
     info_shows, info_movies = fetch_infos.fetch_all(plex_path)

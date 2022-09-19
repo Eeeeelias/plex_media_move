@@ -1,57 +1,70 @@
+import concurrent.futures
 import csv
 import datetime
 import glob
 import os
 import re
+import time
 from itertools import dropwhile
 from typing import AnyStr, List
-from mediainfolib import convert_millis, get_duration, check_ffmpeg, get_language, seperator, sorted_alphanumeric
+from mediainfolib import convert_millis, get_duration, check_ffmpeg, get_language, seperator, split_shows
 
 sep = seperator
 
 
-# properly check for shows with different file endings
-def get_show_infos(plex_path: AnyStr, nr=1) -> List[tuple]:
-    drop = 'TV Shows'
+def get_show_infos(plex_path: str, nr=1) -> list[tuple]:
+    _info_shows = []
+    info_shows = []
+    if os.path.basename(plex_path) != "TV Shows":
+        results = [[search_show(plex_path)]]
+    else:
+        shows_to_check = [plex_path + sep + i for i in os.listdir(plex_path)]
+        shows_split = list(split_shows(shows_to_check, 4))
 
-    show_infos = []
-    show_nr = nr
-    show = ""
-    seasons = 0
+        # cores babyyyyyy
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(iter_through_shows, x) for x in shows_split]
+            results = [f.result() for f in futures]
+
+    # single threaded loop
+    id = nr
+    for i in range(len(results)):
+        for j in range(len(results[i])):
+            if results[i][j][3] > 0:
+                results[i][j][0] = id
+                id += 1
+                info_shows.append(tuple(results[i][j]))
+    return info_shows
+
+
+def iter_through_shows(shows):
+    _info_shows = []
+    for show in shows:
+        tmp = search_show(show)
+        _info_shows.append(tmp)
+    return _info_shows
+
+
+def search_show(show):
+    show_name = os.path.basename(show)
+    print("[i] Show: {}".format(show_name))
     episodes = 0
-    size = 0.0
+    seasons = 0
+    size = 0
     last_modified = 0
     runtime = 0
-    shows_to_check = glob.glob(plex_path + f"{sep}**{sep}*.mp4", recursive=True) + glob.glob(
-            plex_path + f"{sep}**{sep}*.mkv", recursive=True)
-    for media in sorted_alphanumeric(shows_to_check):
+    for episode in glob.glob(show + f"{sep}**{sep}*.mp4") + glob.glob(show + f"{sep}**{sep}*.mkv"):
+        parts = list(dropwhile(lambda x: x != "TV Shows", episode.split(sep)))[1:]
         # parts gives [show, season, episode]
-        parts = list(dropwhile(lambda x: x != drop, media.split(sep)))[1:]
-        if show == "":
-            print(f"[i] Show: {parts[0]}")
-            show = parts[0]
-        if show == parts[0]:
-            try:
-                seasons = int(re.search(r"\d+", parts[1]).group())
-            except AttributeError:
-                pass
-            episodes = episodes + 1
-            size += os.path.getsize(media)
-            last_modified = os.path.getmtime(media) if last_modified < os.path.getmtime(media) else last_modified
-            runtime += get_duration(media)
-            continue
-        show_infos.append((show_nr, show, seasons, episodes, runtime, size, last_modified))
-        last_modified = 0
-        print(f"[i] Show: {parts[0]}")
-        show_nr += 1
-        show = parts[0]
-        seasons = 1
-        episodes = 1
-        last_modified = os.path.getmtime(media) if last_modified < os.path.getmtime(media) else last_modified
-        size = os.path.getsize(media)
-        runtime = get_duration(media)
-    show_infos.append((show_nr, show, seasons, episodes, runtime, size, last_modified))
-    return show_infos
+        try:
+            seasons = max(seasons, int(re.search(r"\d+", parts[1]).group()))
+        except AttributeError:
+            pass
+        episodes = episodes + 1
+        size += os.path.getsize(episode)
+        last_modified = max(os.path.getmtime(episode), last_modified)
+        runtime += get_duration(episode)
+    return [0, show_name, seasons, episodes, runtime, size, last_modified]
 
 
 def get_movie_infos(plex_path: AnyStr, nr=1) -> List[tuple]:
@@ -73,7 +86,8 @@ def get_movie_infos(plex_path: AnyStr, nr=1) -> List[tuple]:
             movie_name = re.search(r".+(?= \(\d{4}\))", filename).group()
             year = re.search(r"(?<=\()\d{4}(?=\))", filename).group()
         except AttributeError:
-            print(f"[w] Movie {filename} not properly named! Make sure its in 'Movie name (Year) - Version.ext' format.")
+            print(
+                f"[w] Movie {filename} not properly named! Make sure its in 'Movie name (Year) - Version.ext' format.")
             exit(1)
         try:
             version = re.search(r"(?<=\(\d{4}\) - ).*(?=(.mp4)|(.mkv))", filename).group()

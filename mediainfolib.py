@@ -150,3 +150,7 @@ def convert_size(size) -> float:
 
 def add_minus() -> str:
     return "-"
+
+
+def split_shows(seq, size):
+    return (seq[i::size] for i in range(size))
