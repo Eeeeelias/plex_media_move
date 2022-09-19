@@ -1,9 +1,15 @@
 # just for testing I swear
+import glob
 import os
+from mediainfolib import sorted_alphanumeric, seperator
 
-import manage_db
+sep = seperator
 
-test = os.get_terminal_size()
-print(test.columns)
+plex_path = "P:\\script_testing\\TV Shows"
 
-print("".join([manage_db.add_minus() for i in range(189)]))
+
+paths = glob.glob(plex_path + f"{sep}**{sep}*.mp4", recursive=True) + glob.glob(
+            plex_path + f"{sep}**{sep}*.mkv", recursive=True)
+
+for pa in sorted_alphanumeric(paths):
+    print(pa)

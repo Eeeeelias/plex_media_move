@@ -5,8 +5,7 @@ import os
 import re
 from itertools import dropwhile
 from typing import AnyStr, List
-
-from mediainfolib import convert_millis, get_duration, check_ffmpeg, get_language, seperator
+from mediainfolib import convert_millis, get_duration, check_ffmpeg, get_language, seperator, sorted_alphanumeric
 
 sep = seperator
 
@@ -23,8 +22,9 @@ def get_show_infos(plex_path: AnyStr, nr=1) -> List[tuple]:
     size = 0.0
     last_modified = 0
     runtime = 0
-    for media in glob.glob(plex_path + f"{sep}**{sep}*.mp4", recursive=True) + glob.glob(
-            plex_path + f"{sep}**{sep}*.mkv", recursive=True):
+    shows_to_check = glob.glob(plex_path + f"{sep}**{sep}*.mp4", recursive=True) + glob.glob(
+            plex_path + f"{sep}**{sep}*.mkv", recursive=True)
+    for media in sorted_alphanumeric(shows_to_check):
         # parts gives [show, season, episode]
         parts = list(dropwhile(lambda x: x != drop, media.split(sep)))[1:]
         if show == "":

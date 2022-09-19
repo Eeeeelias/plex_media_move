@@ -71,6 +71,12 @@ def convert_millis(millis) -> str:
     return "%dh %dm" % (hours, minutes)
 
 
+def sorted_alphanumeric(data):
+    convert = lambda text: int(text) if text.isdigit() else text.lower()
+    alphanum_key = lambda key: [convert(c) for c in re.split("([0-9]+)", key)]
+    return sorted(data, key=alphanum_key)
+
+
 # check if files were skipped
 def completeness_check(path, infos_path) -> None:
     name_list = []

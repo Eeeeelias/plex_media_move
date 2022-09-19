@@ -7,7 +7,7 @@ import time
 from sys import platform
 import manage_db
 import fetch_infos
-from mediainfolib import check_database_ex
+from mediainfolib import check_database_ex, sorted_alphanumeric
 from prompt_toolkit import prompt, HTML, print_formatted_text
 
 # This script renames, organizes and moves your downloaded media files
@@ -281,12 +281,6 @@ def rename_files(path, special):
             video_titles_new.append(title_with_year)
     print_formatted_text("\n")
     return clean_paths, video_titles_new
-
-
-def sorted_alphanumeric(data):
-    convert = lambda text: int(text) if text.isdigit() else text.lower()
-    alphanum_key = lambda key: [convert(c) for c in re.split("([0-9]+)", key)]
-    return sorted(data, key=alphanum_key)
 
 
 def move_files(video_paths, video_titles_new, plex_path) -> set[str]:

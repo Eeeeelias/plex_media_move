@@ -74,6 +74,10 @@ while 1:
             res, db_table = search_other()
             if res == "":
                 continue
+        elif inp == "o":
+            res = None
+            sql = prompt(HTML("<ansiblue>Put in your custom SQL query: </ansiblue>"))
+            print(manage_db.custom_sql(db_path, sql))
         else:
             continue
         print(manage_db.prettify_out(db_table, res))

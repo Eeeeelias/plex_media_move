@@ -216,6 +216,8 @@ def get_specific(db_path: str, sql: str):
 
 
 def prettify_out(table: str, rows: List[tuple]) -> str:
+    if rows is None:
+        return ""
     if table == 'movies':
         return prettify_movies(rows)
     elif table == 'shows':
@@ -269,3 +271,14 @@ def prettify_shows(rows: List[tuple]) -> str:
             continue
     db_out += stopper
     return db_out
+
+
+def custom_sql(db_path: str, sql: str) -> list:
+    cur = None
+    try:
+        cur = create_connection(db_path).cursor()
+        cur.execute(sql)
+    except Error as e:
+        print(e)
+        print("Your query doesn't work like this. See above for exact error.")
+    return cur.fetchall()
