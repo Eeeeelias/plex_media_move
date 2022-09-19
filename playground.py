@@ -1,15 +1,30 @@
 # just for testing I swear
 import glob
 import os
-from mediainfolib import sorted_alphanumeric, seperator
 
+import mediainfolib
+from mediainfolib import seperator, data_path
+import manage_db
+
+db_path = data_path + f"{seperator}media_database.db"
 sep = seperator
 
-plex_path = "P:\\script_testing\\TV Shows"
+plex_path = "P:\\Plex Shows\\TV Shows"
+
+actual_folders = os.listdir(plex_path)
+db_found = [x[1] for x in manage_db.get_shows("", db_path)]
+
+for i in actual_folders:
+    if i not in db_found:
+        print("{} not found!".format(i))
 
 
-paths = glob.glob(plex_path + f"{sep}**{sep}*.mp4", recursive=True) + glob.glob(
-            plex_path + f"{sep}**{sep}*.mkv", recursive=True)
+conf = mediainfolib.get_config()
+orig_path = conf['mover']['orig_path']
+plex_path = conf['mover']['dest_path']
+special = conf['mover']['special'].split(" ")
+print(len(special))
+data_path = conf['database']['db_path']
+db_path = data_path + f"{seperator}media_database.db"
 
-for pa in sorted_alphanumeric(paths):
-    print(pa)
+print(os.path.isfile(""))

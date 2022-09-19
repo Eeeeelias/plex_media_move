@@ -4,13 +4,14 @@ import sys
 import os
 import csv
 from sys import platform
+import json
 
 try:
     import pycountry
     from prompt_toolkit import prompt, HTML, print_formatted_text
     from prompt_toolkit.completion import PathCompleter
 except ModuleNotFoundError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "requirements.txt"])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "pycountry", "prompt_toolkit"])
 
 global seperator
 if platform == "win32":
@@ -21,6 +22,18 @@ else:
     seperator = "/"
     env = "HOME"
     folder = ".pmm"
+
+data_path = os.getenv(env) + seperator + folder
+if not os.path.exists(data_path):
+    os.mkdir(data_path)
+config_path = data_path + f"{seperator}config.json"
+
+
+def get_config() -> dict:
+    defaults = None
+    if os.path.exists(config_path):
+        defaults = json.load(open(config_path, 'r'))
+    return defaults
 
 
 # checks if ffmpeg is installed on the system
@@ -71,7 +84,7 @@ def convert_millis(millis) -> str:
     return "%dh %dm" % (hours, minutes)
 
 
-def sorted_alphanumeric(data):
+def sorted_alphanumeric(data) -> list:
     convert = lambda text: int(text) if text.isdigit() else text.lower()
     alphanum_key = lambda key: [convert(c) for c in re.split("([0-9]+)", key)]
     return sorted(data, key=alphanum_key)
@@ -124,16 +137,16 @@ def convert_country(alpha: str) -> str:
 
 
 # for database pretty print
-def cut_name(name, cut):
+def cut_name(name, cut) -> str:
     if len(name) >= cut:
         return name[:cut-3] + "..."
     else:
         return name
 
 
-def convert_size(size):
+def convert_size(size) -> float:
     return round(size / (1024 ** 3), 2)
 
 
-def add_minus():
+def add_minus() -> str:
     return "-"

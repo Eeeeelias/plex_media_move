@@ -3,10 +3,12 @@ import glob
 import os
 import re
 import shutil
+import sys
 import time
 from sys import platform
 import manage_db
 import fetch_infos
+import mediainfolib
 from mediainfolib import check_database_ex, sorted_alphanumeric
 from prompt_toolkit import prompt, HTML, print_formatted_text
 
@@ -40,9 +42,6 @@ else:
     env = "HOME"
     folder = ".pmm"
 
-data_path = os.getenv(env) + seperator + folder
-if not os.path.exists(data_path):
-    os.mkdir(data_path)
 
 strings_to_match = {
     "2nd Season ": "s02",
@@ -283,7 +282,7 @@ def rename_files(path, special):
     return clean_paths, video_titles_new
 
 
-def move_files(video_paths, video_titles_new, plex_path) -> set[str]:
+def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
     moved_videos = set()
     for video_path, video_title in zip(video_paths, video_titles_new):
         print_formatted_text(
@@ -299,7 +298,7 @@ def move_files(video_paths, video_titles_new, plex_path) -> set[str]:
                     re.search(r"(?<=\(\d{4}\)) -.*(?=(.mp4)|(.mkv))", video_title)
                     is not None
             ):
-                if args.overwrite:
+                if overwrite:
                     print_formatted_text("[i] Overwriting existing version of movie")
                     new_path = plex_path + "/Movies/" + video_title
                     shutil.move(video_path, new_path)
@@ -309,7 +308,7 @@ def move_files(video_paths, video_titles_new, plex_path) -> set[str]:
                     os.makedirs(plex_path + "/Movies/" + movie_title)
                     print_formatted_text("[i] Made new folder: {}".format(movie_title))
                 new_path = plex_path + "/Movies/" + movie_title + "/" + video_title
-                duplicate_num = file_ex_check(new_path, args.overwrite)
+                duplicate_num = file_ex_check(new_path, overwrite)
                 if duplicate_num != 0:
                     new_path = re.sub(ext, f"_{duplicate_num}" + ext, new_path)
                     time.sleep(2)
@@ -367,7 +366,7 @@ def move_files(video_paths, video_titles_new, plex_path) -> set[str]:
             )
             os.makedirs(show_path)
         # if file exists (file_ex_check returns false) add 2 to the file
-        duplicate_num = file_ex_check(show_path + video_title, args.overwrite)
+        duplicate_num = file_ex_check(show_path + video_title, overwrite)
         if duplicate_num != 0:
             ext = re.search(r"(\.mp4)|(\.mkv)", video_title).group()
             video_title = re.sub(ext, "_{}".format(duplicate_num) + ext, video_title)
@@ -391,33 +390,43 @@ if __name__ == "__main__":
     try:
         parser = make_parser()
         args = parser.parse_args()
-        orig_path = args.orig_path.rstrip(seperator)
-        plex_path = args.dest_path.rstrip(seperator)
-        special = [] if args.special is None else args.special
-        if args.audials:
-            paths = [
-                orig_path,
-                orig_path + "/Audials TV Series",
-                orig_path + "/Audials Movies",
-            ]
+        conf = mediainfolib.get_config()
+        if conf is not None:
+            data_path = conf['database']['db_path']
+            db_path = data_path + f"{seperator}media_database.db"
         else:
-            paths = [
-                p
-                for p in glob.glob(orig_path + f"/**/", recursive=True)
-                if not os.path.isfile(p + "/.ignore")
-            ]
-        db_path = data_path + f"{seperator}media_database.db"
-        print(f"[i] Opening: {db_path}")
-        if not check_database_ex(db_path):
-            print_formatted_text("[i] Database not found! Creating...")
-            info_shows, info_movies = fetch_infos.fetch_all(plex_path)
-            manage_db.create_database(db_path, info_shows, info_movies)
-
+            print_formatted_text("[i] Consider running setup.py to set up default values and a database!")
+            db_path = ""
+        # setting variables with argparse if supplied, else from config
+        if len(sys.argv) > 1:
+            data_path = mediainfolib.data_path
+            orig_path = args.orig_path.rstrip(seperator)
+            plex_path = args.dest_path.rstrip(seperator)
+            special = [] if args.special is None else args.special
+            overwrite = True if args.overwrite else False
+            if args.audials:
+                paths = [
+                    orig_path,
+                    orig_path + "/Audials TV Series",
+                    orig_path + "/Audials Movies",
+                ]
+            else:
+                paths = [p for p in glob.glob(orig_path + f"/**/", recursive=True)
+                         if not os.path.isfile(p + "/.ignore")]
+        else:
+            orig_path = conf['mover']['orig_path']
+            plex_path = conf['mover']['dest_path']
+            _special = conf['mover']['special'].split(" ")
+            special = [] if _special[0] == '' else _special
+            overwrite = conf['mover']['overwrite']
+            paths = [p for p in glob.glob(orig_path + f"/**/", recursive=True) if not os.path.isfile(p + "/.ignore")]
         trash_video(orig_path + "/Audials/Audials Other Videos")
         for path in paths:
             video_path_list, video_titles_renamed = rename_files(path, special)
-            moved_files = move_files(video_path_list, video_titles_renamed, plex_path)
-            manage_db.update_database(moved_files, db_path)
+            moved_files = move_files(video_path_list, video_titles_renamed, plex_path, overwrite)
+            if check_database_ex(db_path):
+                print_formatted_text("[i] Updating database")
+                manage_db.update_database(moved_files, db_path)
 
         print_formatted_text("[i] Everything done!")
     except FileNotFoundError:
@@ -435,3 +444,6 @@ if __name__ == "__main__":
     except AttributeError as e:
         print(e)
         print_formatted_text(HTML("<ansired>[w] Make sure you put in the proper arguments! </ansired>"))
+    except KeyboardInterrupt:
+        print_formatted_text("[i] Stopping")
+        exit(0)

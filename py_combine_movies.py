@@ -7,18 +7,13 @@ import subprocess
 import sys
 import time
 from sys import platform
-from mediainfolib import check_ffmpeg, get_duration
 
+from prompt_toolkit import prompt, HTML, print_formatted_text
+from prompt_toolkit.completion import PathCompleter
 
-def install(package):
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+from mediainfolib import check_ffmpeg, get_duration, get_config
 
-
-try:
-    from prompt_toolkit import prompt, HTML, print_formatted_text
-    from prompt_toolkit.completion import PathCompleter
-except ModuleNotFoundError:
-    install("prompt_toolkit")
+conf = get_config()
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -122,20 +117,24 @@ def interactive():
     )
     print_formatted_text("[i] Almost done, just two more questions")
 
-    destination = (
-        prompt(HTML("<ansiblue>[a] Where do you want your movie to be saved ([ENTER] to put it in $PWD):</ansiblue>"),
-               completer=PathCompleter())
-            .lstrip('"')
-            .rstrip('"')
-    )
-    while not os.path.isdir(destination) or destination == "":
+    if conf['combiner']['default_out'] is None:
         destination = (
             prompt(
-                HTML("<ansiblue>[a] This is not a destination! Make sure you spelled everything correctly:</ansiblue>"),
+                HTML("<ansiblue>[a] Where do you want your movie to be saved ([ENTER] to put it in $PWD):</ansiblue>"),
                 completer=PathCompleter())
                 .lstrip('"')
                 .rstrip('"')
         )
+        while not os.path.isdir(destination) or destination == "":
+            destination = (
+                prompt(
+                    HTML(
+                        "<ansiblue>[a] This is not a destination! Make sure you spelled everything "
+                        "correctly:</ansiblue>"),
+                    completer=PathCompleter()).lstrip('"').rstrip('"')
+            )
+    else:
+        destination = conf['combiner']['default_out']
 
     offset = prompt(
         HTML(

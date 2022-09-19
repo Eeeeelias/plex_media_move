@@ -2,8 +2,7 @@ import os
 import re
 from prompt_toolkit import prompt, HTML, print_formatted_text
 import manage_db
-from media_mover import data_path
-from mediainfolib import seperator
+from mediainfolib import seperator, data_path
 
 db_path = data_path + f"{seperator}media_database.db"
 
