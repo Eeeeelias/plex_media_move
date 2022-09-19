@@ -1,28 +1,30 @@
 # just for testing I swear
 import os
 import mediainfolib
-from mediainfolib import seperator, data_path
+from mediainfolib import seperator
 import manage_db
 
-db_path = data_path + f"{seperator}media_database.db"
+conf = mediainfolib.get_config()
+db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
 sep = seperator
 
+env = 'LOCALAPPDATA'
+folder = 'pmm'
+data_path = os.getenv(env) + seperator + folder
+
+conf_path = "C:\\Users\\gooog\\AppData\\Local\\pmm\\config.json"
+# conf_path = data_path + f"{seperator}config.json"
 plex_path = "P:\\Plex Shows\\TV Shows"
 
-actual_folders = os.listdir(plex_path)
-db_found = [x[1] for x in manage_db.get_shows("", db_path)]
 
-for i in actual_folders:
-    if i not in db_found:
-        print("{} not found!".format(i))
+def check_db_for_missing(plex_path):
+    actual_folders = os.listdir(plex_path)
+    db_found = [x[1] for x in manage_db.get_shows("", db_path)]
+
+    for i in actual_folders:
+        if i not in db_found:
+            print("{} not found!".format(i))
 
 
-conf = mediainfolib.get_config()
-orig_path = conf['mover']['orig_path']
-plex_path = conf['mover']['dest_path']
-special = conf['mover']['special'].split(" ")
-print(len(special))
-data_path = conf['database']['db_path']
-db_path = data_path + f"{seperator}media_database.db"
-
-print(os.path.isdir("\\\\192.168.153.59\\Plex_files"))
+print(f"file: {conf_path}")
+print(os.path.getsize(conf_path))

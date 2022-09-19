@@ -1,10 +1,16 @@
 import os
 import re
+import mediainfolib
 from mediainfolib import seperator, data_path
 from prompt_toolkit import prompt, HTML, print_formatted_text
 import manage_db
 
-db_path = data_path + f"{seperator}media_database.db"
+conf = mediainfolib.get_config()
+db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
+
+if db_path is None:
+    print("No database found! Exiting")
+    exit(0)
 
 
 def search_other():

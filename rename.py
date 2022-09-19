@@ -4,20 +4,19 @@ import re
 from pathlib import Path
 from sys import argv
 
-# change this num_shift param to specify with what number to start
-offset = -1
+offset = float('-inf')
 
 
 def shift_numbers(file, off, start=1):
     dirname, name = os.path.split(file)
-    print(name)
     episode_nr = re.search(r"(?<=[eE])\d+", name).group()
     episode_nr_int = int(episode_nr)
-    if off == -1:
+    if off == float('-inf'):
         off = episode_nr_int - start
-    new_name = re.sub(episode_nr, "0" + str(episode_nr_int - off), name)
-    print(f"New Name: {new_name}")
+    new_name = re.sub(r"(?<=[eE])\d+", "0" + str(episode_nr_int - off) + "_shift", name)
     os.rename(file, Path(dirname, new_name))
+    print(f"Old Name: {name}")
+    print(f"New Name: {re.sub(r'_shift', '', new_name)}\n")
     return start + 1, off
 
 
@@ -37,6 +36,7 @@ def rename_weird_format(rename_path):
 if __name__ == '__main__':
     if len(argv) == 1:
         print("Please put in flags.")
+        exit(1)
     try:
         if argv[1] == '-r':
             rename_weird_format(argv[2])
@@ -44,6 +44,9 @@ if __name__ == '__main__':
             num_shift = int(argv[3])
             for file in glob.glob(argv[2] + "/*.mp4"):
                 num_shift, offset = shift_numbers(file, start=num_shift, off=offset)
+            for file in glob.glob(argv[2] + "/*.mp4"):
+                name = re.sub(r"_shift", "", os.path.basename(file))
+                os.rename(file, Path(os.path.dirname(file), name))
     except IndexError:
         print("You haven't supplied enough arguments. Please put in the right arguments")
     except TypeError:
