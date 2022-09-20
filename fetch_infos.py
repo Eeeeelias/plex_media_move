@@ -7,7 +7,7 @@ import re
 from itertools import dropwhile
 from typing import AnyStr, List
 from mediainfolib import get_duration_cv2, check_ffmpeg, get_language, seperator, split_shows, \
-    convert_seconds
+    convert_seconds, get_duration
 
 sep = seperator
 
@@ -25,9 +25,10 @@ def get_show_infos(plex_path: str, nr=1) -> list[tuple]:
     # single threaded loop
     id = nr
     for i in range(len(_info_shows)):
-        _info_shows[i][0] = id
-        info_shows.append(tuple(_info_shows[i]))
-        id += 1
+        if _info_shows[i][3] > 0:
+            _info_shows[i][0] = id
+            info_shows.append(tuple(_info_shows[i]))
+            id += 1
     return info_shows
 
 
@@ -80,7 +81,7 @@ def get_movie_infos(plex_path: AnyStr, nr=1) -> List[tuple]:
         except AttributeError:
             version = "unique"
         language = ";".join(get_language(media))
-        runtime = get_duration_cv2(media)
+        runtime = get_duration(media)
         size = os.path.getsize(media)
         last_modified = os.path.getmtime(media)
         file_type = os.path.splitext(filename)[1]
@@ -131,9 +132,12 @@ def fetch_all(overall_path) -> tuple[List[tuple], List[tuple]]:
     overall_path = overall_path.rstrip(sep)
     if not check_ffmpeg():
         exit(1)
-    info_shows = get_show_infos(overall_path + f"{sep}TV Shows")
-    info_movies = get_movie_infos(overall_path + f"{sep}Movies")
-    return info_shows, info_movies
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(x, y) for x, y in zip([get_show_infos, get_movie_infos], [overall_path + f"{sep}TV Shows", overall_path + f"{sep}Movies"])]
+        results = [f.result() for f in futures]
+    #info_shows = get_show_infos(overall_path + f"{sep}TV Shows")
+    #info_movies = get_movie_infos(overall_path + f"{sep}Movies")
+    return results[0], results[1]
 
 
 if __name__ == '__main__':
