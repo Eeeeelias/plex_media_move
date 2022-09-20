@@ -61,36 +61,41 @@ def search_other():
     return manage_db.get_specific(db_path, sql.format(db, col, metric, col_val, order, desc)), db
 
 
-print("Looking at: {}".format(db_path))
-while 1:
-    try:
-        db_table = ""
-        inp = prompt(
-            HTML("<ansiblue>Would you like to look for a [s]how, a [m]ovie or a [c]ustom search? </ansiblue>")).lower()
-        if inp == "s":
-            show = prompt(HTML("<ansiblue>Put in a name for your search: </ansiblue>"))
-            res = manage_db.get_shows(search=show, db_path=db_path)
-            db_table = "shows"
-        elif inp == "m":
-            movie = prompt(HTML("<ansiblue>Put in a name for your movie search: </ansiblue>"))
-            res = manage_db.get_movies(search=movie, db_path=db_path, order='id')
-            db_table = "movies"
-        elif inp == "c":
-            res, db_table = search_other()
-            if res == "":
+def main():
+    print("Looking at: {}".format(db_path))
+    while 1:
+        try:
+            db_table = ""
+            inp = prompt(
+                HTML("<ansiblue>Would you like to look for a [s]how, a [m]ovie or a [c]ustom search? </ansiblue>")).lower()
+            if inp == "s":
+                show = prompt(HTML("<ansiblue>Put in a name for your search: </ansiblue>"))
+                res = manage_db.get_shows(search=show, db_path=db_path)
+                db_table = "shows"
+            elif inp == "m":
+                movie = prompt(HTML("<ansiblue>Put in a name for your movie search: </ansiblue>"))
+                res = manage_db.get_movies(search=movie, db_path=db_path, order='id')
+                db_table = "movies"
+            elif inp == "c":
+                res, db_table = search_other()
+                if res == "":
+                    continue
+            elif inp == "o":
+                res = None
+                sql = prompt(HTML("<ansiblue>Put in your custom SQL query: </ansiblue>"))
+                print(manage_db.custom_sql(db_path, sql))
+            else:
                 continue
-        elif inp == "o":
-            res = None
-            sql = prompt(HTML("<ansiblue>Put in your custom SQL query: </ansiblue>"))
-            print(manage_db.custom_sql(db_path, sql))
-        else:
-            continue
-        print(manage_db.prettify_out(db_table, res))
-        next = prompt(HTML("<ansiblue>Would you like to make another search? [y/N] </ansiblue>"))
-        if next.lower() == "n":
+            print(manage_db.prettify_out(db_table, res))
+            next = prompt(HTML("<ansiblue>Would you like to make another search? [y/N] </ansiblue>"))
+            if next.lower() == "n":
+                exit(0)
+            elif next.lower() == 'clear':
+                os.system('cls' if os.name == 'nt' else 'clear')
+        except KeyboardInterrupt:
+            print("\nFinishing")
             exit(0)
-        elif next.lower() == 'clear':
-            os.system('cls' if os.name == 'nt' else 'clear')
-    except KeyboardInterrupt:
-        print("\nFinishing")
-        exit(0)
+
+
+if __name__ == '__main__':
+    main()

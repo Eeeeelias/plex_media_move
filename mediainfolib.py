@@ -30,6 +30,10 @@ config_path = data_path + f"{seperator}config.json"
 
 
 def get_config() -> dict:
+    """
+    Returns the config as a dict or None if no config exists
+    :return: dict
+    """
     defaults = None
     if os.path.exists(config_path):
         defaults = json.load(open(config_path, 'r'))
@@ -54,8 +58,12 @@ def check_ffmpeg() -> bool:
         print("There was an error with ffmpeg checking, please try again.")
 
 
-# returns the duration of a video file in milliseconds
 def get_duration(filename) -> int:
+    """
+    Returns the duration of a video file in milliseconds
+    :param filename: path to the video file
+    :return: duration in milliseconds
+    """
     try:
         result = subprocess.run(
             [
@@ -79,6 +87,11 @@ def get_duration(filename) -> int:
 
 # returns the duration of a video file in seconds
 def get_duration_cv2(filename) -> int:
+    """
+    Returns the duration of a video file in seconds
+    :param filename: path to the video file
+    :return: duration in seconds
+    """
     data = cv2.VideoCapture(filename)
     frames = data.get(cv2.CAP_PROP_FRAME_COUNT)
     fps = data.get(cv2.CAP_PROP_FPS)
@@ -86,13 +99,22 @@ def get_duration_cv2(filename) -> int:
 
 
 def convert_seconds(secs) -> str:
+    """
+    Converts seconds into hours and minutes
+    :param secs: seconds
+    :return: string of form XXh YYm
+    """
     minutes = (secs / 60) % 60
     hours = (secs / (60 * 60))
     return "%dh %dm" % (hours, minutes)
 
 
-# converts milliseconds to minutes and hours
 def convert_millis(millis) -> str:
+    """
+    Converts milliseconds into hours and minutes
+    :param millis: seconds
+    :return: string of form XXh YYm
+    """
     minutes = (millis / (1000 * 60)) % 60
     hours = (millis / (1000 * 60 * 60))
     return "%dh %dm" % (hours, minutes)
@@ -104,7 +126,7 @@ def sorted_alphanumeric(data) -> list:
     return sorted(data, key=alphanum_key)
 
 
-# check if files were skipped
+# TODO: Change this so it works with the database
 def completeness_check(path, infos_path) -> None:
     name_list = []
     shows_list = [x for x in os.listdir(path)]

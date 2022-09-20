@@ -4,12 +4,37 @@ import pathlib
 import re
 import subprocess
 import sys
+from prompt_toolkit import prompt, HTML
+from prompt_toolkit.completion import PathCompleter
 
-print(f"[i] Converting .ts files in {sys.argv[1]}")
-for path in glob.glob(sys.argv[1] + "/*.ts"):
-    dirname, name = os.path.split(path)
-    new_name = re.sub(r".ts", ".mp4", os.path.basename(path))
-    print(f"[i] Converting to : {pathlib.Path(dirname, new_name)}")
-    subprocess.run(["ffmpeg", "-loglevel", "warning", "-i", path, "-c", "copy", pathlib.Path(dirname, new_name)])
-    print("[i] Removing original file")
-    os.remove(path)
+
+def converting(unconverted_path, filetype=".ts"):
+    print(f"[i] Converting .ts files in {unconverted_path}")
+    files_to_convert = glob.glob(unconverted_path + f"/*{filetype}")
+    if len(files_to_convert) == 0:
+        print("[i] There seem to be no videos to convert. Are you sure your inputs are proper?")
+        return
+    for path in files_to_convert:
+        dirname, name = os.path.split(path)
+        new_name = re.sub(f"{filetype}", ".mp4", os.path.basename(path))
+        print(f"[i] Converting to : {pathlib.Path(dirname, new_name)}")
+        subprocess.run(["ffmpeg", "-loglevel", "warning", "-i", path, "-c", "copy", pathlib.Path(dirname, new_name)])
+        print("[i] Removing original file")
+        os.remove(path)
+
+
+def main():
+    if len(sys.argv) == 1:
+        path = prompt(HTML("<ansiblue>Put in the path of the folder containing your unconverted files: </ansiblue>"),
+                      completer=PathCompleter()).lstrip('"').rstrip('"')
+        filetype = prompt(HTML("<ansiblue> Put in the filetype you want to convert (default: .ts): </ansiblue>"))
+        converting(path, filetype)
+    else:
+        try:
+            converting(sys.argv[1], sys.argv[2])
+        except IndexError:
+            converting(sys.argv[1])
+
+
+if __name__ == '__main__':
+    main()

@@ -242,7 +242,7 @@ def prettify_movies(rows: List[tuple]) -> str:
     for row in rows:
         try:
             db_out += movie_row.format(row[0], cut_name(row[1], max_len_names), row[2], convert_country(row[3]), row[4],
-                                       convert_seconds(row[5]), round(row[6] / (1024 ** 3), 2),
+                                       convert_millis(row[5]), round(row[6] / (1024 ** 3), 2),
                                        datetime.fromtimestamp(row[7]).strftime('%Y-%m-%d, %H:%M'), row[8])
         except OSError:
             db_out += error_row.format("N/A", "ERROR", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A")

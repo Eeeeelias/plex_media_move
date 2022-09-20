@@ -1,5 +1,6 @@
 # just for testing I swear
 import os
+import sys
 import time
 from itertools import dropwhile
 
@@ -38,5 +39,6 @@ def time_info_reading():
     return time_end - time_start
 
 
-print("Time: {} seconds".format(time_info_reading()))
+print(sys.argv[2])
+#print("Time: {} seconds".format(time_info_reading()))
 # print("Runtime: {}s".format(get_infos()))

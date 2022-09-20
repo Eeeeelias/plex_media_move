@@ -58,11 +58,19 @@ def set_database():
 
 
 def set_config():
+    mover = {}
+    combiner = {}
+    database = {}
     if not os.path.exists(config_path):
         open(config_path, 'a').close()
-    mover = set_media_mover()
-    combiner = set_combiner()
-    database = set_database()
+    try:
+        mover = set_media_mover()
+        combiner = set_combiner()
+        database = set_database()
+    except KeyboardInterrupt:
+        print("Aborting")
+        exit(0)
+
     print_formatted_text(HTML("[i] Saving config at: {}\n".format(config_path)))
     json.dump({"mover": mover, "combiner": combiner, "database": database}, open(config_path, 'w'))
     create_db = prompt(HTML("<ansiblue>[a] Do you want to create the database now (If you already have a database it "

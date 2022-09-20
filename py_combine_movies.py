@@ -8,10 +8,10 @@ import sys
 import time
 from sys import platform
 
-from prompt_toolkit import prompt, HTML, print_formatted_text
+from prompt_toolkit import HTML, print_formatted_text, prompt
 from prompt_toolkit.completion import PathCompleter
 
-from mediainfolib import check_ffmpeg, get_duration_cv2, get_config
+from mediainfolib import check_ffmpeg, get_config, get_duration_cv2, get_duration
 
 conf = get_config()
 
@@ -176,24 +176,20 @@ def delete_movies(movie_en, movie_de):
     return
 
 
-if __name__ == "__main__":
+def main():
     args = parser.parse_args()
     destination = ""
     if not check_ffmpeg():
         exit(1)
     if args.interactive or len(sys.argv) == 1:
-        try:
-            movie_en, movie_de, lan_en, lan_de, destination, offset = interactive()
-            with open(os.path.expanduser("~/prev"), "w") as f:
-                f.write(f"mv_en\t{movie_en}\n")
-                f.write(f"mv_de\t{movie_de}\n")
-                f.write(f"ln_en\t{lan_en}\n")
-                f.write(f"ln_de\t{lan_de}\n")
-                f.write(f"dst\t{destination}")
-                f.close()
-        except KeyboardInterrupt:
-            print("Aborting...")
-            exit(0)
+        movie_en, movie_de, lan_en, lan_de, destination, offset = interactive()
+        with open(os.path.expanduser("~/prev"), "w") as f:
+            f.write(f"mv_en\t{movie_en}\n")
+            f.write(f"mv_de\t{movie_de}\n")
+            f.write(f"ln_en\t{lan_en}\n")
+            f.write(f"ln_de\t{lan_de}\n")
+            f.write(f"dst\t{destination}")
+            f.close()
     else:
         try:
             movie_en = args.input1
@@ -212,8 +208,9 @@ if __name__ == "__main__":
             print("Please make sure you put in all necessary arguments!")
             exit(1)
 
-    dur_en = get_duration_cv2(movie_en)
-    dur_de = get_duration_cv2(movie_de)
+
+    dur_en = get_duration(movie_en)
+    dur_de = get_duration(movie_de)
     diff = dur_en - dur_de
     if offset == "":
         print("[i] No offset given, using time diff")
@@ -276,4 +273,15 @@ if __name__ == "__main__":
             exit(1)
     else:
         print("[i] Files combined!")
-    exit(0)
+    if prompt(HTML("<ansiblue>Do you want try again? [y/N] ")).lower() == "y":
+        main()
+    else:
+        exit(0)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Exiting")
+        exit(0)

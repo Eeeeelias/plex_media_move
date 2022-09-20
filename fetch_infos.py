@@ -6,7 +6,7 @@ import os
 import re
 from itertools import dropwhile
 from typing import AnyStr, List
-from mediainfolib import get_duration_cv2, check_ffmpeg, get_language, seperator, split_shows, \
+from mediainfolib import get_duration_cv2, check_ffmpeg, get_language, seperator,  \
     convert_seconds, get_duration
 
 sep = seperator
@@ -138,9 +138,3 @@ def fetch_all(overall_path) -> tuple[List[tuple], List[tuple]]:
     #info_shows = get_show_infos(overall_path + f"{sep}TV Shows")
     #info_movies = get_movie_infos(overall_path + f"{sep}Movies")
     return results[0], results[1]
-
-
-if __name__ == '__main__':
-    info_shows, info_movies = fetch_all("P:\\Plex Shows")
-    write_to_csv(info_shows)
-    write_to_csv(info_movies, filename='movie_infos')

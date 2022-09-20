@@ -385,7 +385,7 @@ def trash_video(path):
             os.remove(path + "/" + title)
 
 
-if __name__ == "__main__":
+def main():
     try:
         parser = make_parser()
         args = parser.parse_args()
@@ -445,3 +445,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print_formatted_text("[i] Stopping")
         exit(0)
+
+
+if __name__ == "__main__":
+    main()
