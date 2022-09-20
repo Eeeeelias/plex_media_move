@@ -11,7 +11,7 @@ from sys import platform
 from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
 
-from mediainfolib import check_ffmpeg, get_duration, get_config
+from mediainfolib import check_ffmpeg, get_duration_cv2, get_config
 
 conf = get_config()
 
@@ -212,8 +212,8 @@ if __name__ == "__main__":
             print("Please make sure you put in all necessary arguments!")
             exit(1)
 
-    dur_en = get_duration(movie_en)
-    dur_de = get_duration(movie_de)
+    dur_en = get_duration_cv2(movie_en)
+    dur_de = get_duration_cv2(movie_de)
     diff = dur_en - dur_de
     if offset == "":
         print("[i] No offset given, using time diff")

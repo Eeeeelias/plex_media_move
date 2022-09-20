@@ -4,10 +4,10 @@ import datetime
 import glob
 import os
 import re
-import time
 from itertools import dropwhile
 from typing import AnyStr, List
-from mediainfolib import convert_millis, get_duration, check_ffmpeg, get_language, seperator, split_shows
+from mediainfolib import get_duration_cv2, check_ffmpeg, get_language, seperator, split_shows, \
+    convert_seconds
 
 sep = seperator
 
@@ -16,33 +16,19 @@ def get_show_infos(plex_path: str, nr=1) -> list[tuple]:
     _info_shows = []
     info_shows = []
     if os.path.basename(plex_path) != "TV Shows":
-        results = [[search_show(plex_path)]]
+        _info_shows = [search_show(plex_path)]
     else:
         shows_to_check = [plex_path + sep + i for i in os.listdir(plex_path)]
-        shows_split = list(split_shows(shows_to_check, 4))
-
-        # cores babyyyyyy
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(iter_through_shows, x) for x in shows_split]
-            results = [f.result() for f in futures]
+        for show in shows_to_check:
+            _info_shows.append(search_show(show))
 
     # single threaded loop
     id = nr
-    for i in range(len(results)):
-        for j in range(len(results[i])):
-            if results[i][j][3] > 0:
-                results[i][j][0] = id
-                id += 1
-                info_shows.append(tuple(results[i][j]))
+    for i in range(len(_info_shows)):
+        _info_shows[i][0] = id
+        info_shows.append(tuple(_info_shows[i]))
+        id += 1
     return info_shows
-
-
-def iter_through_shows(shows):
-    _info_shows = []
-    for show in shows:
-        tmp = search_show(show)
-        _info_shows.append(tmp)
-    return _info_shows
 
 
 def search_show(show):
@@ -63,7 +49,7 @@ def search_show(show):
         episodes = episodes + 1
         size += os.path.getsize(episode)
         last_modified = max(os.path.getmtime(episode), last_modified)
-        runtime += get_duration(episode)
+        runtime += get_duration_cv2(episode)
     return [0, show_name, seasons, episodes, runtime, size, last_modified]
 
 
@@ -94,7 +80,7 @@ def get_movie_infos(plex_path: AnyStr, nr=1) -> List[tuple]:
         except AttributeError:
             version = "unique"
         language = ";".join(get_language(media))
-        runtime = get_duration(media)
+        runtime = get_duration_cv2(media)
         size = os.path.getsize(media)
         last_modified = os.path.getmtime(media)
         file_type = os.path.splitext(filename)[1]
@@ -122,7 +108,7 @@ def print_show_infos(show_infos: List) -> None:
         print(f"Name: {show[1]}")
         print(f"Seasons: {show[2]}")
         print(f"Episodes: {show[3]}")
-        print(f"Runtime: {convert_millis(show[4])}")
+        print(f"Runtime: {convert_seconds(show[4])}")
         print(f"Last modified: {datetime.datetime.fromtimestamp(show[6]).strftime('%Y-%m-%d, %H:%M')}")
         print(f"Show size: {round(show[5] / (1024 ** 3), 2)} GB\n")
     return
@@ -135,7 +121,7 @@ def print_movie_infos(movie_infos: List) -> None:
         print(f"Year: {movie[2]}")
         print(f"Language: {movie[3]}")
         print(f"Version: {movie[4]}")
-        print(f"Runtime: {convert_millis(movie[5])}")
+        print(f"Runtime: {convert_seconds(movie[5])}")
         print(f"Last modified: {datetime.datetime.fromtimestamp(movie[7]).strftime('%Y-%m-%d, %H:%M')}")
         print(f"Movie size: {round(movie[6] / (1024 ** 3), 2)} GB")
         print(f"File type: {movie[8]}\n")

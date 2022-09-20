@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime
 from sqlite3 import Error
 from typing import List
-from mediainfolib import convert_millis, convert_country, cut_name, convert_size, add_minus
+from mediainfolib import convert_millis, convert_country, cut_name, convert_size, add_minus, convert_seconds
 import fetch_infos
 
 
@@ -26,8 +26,8 @@ def create_table(conn, sql_table) -> bool:
     return True
 
 
-def add_to_db(conn, type, media) -> tuple:
-    if type == "show":
+def add_to_db(conn, table, media) -> tuple:
+    if table == "show":
         sql = """INSERT INTO shows(id, name, seasons, episodes, runtime, size, modified)
                  VALUES(?,?,?,?,?,?,?)"""
     else:
@@ -124,19 +124,19 @@ def update_database(additions: set[str], db) -> None:
     return
 
 
-def get_max_id(type, cursor: sqlite3.Cursor) -> tuple[int]:
-    if type == "movies":
+def get_max_id(table, cursor: sqlite3.Cursor) -> tuple[int]:
+    if table == "movies":
         return cursor.execute("SELECT MAX(id) FROM movies").fetchone()
-    elif type == "shows":
+    elif table == "shows":
         return cursor.execute("SELECT MAX(id) FROM shows").fetchone()
     return (1,)
 
 
-def check_entry_ex(type: str, cursor: sqlite3.Cursor, info: tuple):
+def check_entry_ex(table: str, cursor: sqlite3.Cursor, info: tuple):
     possible_ex = None
-    if type == "movies":
+    if table == "movies":
         possible_ex = cursor.execute(f"SELECT * FROM movies WHERE name='{info[1]}' AND version='{info[4]}'").fetchone()
-    elif type == "shows":
+    elif table == "shows":
         possible_ex = cursor.execute(f"SELECT * FROM shows WHERE name='{info[1]}'").fetchone()
     if possible_ex is not None:
         print("[i] Entry already found, updating existing")
@@ -145,36 +145,36 @@ def check_entry_ex(type: str, cursor: sqlite3.Cursor, info: tuple):
     return None
 
 
-def update_sql(type: str, cur: sqlite3.Cursor, info: tuple) -> None:
+def update_sql(table: str, cur: sqlite3.Cursor, info: tuple) -> None:
     sql_movie = """UPDATE movies
                   SET language = ?,
                       runtime = ?,
-                      size = ?,
                       modified = ?,
+                      size = ?,
                       type = ?
                   WHERE id = ?"""
     sql_show = """UPDATE shows 
                  SET seasons = ?,
                      episodes = ?,
                      runtime = ?,
-                     modified = ?,
-                     size = ?
+                     size = ?,
+                     modified = ?
                  WHERE id = ?"""
 
-    if type == "movies":
+    if table == "movies":
         info_sql = (info[3], info[5], info[6], info[7], info[8], info[0])
         cur.execute(sql_movie, info_sql)
-    elif type == "shows":
+    elif table == "shows":
         info_sql = (info[2], info[3], info[4], info[5], info[6], info[0])
         cur.execute(sql_show, info_sql)
 
 
-def add_sql(type: str, cur: sqlite3.Cursor, info: tuple) -> None:
+def add_sql(table: str, cur: sqlite3.Cursor, info: tuple) -> None:
     sql_movie = "INSERT INTO movies VALUES (?,?,?,?,?,?,?,?,?)"
     sql_shows = "INSERT INTO shows VALUES (?,?,?,?,?,?,?)"
-    if type == "movies":
+    if table == "movies":
         cur.execute(sql_movie, info)
-    elif type == "shows":
+    elif table == "shows":
         cur.execute(sql_shows, info)
 
 
@@ -199,13 +199,13 @@ def get_shows(search: str, db_path: str, order='name', desc=True) -> list[tuple]
     return rows
 
 
-def get_newest(type: str, search: float, db_path: str):
+def get_newest(table: str, search: float, db_path: str):
     cur = create_connection(db_path).cursor()
     sql_show = f"SELECT * FROM shows WHERE modified >= '{search}' ORDER BY modified"
     sql_movie = f"SELECT * FROM movies WHERE modified >= '{search}' ORDER BY modified"
-    if type == "movies":
+    if table == "movies":
         cur.execute(sql_movie)
-    elif type == "shows":
+    elif table == "shows":
         cur.execute(sql_show)
     return cur.fetchall()
 
@@ -242,7 +242,7 @@ def prettify_movies(rows: List[tuple]) -> str:
     for row in rows:
         try:
             db_out += movie_row.format(row[0], cut_name(row[1], max_len_names), row[2], convert_country(row[3]), row[4],
-                                       convert_millis(row[5]), round(row[6] / (1024 ** 3), 2),
+                                       convert_seconds(row[5]), round(row[6] / (1024 ** 3), 2),
                                        datetime.fromtimestamp(row[7]).strftime('%Y-%m-%d, %H:%M'), row[8])
         except OSError:
             db_out += error_row.format("N/A", "ERROR", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A")
@@ -251,7 +251,7 @@ def prettify_movies(rows: List[tuple]) -> str:
 
 
 def prettify_shows(rows: List[tuple]) -> str:
-    max_len_names = os.get_terminal_size().columns - 96
+    max_len_names = os.get_terminal_size().columns - 75
     db_out = ""
     stopper = "".join([add_minus() for i in range(max_len_names + 75)]) + "\n"
     head = "| ID  | Name{:%d}| Seasons | Episodes | Runtime{:2} | Added{:12} | Size{:5} |\n" % (max_len_names - 3)
@@ -265,7 +265,7 @@ def prettify_shows(rows: List[tuple]) -> str:
         db_out += empty_res.format("None", "", "", "", "", "", "")
     for row in rows:
         try:
-            db_out += show_row.format(row[0], cut_name(row[1], max_len_names), row[2], row[3], convert_millis(row[4]),
+            db_out += show_row.format(row[0], cut_name(row[1], max_len_names), row[2], row[3], convert_seconds(row[4]),
                                       datetime.fromtimestamp(row[6]).strftime('%Y-%m-%d, %H:%M'), convert_size(row[5]))
         except OSError:
             db_out += error_row.format("N/A", "ERROR", "N/A", "N/A", "N/A", "N/A", "N/A")

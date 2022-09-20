@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import time
 
 import mediainfolib
 from mediainfolib import data_path, seperator
@@ -78,6 +79,7 @@ def set_config():
 
 
 def redo_db():
+    start = time.time()
     conf = mediainfolib.get_config()
     if conf['mover']['dest_path'] is not None:
         plex_path = conf['mover']['dest_path']
@@ -85,9 +87,13 @@ def redo_db():
         _plex_path = prompt(HTML("<ansiblue>Put in the path to your plex files: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
         plex_path = ensure_path_ex(_plex_path)
     db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
-    os.remove(db_path)
+    if os.path.exists(db_path):
+        os.remove(db_path)
+    print("[i] Rebuilding database... (this could take a while)")
     info_shows, info_movies = fetch_infos.fetch_all(plex_path)
     manage_db.create_database(db_path, info_shows, info_movies)
+    end = time.time()
+    print("[i] Rebuilding the database finished in {} minutes".format(round((end-start) / 60.0, 2)))
 
 
 if __name__ == '__main__':

@@ -1,14 +1,11 @@
 # just for testing I swear
-import concurrent.futures
-import glob
 import os
-import re
 import time
 from itertools import dropwhile
 
 import fetch_infos
 import mediainfolib
-from mediainfolib import seperator, sorted_alphanumeric, get_duration
+from mediainfolib import seperator
 import manage_db
 
 conf = mediainfolib.get_config()
@@ -34,12 +31,12 @@ def check_db_for_missing(plex_path):
 
 def time_info_reading():
     time_start = time.time()
-    info_shows = fetch_infos.get_show_infos("P:\\Plex Shows\\TV Shows\\Sankarea")
+    info_shows = fetch_infos.get_show_infos("P:\\Plex Shows\\TV Shows\\Parks and Recreation")
     print(info_shows)
+    print(mediainfolib.convert_seconds(info_shows[0][4]))
     time_end = time.time()
     return time_end - time_start
 
 
-print(time_info_reading())
+print("Time: {} seconds".format(time_info_reading()))
 # print("Runtime: {}s".format(get_infos()))
-

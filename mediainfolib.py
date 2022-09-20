@@ -5,13 +5,13 @@ import os
 import csv
 from sys import platform
 import json
-
 try:
     import pycountry
     from prompt_toolkit import prompt, HTML, print_formatted_text
     from prompt_toolkit.completion import PathCompleter
+    import cv2
 except ModuleNotFoundError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pycountry", "prompt_toolkit"])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "pycountry", "prompt_toolkit", "opencv-python"])
 
 global seperator
 if platform == "win32":
@@ -77,6 +77,20 @@ def get_duration(filename) -> int:
     return duration
 
 
+# returns the duration of a video file in seconds
+def get_duration_cv2(filename) -> int:
+    data = cv2.VideoCapture(filename)
+    frames = data.get(cv2.CAP_PROP_FRAME_COUNT)
+    fps = data.get(cv2.CAP_PROP_FPS)
+    return round(frames / fps)
+
+
+def convert_seconds(secs) -> str:
+    minutes = (secs / 60) % 60
+    hours = (secs / (60 * 60))
+    return "%dh %dm" % (hours, minutes)
+
+
 # converts milliseconds to minutes and hours
 def convert_millis(millis) -> str:
     minutes = (millis / (1000 * 60)) % 60
@@ -130,7 +144,7 @@ def convert_country(alpha: str) -> str:
                     langs.append(pycountry.languages.get(alpha_2=al).name)
                     break
                 langs.append(pycountry.languages.get(alpha_3=al).name)
-                return ";".join(langs)
+            return ";".join(langs)
         except AttributeError:
             return "Undefined"
     return "Undefined"
