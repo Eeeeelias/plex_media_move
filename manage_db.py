@@ -143,6 +143,8 @@ def get_max_id(table, cursor: sqlite3.Cursor) -> tuple[int]:
 
 def check_entry_ex(table: str, cursor: sqlite3.Cursor, info: tuple):
     possible_ex = None
+    info = list(info)
+    info[1] = info[1].replace("'", "''")
     if table == "movies":
         possible_ex = cursor.execute(f"SELECT * FROM movies WHERE name='{info[1]}' AND version='{info[4]}'").fetchone()
     elif table == "shows":
@@ -209,6 +211,7 @@ def delete_entry(table: str, db_file, id: int) -> None:
 
 # returns movies that contain the search word
 def get_movies(search: str, db_path: str, order='name', desc=True) -> list[tuple]:
+    search = search.replace("'", "''")
     sort = "ASC" if not desc else "DESC"
     sql = f"SELECT * FROM movies WHERE name like '%{search}%' ORDER BY {order} {sort}"
     conn = create_connection(db_path)
@@ -219,6 +222,7 @@ def get_movies(search: str, db_path: str, order='name', desc=True) -> list[tuple
 
 
 def get_shows(search: str, db_path: str, order='name', desc=True) -> list[tuple]:
+    search = search.replace("'", "''")
     sort = "ASC" if not desc else "DESC"
     sql = f"SELECT * FROM shows WHERE name like '%{search}%' ORDER BY {order} {sort}"
     conn = create_connection(db_path)

@@ -30,9 +30,10 @@ def time_info_reading():
     return time_end - time_start
 
 
-test = input("put in something: ")
+conn = manage_db.create_connection(db_path)
+print(manage_db.check_entry_ex("shows", conn.cursor(), (86, "JoJo's Bizarre Adventure", 5, 171, 245113, 42217537643, 1662149867.533148)))
 
-if test == ("m" or "movies" or "1"):
-    print(True)
-else:
-    print(False)
+
+sql = "SELECT * FROM shows WHERE name like '%jojo''s%' "
+
+print(manage_db.custom_sql(db_path, sql))
