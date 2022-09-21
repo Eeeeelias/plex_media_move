@@ -10,22 +10,19 @@ from prompt_toolkit.completion import PathCompleter
 def overview():
     gs = "<ansigreen>"
     ge = "</ansigreen>"
+    bs = "<grey><i>"
+    be = "</i></grey>"
     print_formatted_text(HTML(f"""
     ############################################################################
     #                                                                          #
     # Whith this tool you are able to shift episode numbers to fit a certain   #
-    # numbering. It goes like this:                                            #           
-    #                                                                          #
-    # /path/to/yourShow/                                                       #
-    #   yourShow s01e05.mp4                                                    #
-    #   yourShow s01e06.mp4                                                    #
-    #   yourShow s01e10.mp4                                                    #
-    #                                                                          #
-    # => {gs}Start at 1:{ge}                                                           #
-    # /path/to/yourShow/                                                       #
-    #   yourShow s01e01.mp4                                                    #
-    #   yourShow s01e02.mp4                                                    #
-    #   yourShow s01e06.mp4                                                    #
+    # numbering. It goes like this:                                            #
+    #                                                                          #           
+    #  {bs}Unordered{be}                     |     => {gs}Start at 1:{ge}                      #
+    # /path/to/yourShow/             |       /path/to/yourShow/                #
+    #   yourShow s01e05.mp4          |          yourShow s01e01.mp4            #
+    #   yourShow s01e06.mp4          |          yourShow s01e02.mp4            #
+    #   yourShow s01e10.mp4          |          yourShow s01e06.mp4            #
     #                                                                          #
     ############################################################################
     """))
