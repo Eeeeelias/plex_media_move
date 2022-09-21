@@ -133,11 +133,12 @@ def update_database(additions: set[str], db) -> None:
     return
 
 
-def get_max_id(table, cursor: sqlite3.Cursor) -> tuple[int]:
+def get_max_id(table, db_path: str) -> tuple[int]:
+    cursor = create_connection(db_path).cursor()
     if table == "movies":
-        return cursor.execute("SELECT MAX(id) FROM movies").fetchone()
+        return cursor.execute("SELECT COUNT(id) FROM movies").fetchone()
     elif table == "shows":
-        return cursor.execute("SELECT MAX(id) FROM shows").fetchone()
+        return cursor.execute("SELECT COUNT(id) FROM shows").fetchone()
     return (1,)
 
 

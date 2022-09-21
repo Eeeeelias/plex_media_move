@@ -1,23 +1,28 @@
 import os
 import re
 import mediainfolib
+import setup
 from mediainfolib import seperator, clear
 from prompt_toolkit import prompt, HTML, print_formatted_text
 import manage_db
+from manage_db import get_max_id
 
 conf = mediainfolib.get_config()
 db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
 
 
-def give_options():
+def give_options(num_shows, num_movies):
+    info_line = " [i] {} shows and {} movies in your database.".format(num_shows[0], num_movies[0])
+    empty_space = ' ' * (74 - len(info_line))
     gs = "<ansigreen>"
     ge = "</ansigreen>"
     print_formatted_text(HTML(f"""
     ############################################################################
+    #{info_line}{empty_space}#
     #                                                                          #
     # What would you like to do?                                               #
     # Search:  [1] {gs}shows{ge}    [2] {gs}movies{ge}    [3] {gs}custom search{ge}                    #
-    # Execute: [4] {gs}deletion{ge} [5] {gs}SQL{ge}                                            #
+    # Execute: [4] {gs}deletion{ge} [5] {gs}SQL{ge}       [6] {gs}reindex db{ge}                       #
     #                                                                          #
     ############################################################################
 """))
@@ -81,7 +86,7 @@ def main():
     while 1:
         try:
             db_table = ""
-            give_options()
+            give_options(get_max_id("shows", db_path), get_max_id("movies", db_path))
             inp = prompt(HTML("<ansiblue>Your choice: </ansiblue>")).lower()
             if inp == "1" or inp == "s" or inp == "shows":
                 show = prompt(HTML("<ansiblue>Put in a name for your search: </ansiblue>"))
@@ -107,6 +112,9 @@ def main():
                 res = None
                 sql = prompt(HTML("<ansiblue>Put in your custom SQL query: </ansiblue>"))
                 print(manage_db.custom_sql(db_path, sql))
+            elif inp == "6" or inp == "r" or inp == "reindex db":
+                res = None
+                setup.redo_db()
             else:
                 clear()
                 continue
