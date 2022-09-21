@@ -80,10 +80,11 @@ def interactive():
 
         if prev == "y":
             return get_prev(os.path.expanduser("~/prev"))
+        elif prev == "q":
+            return 0, 0, 0, 0, 0, 0
 
     movie_en = prompt(HTML("<ansiblue>[a] Firstly, give the path of the first movie:</ansiblue>"),
                       completer=PathCompleter()).lstrip('"').rstrip('"')
-
     while not os.path.isfile(movie_en):
         movie_en = (
             prompt(HTML("<ansiblue>[a] This is not a file! Make sure you spelled the path correctly:</ansiblue>"),
@@ -183,6 +184,8 @@ def main():
         exit(1)
     if args.interactive or len(sys.argv) == 1:
         movie_en, movie_de, lan_en, lan_de, destination, offset = interactive()
+        if movie_en is 0:
+            return
         with open(os.path.expanduser("~/prev"), "w") as f:
             f.write(f"mv_en\t{movie_en}\n")
             f.write(f"mv_de\t{movie_de}\n")

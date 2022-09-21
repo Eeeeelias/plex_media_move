@@ -136,6 +136,15 @@ def update_database(additions: set[str], db) -> None:
 def get_max_id(table, db_path: str) -> tuple[int]:
     cursor = create_connection(db_path).cursor()
     if table == "movies":
+        return cursor.execute("SELECT MAX(id) FROM movies").fetchone()
+    elif table == "shows":
+        return cursor.execute("SELECT MAX(id) FROM shows").fetchone()
+    return (1,)
+
+
+def get_count_ids(table: str, db_path: str) -> tuple[int]:
+    cursor = create_connection(db_path).cursor()
+    if table == "movies":
         return cursor.execute("SELECT COUNT(id) FROM movies").fetchone()
     elif table == "shows":
         return cursor.execute("SELECT COUNT(id) FROM shows").fetchone()

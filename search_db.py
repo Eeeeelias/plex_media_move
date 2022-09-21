@@ -5,7 +5,7 @@ import setup
 from mediainfolib import seperator, clear
 from prompt_toolkit import prompt, HTML, print_formatted_text
 import manage_db
-from manage_db import get_max_id
+from manage_db import get_count_ids
 
 
 def give_options(num_shows, num_movies):
@@ -85,7 +85,7 @@ def main():
     while 1:
         try:
             db_table = ""
-            give_options(get_max_id("shows", db_path), get_max_id("movies", db_path))
+            give_options(get_count_ids("shows", db_path), get_count_ids("movies", db_path))
             inp = prompt(HTML("<ansiblue>Your choice: </ansiblue>")).lower()
             if inp == "1" or inp == "s" or inp == "shows":
                 show = prompt(HTML("<ansiblue>Put in a name for your search: </ansiblue>"))
@@ -114,6 +114,8 @@ def main():
             elif inp == "6" or inp == "r" or inp == "reindex db":
                 res = None
                 setup.redo_db()
+            elif inp == "q":
+                return
             else:
                 clear()
                 continue
@@ -122,7 +124,9 @@ def main():
             if next.lower() == "n":
                 clear()
                 return
-            if next.lower() == "q" or next.lower() == "quit" or next.lower() == "stop":
+            elif next.lower() == "q":
+                return
+            elif next.lower() == "quit" or next.lower() == "stop":
                 exit(0)
             elif next.lower() == 'clear':
                 os.system('cls' if os.name == 'nt' else 'clear')

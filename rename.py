@@ -15,7 +15,7 @@ def overview():
     print_formatted_text(HTML(f"""
     ############################################################################
     #                                                                          #
-    # Whith this tool you are able to shift episode numbers to fit a certain   #
+    # With this tool you are able to shift episode numbers to fit a certain    #
     # numbering. It goes like this:                                            #
     #                                                                          #           
     #  {bs}Unordered{be}                     |     => {gs}Start at 1:{ge}                      #
@@ -69,7 +69,11 @@ def main():
         overview()
         in_path = prompt(HTML("<ansiblue>Put in the path where your files that need shifting are: </ansiblue>"),
                          completer=PathCompleter()).lstrip('"').rstrip('"')
+        if in_path == "q":
+            return
         start_pos = prompt(HTML("<ansiblue>Put in the position at which your episodes need to start: </ansiblue>"))
+        if start_pos == "q":
+            return
         loop_shift(in_path, int(start_pos))
     else:
         try:

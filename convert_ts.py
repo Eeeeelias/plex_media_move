@@ -44,7 +44,11 @@ def main():
         overview()
         path = prompt(HTML("<ansiblue>Put in the path of the folder containing your unconverted files: </ansiblue>"),
                       completer=PathCompleter()).lstrip('"').rstrip('"')
-        filetype = prompt(HTML("<ansiblue> Put in the filetype you want to convert (default: .ts): </ansiblue>"))
+        if path == "q":
+            return
+        filetype = prompt(HTML("<ansiblue>Put in the filetype you want to convert (default: .ts): </ansiblue>"))
+        if filetype == "q":
+            return
         converting(path, filetype)
     else:
         try:
