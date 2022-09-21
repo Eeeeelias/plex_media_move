@@ -7,9 +7,6 @@ from prompt_toolkit import prompt, HTML, print_formatted_text
 import manage_db
 from manage_db import get_max_id
 
-conf = mediainfolib.get_config()
-db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
-
 
 def give_options(num_shows, num_movies):
     info_line = " [i] {} shows and {} movies in your database.".format(num_shows[0], num_movies[0])
@@ -26,11 +23,6 @@ def give_options(num_shows, num_movies):
     #                                                                          #
     ############################################################################
 """))
-
-
-if db_path is None:
-    print("No database found! Exiting")
-    exit(0)
 
 
 def search_other():
@@ -82,6 +74,13 @@ def search_other():
 
 
 def main():
+    conf = mediainfolib.get_config()
+    db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
+
+    if db_path is None:
+        print("No database found! Exiting")
+        exit(0)
+
     print("Looking at: {}".format(db_path))
     while 1:
         try:

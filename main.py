@@ -4,7 +4,6 @@ import py_combine_movies
 import rename
 import search_db
 import setup
-import os
 from mediainfolib import get_config, clear
 from prompt_toolkit import HTML, print_formatted_text, prompt
 
