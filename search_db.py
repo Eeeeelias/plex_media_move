@@ -83,19 +83,27 @@ def main():
             db_table = ""
             give_options()
             inp = prompt(HTML("<ansiblue>Your choice: </ansiblue>")).lower()
-            if inp == ("1" or "s" or "shows"):
+            if inp == "1" or inp == "s" or inp == "shows":
                 show = prompt(HTML("<ansiblue>Put in a name for your search: </ansiblue>"))
                 res = manage_db.get_shows(search=show, db_path=db_path)
                 db_table = "shows"
-            elif inp == ("2" or "m" or "movies"):
+            elif inp == "2" or inp == "m" or inp == "movies":
                 movie = prompt(HTML("<ansiblue>Put in a name for your movie search: </ansiblue>"))
                 res = manage_db.get_movies(search=movie, db_path=db_path, order='id')
                 db_table = "movies"
-            elif inp == ("1" or "c" or "custom"):
+            elif inp == "3" or inp == "c" or inp == "custom":
                 res, db_table = search_other()
                 if res == "":
                     continue
-            elif inp == ("5" or "o" or "SQL"):
+            elif inp == "4" or inp == "d" or inp == "deletion":
+                table = prompt(HTML("<ansiblue>Choose the database you want to delete from (shows or movies): "
+                                    "</ansiblue>"))
+                while not (table == "movies" or table == "shows"):
+                    table = prompt(HTML("<ansiblue>This is not a valid option! Try again: </ansiblue>"))
+                id = prompt(HTML("<ansiblue>Give the id of the entry you want to delete: </ansiblue>"))
+                manage_db.delete_entry(table, db_path, int(id))
+                continue
+            elif inp == "5" or inp == "o" or inp == "SQL":
                 res = None
                 sql = prompt(HTML("<ansiblue>Put in your custom SQL query: </ansiblue>"))
                 print(manage_db.custom_sql(db_path, sql))
@@ -107,7 +115,7 @@ def main():
             if next.lower() == "n":
                 clear()
                 return
-            if next.lower() == ("q" or "quit" or "stop"):
+            if next.lower() == "q" or next.lower() == "quit" or next.lower() == "stop":
                 exit(0)
             elif next.lower() == 'clear':
                 os.system('cls' if os.name == 'nt' else 'clear')

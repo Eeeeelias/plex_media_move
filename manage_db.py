@@ -187,17 +187,24 @@ def add_sql(table: str, cur: sqlite3.Cursor, info: tuple) -> None:
         cur.execute(sql_shows, info)
 
 
-def delete_entry(table: str, cur: sqlite3.Cursor, id: int) -> None:
-    if table == "movies":
-        cur.execute("SELECT name FROM movies where id=?", (id,))
-        print("[i] Deleting \'{}\'.".format(cur.fetchone()[0]))
-        time.sleep(3)
-        cur.execute("DELETE FROM movies WHERE id= ?", (id,))
-    if table == "shows":
-        cur.execute("SELECT name FROM shows where id=?", (id,))
-        print("[i] Deleting \'{}\'.".format(cur.fetchone()[0]))
-        time.sleep(3)
-        cur.execute("DELETE FROM shows WHERE id= ?", (id,))
+def delete_entry(table: str, db_file, id: int) -> None:
+    conn = create_connection(db_file)
+    cur = conn.cursor()
+    try:
+        if table == "movies":
+            cur.execute("SELECT name FROM movies where id=?", (id,))
+            print("[i] Deleting \'{}\'.".format(cur.fetchone()[0]))
+            time.sleep(3)
+            cur.execute("DELETE FROM movies WHERE id= ?", (id,))
+        elif table == "shows":
+            cur.execute("SELECT name FROM shows where id=?", (id,))
+            print("[i] Deleting \'{}\'.".format(cur.fetchone()[0]))
+            time.sleep(3)
+            cur.execute("DELETE FROM shows WHERE id= ?", (id,))
+    except TypeError:
+        print("ID doesn't exist.")
+        return
+    conn.commit()
 
 
 # returns movies that contain the search word
@@ -283,7 +290,6 @@ def prettify_movies(rows: List[tuple]) -> str:
 
 def prettify_shows(rows: List[tuple]) -> str:
     max_len_names = os.get_terminal_size().columns - 75 - 12
-    print("Max len names", max_len_names)
     db_out = ""
     stopper = "    " + "".join([add_minus() for i in range(max_len_names + 75)]) + "\t\n"
     head = "    | ID  | Name{:%d}| Seasons | Episodes | Runtime{:2} | Added{:12} | Size{:5} |\t\n" % (max_len_names - 3)

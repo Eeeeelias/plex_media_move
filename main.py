@@ -50,24 +50,26 @@ def main():
     while 1:
         greetings()
         tool = prompt(HTML("<ansiblue>Your choice: </ansiblue>"))
-        if tool == ("1" or "media mover"):
+        if tool == "1" or tool == "media mover":
             media_mover.main()
-        if tool == ("2" or "combiner"):
+        elif tool == "2" or tool == "combiner":
             clear()
             py_combine_movies.main()
-        if tool == ("3" or "shifting"):
+        elif tool == "3" or tool == "shifting":
             clear()
             rename.main()
-        if tool == ("4" or "converter"):
+        elif tool == "4" or tool == "converter":
             clear()
             convert_ts.main()
-        if tool == ("5" or "db search"):
+        elif tool == "5" or tool == "db search":
             clear()
             search_db.main()
-        if tool == "clear":
+        elif tool == "clear":
             clear()
-        if tool == ("close" or "q" or "quit"):
+        elif tool == "close" or tool == "q" or tool == "quit":
             exit(0)
+        else:
+            clear()
 
 
 if __name__ == '__main__':
