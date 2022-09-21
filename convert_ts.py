@@ -4,8 +4,24 @@ import pathlib
 import re
 import subprocess
 import sys
-from prompt_toolkit import prompt, HTML
+from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
+
+
+def overview():
+    gs = "<ansigreen>"
+    ge = "</ansigreen>"
+    print_formatted_text(HTML(f"""
+    ############################################################################
+    #                                                                          #
+    # Turn this:                        {gs}=> Into this:{ge}                          #
+    # /your/path/                          /your/path/                         #
+    #    yourShow Episode 1.ts                yourShow Episode 1.mp4           #
+    #    yourShow Episode 2.mp4               yourShow Episode 2.mp4           #
+    #    yourShow Episode 3.ts                yourShow Episode 3.mp4           #
+    #                                                                          #
+    ############################################################################
+    """))
 
 
 def converting(unconverted_path, filetype=".ts"):
@@ -25,6 +41,7 @@ def converting(unconverted_path, filetype=".ts"):
 
 def main():
     if len(sys.argv) == 1:
+        overview()
         path = prompt(HTML("<ansiblue>Put in the path of the folder containing your unconverted files: </ansiblue>"),
                       completer=PathCompleter()).lstrip('"').rstrip('"')
         filetype = prompt(HTML("<ansiblue> Put in the filetype you want to convert (default: .ts): </ansiblue>"))

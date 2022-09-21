@@ -69,6 +69,7 @@ def loop_shift(path, num_shift):
 
 def main():
     if len(argv) == 1:
+        overview()
         in_path = prompt(HTML("<ansiblue>Put in the path where your files that need shifting are: </ansiblue>"),
                          completer=PathCompleter()).lstrip('"').rstrip('"')
         start_pos = prompt(HTML("<ansiblue>Put in the position at which your episodes need to start: </ansiblue>"))

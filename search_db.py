@@ -1,12 +1,27 @@
 import os
 import re
 import mediainfolib
-from mediainfolib import seperator, data_path
+from mediainfolib import seperator, clear
 from prompt_toolkit import prompt, HTML, print_formatted_text
 import manage_db
 
 conf = mediainfolib.get_config()
 db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
+
+
+def give_options():
+    gs = "<ansigreen>"
+    ge = "</ansigreen>"
+    print_formatted_text(HTML(f"""
+    ############################################################################
+    #                                                                          #
+    # What would you like to do?                                               #
+    # Search:  [1] {gs}shows{ge}    [2] {gs}movies{ge}    [3] {gs}custom search{ge}                    #
+    # Execute: [4] {gs}deletion{ge} [5] {gs}SQL{ge}                                            #
+    #                                                                          #
+    ############################################################################
+"""))
+
 
 if db_path is None:
     print("No database found! Exiting")
@@ -66,29 +81,33 @@ def main():
     while 1:
         try:
             db_table = ""
-            inp = prompt(
-                HTML("<ansiblue>Would you like to look for a [s]how, a [m]ovie or a [c]ustom search? </ansiblue>")).lower()
-            if inp == "s":
+            give_options()
+            inp = prompt(HTML("<ansiblue>Your choice: </ansiblue>")).lower()
+            if inp == ("1" or "s" or "shows"):
                 show = prompt(HTML("<ansiblue>Put in a name for your search: </ansiblue>"))
                 res = manage_db.get_shows(search=show, db_path=db_path)
                 db_table = "shows"
-            elif inp == "m":
+            elif inp == ("2" or "m" or "movies"):
                 movie = prompt(HTML("<ansiblue>Put in a name for your movie search: </ansiblue>"))
                 res = manage_db.get_movies(search=movie, db_path=db_path, order='id')
                 db_table = "movies"
-            elif inp == "c":
+            elif inp == ("1" or "c" or "custom"):
                 res, db_table = search_other()
                 if res == "":
                     continue
-            elif inp == "o":
+            elif inp == ("5" or "o" or "SQL"):
                 res = None
                 sql = prompt(HTML("<ansiblue>Put in your custom SQL query: </ansiblue>"))
                 print(manage_db.custom_sql(db_path, sql))
             else:
+                clear()
                 continue
             print(manage_db.prettify_out(db_table, res))
             next = prompt(HTML("<ansiblue>Would you like to make another search? [y/N] </ansiblue>"))
             if next.lower() == "n":
+                clear()
+                return
+            if next.lower() == ("q" or "quit" or "stop"):
                 exit(0)
             elif next.lower() == 'clear':
                 os.system('cls' if os.name == 'nt' else 'clear')

@@ -126,19 +126,8 @@ def sorted_alphanumeric(data) -> list:
     return sorted(data, key=alphanum_key)
 
 
-# TODO: Change this so it works with the database
-def completeness_check(path, infos_path) -> None:
-    name_list = []
-    shows_list = [x for x in os.listdir(path)]
-
-    with open(infos_path, 'r') as csvfile:
-        show_infos = csv.reader(csvfile)
-        for lines in show_infos:
-            name_list.append(lines[1])
-
-    for i in shows_list:
-        if i not in name_list:
-            print(f"{i} not in your list!")
+def clear():
+    return os.system('cls' if os.name == 'nt' else 'clear')
 
 
 # returns the audio language of the given file

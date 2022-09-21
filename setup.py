@@ -81,7 +81,7 @@ def set_config():
                             completer=PathCompleter()).lstrip('"').rstrip('"')
         plex_path = ensure_path_ex(_plex_path)
         info_shows, info_movies = fetch_infos.fetch_all(plex_path)
-        manage_db.create_database(db_path, info_shows, info_movies)
+        manage_db.create_database(plex_path, db_path, info_shows, info_movies)
     print_formatted_text("[i] All done!")
     exit(0)
 
@@ -99,7 +99,7 @@ def redo_db():
         os.remove(db_path)
     print("[i] Rebuilding database... (this could take a while)")
     info_shows, info_movies = fetch_infos.fetch_all(plex_path)
-    manage_db.create_database(db_path, info_shows, info_movies)
+    manage_db.create_database(plex_path, db_path, info_shows, info_movies)
     end = time.time()
     print("[i] Rebuilding the database finished in {} minutes".format(round((end-start) / 60.0, 2)))
 

@@ -1,9 +1,11 @@
 import os.path
 import sqlite3
+import time
 from datetime import datetime
 from sqlite3 import Error
 from typing import List
-from mediainfolib import convert_millis, convert_country, cut_name, convert_size, add_minus, convert_seconds
+from mediainfolib import convert_millis, convert_country, cut_name, convert_size, add_minus, convert_seconds, \
+    seperator as sep
 import fetch_infos
 
 
@@ -39,7 +41,7 @@ def add_to_db(conn, table, media) -> tuple:
     return curse.lastrowid
 
 
-def create_database(db_path, info_shows: List[tuple], info_movies: List[tuple]) -> None:
+def create_database(plex_path, db_path, info_shows: List[tuple], info_movies: List[tuple]) -> None:
     if not os.path.exists(db_path):
         open(db_path, 'a').close()
     sql_create_shows = """ CREATE TABLE IF NOT EXISTS shows (
@@ -79,6 +81,13 @@ def create_database(db_path, info_shows: List[tuple], info_movies: List[tuple]) 
     for movie in info_movies:
         last_movie_id = add_to_db(connection, "movie", movie)
         # print(f"[i] Movie {movie[1]} added!")
+    cur = connection.cursor()
+    cur.execute("SELECT name FROM shows")
+    list_shows = list(cur.fetchall())
+    completeness_check(plex_path + f"{sep}TV Shows", [x[0] for x in list_shows])
+    # cur.execute("SELECT name FROM movies")
+    # list_movies = list(cur.fetchall())
+    # completeness_check(plex_path + f"{sep}Movies", list_movies)
     print(f"[i] {last_show_id} Shows now in the database!")
     print(f"[i] {last_movie_id} Movies now in the database!")
 
@@ -178,6 +187,19 @@ def add_sql(table: str, cur: sqlite3.Cursor, info: tuple) -> None:
         cur.execute(sql_shows, info)
 
 
+def delete_entry(table: str, cur: sqlite3.Cursor, id: int) -> None:
+    if table == "movies":
+        cur.execute("SELECT name FROM movies where id=?", (id,))
+        print("[i] Deleting \'{}\'.".format(cur.fetchone()[0]))
+        time.sleep(3)
+        cur.execute("DELETE FROM movies WHERE id= ?", (id,))
+    if table == "shows":
+        cur.execute("SELECT name FROM shows where id=?", (id,))
+        print("[i] Deleting \'{}\'.".format(cur.fetchone()[0]))
+        time.sleep(3)
+        cur.execute("DELETE FROM shows WHERE id= ?", (id,))
+
+
 # returns movies that contain the search word
 def get_movies(search: str, db_path: str, order='name', desc=True) -> list[tuple]:
     sort = "ASC" if not desc else "DESC"
@@ -216,6 +238,14 @@ def get_specific(db_path: str, sql: str):
     return cur.fetchall()
 
 
+def completeness_check(path, db_names) -> None:
+    shows_list = [x for x in os.listdir(path)]
+
+    for i in shows_list:
+        if i not in db_names:
+            print(f"[i] \'{i}\' not in your database!")
+
+
 def prettify_out(table: str, rows: List[tuple]) -> str:
     if rows is None:
         return ""
@@ -227,13 +257,14 @@ def prettify_out(table: str, rows: List[tuple]) -> str:
 
 
 def prettify_movies(rows: List[tuple]) -> str:
-    max_len_names = os.get_terminal_size().columns - 96
+    max_len_names = os.get_terminal_size().columns - 96 - 12
     db_out = ""
-    stopper = "".join([add_minus() for i in range(max_len_names + 96)]) + "\n"
-    head = "| ID  | Name{:%d}| Year | Language{:7} | Version{:3} | Runtime | Size{:4} | Added{:12} | Type |\n" % (max_len_names - 3)
-    empty_res = "| {:4}   {:%d}   {:7}   {:8}   {:9}   {:17}   {:26}    |\n" % max_len_names
-    movie_row = "| {0:3} | {1:%d} | {2} | {3:15} | {4:10} | {5:6}  | {6:5} GB | {7} | {8} |\n" % max_len_names
-    error_row = "| {0:3} | {1:%d} | {2} | {3:15} | {4:10} | {5:6}  | {6:5} GB | {7} | {8} |\n" % max_len_names
+    stopper = "    " + "".join([add_minus() for i in range(max_len_names + 96)]) + "\t\n"
+    head = "    | ID  | Name{:%d}| Year | Language{:7} | Version{:3} | Runtime | Size{:4} | Added{:12} | Type |\t\n" % (
+                max_len_names - 3)
+    empty_res = "    | {:4}   {:%d}   {:7}   {:8}   {:9}   {:17}   {:26}    |\t\n" % max_len_names
+    movie_row = "    | {0:3} | {1:%d} | {2} | {3:15} | {4:10} | {5:6}  | {6:5} GB | {7} | {8} |\t\n" % max_len_names
+    error_row = "    | {0:3} | {1:%d} | {2} | {3:15} | {4:10} | {5:6}  | {6:5} GB | {7} | {8} |\t\n" % max_len_names
     db_out += stopper
     db_out += head.format("", "", "", "", "")
     db_out += stopper
@@ -251,13 +282,14 @@ def prettify_movies(rows: List[tuple]) -> str:
 
 
 def prettify_shows(rows: List[tuple]) -> str:
-    max_len_names = os.get_terminal_size().columns - 75
+    max_len_names = os.get_terminal_size().columns - 75 - 12
+    print("Max len names", max_len_names)
     db_out = ""
-    stopper = "".join([add_minus() for i in range(max_len_names + 75)]) + "\n"
-    head = "| ID  | Name{:%d}| Seasons | Episodes | Runtime{:2} | Added{:12} | Size{:5} |\n" % (max_len_names - 3)
-    empty_res = "| {:4}   {:%d}   {:7}   {:8}   {:9}   {:17}   {:5}    |\n" % max_len_names
-    show_row = "| {0:3} | {1:%d} | {2:7} | {3:8} | {4:9} | {5:17} | {6:6} GB |\n" % max_len_names
-    error_row = "| {:3} | {:%d} | {:7} | {:8} | {:9} | {:17} | {:6} GB |\n" % max_len_names
+    stopper = "    " + "".join([add_minus() for i in range(max_len_names + 75)]) + "\t\n"
+    head = "    | ID  | Name{:%d}| Seasons | Episodes | Runtime{:2} | Added{:12} | Size{:5} |\t\n" % (max_len_names - 3)
+    empty_res = "    | {:4}   {:%d}   {:7}   {:8}   {:9}   {:17}   {:5}    |\t\n" % max_len_names
+    shows_row = "    | {0:3} | {1:%d} | {2:7} | {3:8} | {4:9} | {5:17} | {6:6} GB |\t\n" % max_len_names
+    error_row = "    | {:3} | {:%d} | {:7} | {:8} | {:9} | {:17} | {:6} GB |\t\n" % max_len_names
     db_out += stopper
     db_out += head.format("", "", "", "")
     db_out += stopper
@@ -265,8 +297,8 @@ def prettify_shows(rows: List[tuple]) -> str:
         db_out += empty_res.format("None", "", "", "", "", "", "")
     for row in rows:
         try:
-            db_out += show_row.format(row[0], cut_name(row[1], max_len_names), row[2], row[3], convert_seconds(row[4]),
-                                      datetime.fromtimestamp(row[6]).strftime('%Y-%m-%d, %H:%M'), convert_size(row[5]))
+            db_out += shows_row.format(row[0], cut_name(row[1], max_len_names), row[2], row[3], convert_seconds(row[4]),
+                                       datetime.fromtimestamp(row[6]).strftime('%Y-%m-%d, %H:%M'), convert_size(row[5]))
         except OSError:
             db_out += error_row.format("N/A", "ERROR", "N/A", "N/A", "N/A", "N/A", "N/A")
             continue

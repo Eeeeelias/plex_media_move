@@ -5,7 +5,7 @@ import rename
 import search_db
 import setup
 import os
-from mediainfolib import get_config
+from mediainfolib import get_config, clear
 from prompt_toolkit import HTML, print_formatted_text, prompt
 
 
@@ -50,19 +50,23 @@ def main():
     while 1:
         greetings()
         tool = prompt(HTML("<ansiblue>Your choice: </ansiblue>"))
-        if tool == "1" or tool == "media mover":
+        if tool == ("1" or "media mover"):
             media_mover.main()
-        if tool == "2" or tool == "combiner":
+        if tool == ("2" or "combiner"):
+            clear()
             py_combine_movies.main()
-        if tool == "3" or tool == "shifting":
+        if tool == ("3" or "shifting"):
+            clear()
             rename.main()
-        if tool == "4" or tool == "converter":
+        if tool == ("4" or "converter"):
+            clear()
             convert_ts.main()
-        if tool == "5" or tool == "db search":
+        if tool == ("5" or "db search"):
+            clear()
             search_db.main()
         if tool == "clear":
-            os.system('cls' if os.name == 'nt' else 'clear')
-        if tool == "close" or tool == "q" or tool == "quit":
+            clear()
+        if tool == ("close" or "q" or "quit"):
             exit(0)
 
 
