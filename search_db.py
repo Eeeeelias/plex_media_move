@@ -25,7 +25,7 @@ def give_options(num_shows, num_movies):
 """))
 
 
-def search_other():
+def search_other(db_path):
     movies_vals = {"id": int, "name": str, "year": int, "language": str, "version": str, "runtime": str, "size": int,
                    "modified": float, "type": str}
     shows_vals = {"id": int, "name": str, "seasons": int, "episodes": int, "runtime": int, "modified": float,
@@ -96,7 +96,7 @@ def main():
                 res = manage_db.get_movies(search=movie, db_path=db_path, order='id')
                 db_table = "movies"
             elif inp == "3" or inp == "c" or inp == "custom":
-                res, db_table = search_other()
+                res, db_table = search_other(db_path)
                 if res == "":
                     continue
             elif inp == "4" or inp == "d" or inp == "deletion":
