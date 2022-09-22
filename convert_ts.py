@@ -26,6 +26,7 @@ def overview():
 
 def converting(unconverted_path, filetype=".ts"):
     print(f"[i] Converting .ts files in {unconverted_path}")
+    print(filetype)
     files_to_convert = glob.glob(unconverted_path + f"/*{filetype}")
     if len(files_to_convert) == 0:
         print("[i] There seem to be no videos to convert. Are you sure your inputs are proper?")
@@ -49,7 +50,10 @@ def main():
         filetype = prompt(HTML("<ansiblue>Put in the filetype you want to convert (default: .ts): </ansiblue>"))
         if filetype == "q":
             return
-        converting(path, filetype)
+        elif filetype != "":
+            converting(path, filetype)
+        else:
+            converting(path)
     else:
         try:
             converting(sys.argv[1], sys.argv[2])

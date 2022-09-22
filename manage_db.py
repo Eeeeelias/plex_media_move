@@ -278,7 +278,7 @@ def prettify_out(table: str, rows: List[tuple]) -> str:
 
 
 def prettify_movies(rows: List[tuple]) -> str:
-    max_len_names = os.get_terminal_size().columns - 96 - 12
+    max_len_names = max(10, os.get_terminal_size().columns - 96 - 12)
     db_out = ""
     stopper = "    " + "".join([add_minus() for i in range(max_len_names + 96)]) + "\t\n"
     head = "    | ID  | Name{:%d}| Year | Language{:7} | Version{:3} | Runtime | Size{:4} | Added{:12} | Type |\t\n" % (
