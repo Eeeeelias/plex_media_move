@@ -5,6 +5,7 @@ import re
 import shutil
 import sys
 import time
+import traceback
 from sys import platform
 import manage_db
 import mediainfolib
@@ -433,6 +434,7 @@ def main():
         )
         exit(1)
     except TypeError as e:
+        traceback.print_exc()
         print_formatted_text(HTML(
             "<ansired>[w] There was an error with some of the values you put in! Please double-check those and send "
             "me a message "
