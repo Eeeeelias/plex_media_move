@@ -184,7 +184,7 @@ def main():
         exit(1)
     if args.interactive or len(sys.argv) == 1:
         movie_en, movie_de, lan_en, lan_de, destination, offset = interactive()
-        if movie_en is 0:
+        if movie_en == 0:
             return
         with open(os.path.expanduser("~/prev"), "w") as f:
             f.write(f"mv_en\t{movie_en}\n")
@@ -276,7 +276,7 @@ def main():
             exit(1)
     else:
         print("[i] Files combined!")
-    if prompt(HTML("<ansiblue>Do you want try again? [y/N] ")).lower() == "y":
+    if prompt(HTML("<ansiblue>Do you want try again? [y/N] </ansiblue>")).lower() == "y":
         main()
     else:
         exit(0)

@@ -2,7 +2,6 @@ import re
 import subprocess
 import sys
 import os
-import csv
 from sys import platform
 import json
 try:
@@ -109,14 +108,19 @@ def convert_seconds(secs) -> str:
     return "%dh %dm" % (hours, minutes)
 
 
-def convert_millis(millis) -> str:
+def convert_millis(millis, day=False) -> str:
     """
     Converts milliseconds into hours and minutes
+    :param day: Set if return string should include days
     :param millis: seconds
     :return: string of form XXh YYm
     """
     minutes = (millis / (1000 * 60)) % 60
     hours = (millis / (1000 * 60 * 60))
+    if day:
+        hours = hours % 24
+        days = (millis / (1000 * 60 * 60 * 24))
+        return "%d days and %d hours" % (days, hours)
     return "%dh %dm" % (hours, minutes)
 
 
@@ -169,8 +173,12 @@ def cut_name(name, cut) -> str:
         return name
 
 
-def convert_size(size) -> float:
-    return round(size / (1024 ** 3), 2)
+def convert_size(size, tb=False) -> float:
+    size_gb = size / (1024 ** 3)
+    if tb:
+        size_tb = size_gb / 1000
+        return round(size_tb, 2)
+    return round(size_gb, 2)
 
 
 def add_minus() -> str:

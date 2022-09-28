@@ -1,15 +1,17 @@
 import os
+import random
 import re
+
+import db_infos
 import mediainfolib
 import setup
 from mediainfolib import seperator, clear
 from prompt_toolkit import prompt, HTML, print_formatted_text
 import manage_db
-from manage_db import get_count_ids
 
 
-def give_options(num_shows, num_movies):
-    info_line = " [i] {} shows and {} movies in your database.".format(num_shows[0], num_movies[0])
+def give_options(info):
+    info_line = info
     empty_space = ' ' * (74 - len(info_line))
     gs = "<ansigreen>"
     ge = "</ansigreen>"
@@ -23,6 +25,24 @@ def give_options(num_shows, num_movies):
     #                                                                          #
     ############################################################################
 """))
+
+
+# could add like total (possible) watch time, oldest entry, oldest movie, most episodes, etc.
+def info_line(db_path):
+    try:
+        choice = random.randint(1, 5)
+        if choice == 1:
+            return db_infos.media_size(db_path)
+        elif choice == 2:
+            return db_infos.best_quality(db_path)
+        elif choice == 3:
+            return db_infos.best_quality(db_path, worst=True)
+        elif choice == 4:
+            return db_infos.database_size(db_path)
+        elif choice == 5:
+            return db_infos.total_watchtime(db_path)
+    except:
+        return " [i] No cool infos! :("
 
 
 def search_other(db_path):
@@ -81,11 +101,11 @@ def main():
         print("No database found! Exiting")
         exit(0)
 
-    print("Looking at: {}".format(db_path))
+    # print("Looking at: {}".format(db_path))
     while 1:
         try:
             db_table = ""
-            give_options(get_count_ids("shows", db_path), get_count_ids("movies", db_path))
+            give_options(info_line(db_path))
             inp = prompt(HTML("<ansiblue>Your choice: </ansiblue>")).lower()
             if inp == "1" or inp == "s" or inp == "shows":
                 show = prompt(HTML("<ansiblue>Put in a name for your search: </ansiblue>"))

@@ -135,6 +135,6 @@ def fetch_all(overall_path) -> tuple[List[tuple], List[tuple]]:
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [executor.submit(x, y) for x, y in zip([get_show_infos, get_movie_infos], [overall_path + f"{sep}TV Shows", overall_path + f"{sep}Movies"])]
         results = [f.result() for f in futures]
-    #info_shows = get_show_infos(overall_path + f"{sep}TV Shows")
-    #info_movies = get_movie_infos(overall_path + f"{sep}Movies")
+    # info_shows = get_show_infos(overall_path + f"{sep}TV Shows")
+    # info_movies = get_movie_infos(overall_path + f"{sep}Movies")
     return results[0], results[1]

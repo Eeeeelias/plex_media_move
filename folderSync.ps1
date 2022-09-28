@@ -13,6 +13,6 @@ Write-Output "[i] Processing $len files"
 
 for ($i = 0; $i -le $inputPath1.length-1; $i++)
 {
-  python3 .\py_combine_movies.py -g $inputPath1[$i] -b $inputPath2[$i] -p $out -l $lang1 $lang2
+  py .\py_combine_movies.py -g $inputPath1[$i] -b $inputPath2[$i] -p $out -l $lang1 $lang2
 }
 

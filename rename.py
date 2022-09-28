@@ -54,6 +54,14 @@ def rename_weird_format(rename_path):
             print("Renamed:", path)
 
 
+def rename_other_weird_format(rename_path):
+    for path in glob.glob(rename_path + "/*.mp4"):
+        base_path, base_name = os.path.split(path)
+        new_name = re.sub(r"\((\d) x (\d+)\).*(\.[^.]+$)", r"s0\g<1>e0\g<2>\g<3>", base_name)
+        os.rename(path, Path(base_path, new_name))
+        print("Renamed:", path)
+
+
 def loop_shift(path, num_shift):
     offset = float('-inf')
     for file in glob.glob(path + "/*.mp4"):
@@ -79,6 +87,8 @@ def main():
         try:
             if argv[1] == '-r':
                 rename_weird_format(argv[2])
+            if argv[1] == '-r2':
+                rename_other_weird_format(argv[2])
             if argv[1] == '-s':
                 loop_shift(argv[2], int(argv[3]))
         except IndexError:
