@@ -5,13 +5,13 @@ import re
 import db_infos
 import mediainfolib
 import setup
-from mediainfolib import seperator, clear
+from mediainfolib import seperator, clear, cut_name
 from prompt_toolkit import prompt, HTML, print_formatted_text
 import manage_db
 
 
 def give_options(info):
-    info_line = info
+    info_line = cut_name(info, 73)
     empty_space = ' ' * (74 - len(info_line))
     gs = "<ansigreen>"
     ge = "</ansigreen>"
@@ -24,7 +24,7 @@ def give_options(info):
     # Execute: [4] {gs}deletion{ge} [5] {gs}SQL{ge}       [6] {gs}reindex db{ge}                       #
     #                                                                          #
     ############################################################################
-"""))
+    """))
 
 
 # could add like total (possible) watch time, oldest entry, oldest movie, most episodes, etc.
