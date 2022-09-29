@@ -1,6 +1,6 @@
 import convert_ts
+import ffmpeg_edits
 import media_mover
-import py_combine_movies
 import rename
 import search_db
 import setup
@@ -21,8 +21,7 @@ def greetings():
     #                                                                          #
     # [1] {gs}media mover{ge} - moves your media files to your plex folder             #
     #                                                                          #
-    # [2] {gs}combiner{ge}    - let's you combine two movies in different languages    #
-    #                   so you have one movie with two languages.              #
+    # [2] {gs}video edits{ge} - combine, concatenate or cut videos                     #
     #                                                                          #
     # [3] {gs}shifting{ge}    - shift all episode numbers of a show by a given         #
     #                   amount                                                 #
@@ -50,10 +49,11 @@ def main():
         greetings()
         tool = prompt(HTML("<ansiblue>Your choice: </ansiblue>"))
         if tool == "1" or tool == "media mover":
+            clear()
             media_mover.main()
         elif tool == "2" or tool == "combiner":
             clear()
-            py_combine_movies.main()
+            ffmpeg_edits.main()
         elif tool == "3" or tool == "shifting":
             clear()
             rename.main()

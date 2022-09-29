@@ -36,4 +36,4 @@ def main():
 
 
 if __name__ == '__main__':
-    print(db_infos.total_watchtime(db_path))
+    main()
