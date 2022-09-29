@@ -71,3 +71,9 @@ def total_watchtime(db: str):
     movie_wt = manage_db.custom_sql(db, "SELECT SUM(runtime) FROM main.movies")[0][0]
     total_wt = mediainfolib.convert_millis((show_wt * 1000) + movie_wt, day=True)
     return f" [i] You could watch through all your media in {total_wt}!"
+
+
+def oldest_movie(db: str):
+    oldest = manage_db.custom_sql(db, "SELECT name,MIN(year) FROM main.movies GROUP BY year")[0]
+    name = mediainfolib.cut_name(oldest[0], 72 - 46)
+    return f" [i] The oldest movie you have is from {oldest[1]} ({name})!"

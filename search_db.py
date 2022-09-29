@@ -11,7 +11,7 @@ import manage_db
 
 
 def give_options(info):
-    info_line = cut_name(info, 73)
+    info_line = cut_name(info, 74)
     empty_space = ' ' * (74 - len(info_line))
     gs = "<ansigreen>"
     ge = "</ansigreen>"
@@ -27,10 +27,10 @@ def give_options(info):
     """))
 
 
-# could add like total (possible) watch time, oldest entry, oldest movie, most episodes, etc.
+# could add like oldest entry, most episodes, etc.
 def info_line(db_path):
     try:
-        choice = random.randint(1, 5)
+        choice = random.randint(1, 6)
         if choice == 1:
             return db_infos.media_size(db_path)
         elif choice == 2:
@@ -41,6 +41,8 @@ def info_line(db_path):
             return db_infos.database_size(db_path)
         elif choice == 5:
             return db_infos.total_watchtime(db_path)
+        elif choice == 6:
+            return db_infos.oldest_movie(db_path)
     except:
         return " [i] No cool infos! :("
 
