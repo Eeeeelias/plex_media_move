@@ -211,7 +211,6 @@ def main():
             print("Please make sure you put in all necessary arguments!")
             exit(1)
 
-
     dur_en = get_duration(movie_en)
     dur_de = get_duration(movie_de)
     diff = dur_en - dur_de

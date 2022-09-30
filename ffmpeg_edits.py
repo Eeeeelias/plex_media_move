@@ -53,7 +53,11 @@ def concat_video_name(input):
 
 def cut_video_name(input):
     path, name = os.path.split(input)
-    new_name = "{}{}cut_{}".format(path, sep, name)
+    index = 1
+    new_name = "{}{}cut{}_{}".format(path, sep, index, name)
+    while os.path.exists(new_name):
+        index += 1
+        new_name = "{}{}cut{}_{}".format(path, sep, index, name)
     return new_name
 
 
