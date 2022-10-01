@@ -164,7 +164,7 @@ def movie_checker(movie_title, path, ext=".mp4"):
             )
             # skip if wanted
             if version_name == "":
-                return []
+                return None
 
             movie_title_version = movie_title + " - " + version_name + ext
             movie_moves.append(path + "/" + movie_title + "/" + movie_title_version)
@@ -289,6 +289,7 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
             "[i] Original title: {}".format(os.path.basename(video_path))
         )
 
+        # Taking care of movies here
         if re.search("[sS][0-9]+[eE][0-9]+", video_title) is None:
             movie_title = re.sub(r"(?<=\(\d{4}\)).*", "", video_title)
             ext = re.search(r"(\.mp4)|(\.mkv)", video_title).group()
@@ -317,6 +318,9 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
             else:
                 movie_paths = movie_checker(movie_title, plex_path + "/Movies", ext=ext)
 
+                # something about this is not smart
+                if movie_paths is None:
+                    continue
                 if len(movie_paths) > 0:
                     new_path = movie_paths[0]
                 else:
