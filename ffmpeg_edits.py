@@ -5,6 +5,7 @@ import subprocess
 from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit import prompt, HTML, print_formatted_text
 
+import combine_sub_with_movie
 import py_combine_movies
 from mediainfolib import clear, seperator as sep
 
@@ -20,6 +21,7 @@ def give_options():
     #                  movie with two languages                                #
     # [2] {gs}concat{ge}     - concatenate two videos into one video the sum of both   #
     # [3] {gs}cut{ge}        - cut video from x to y to get the relevant parts         #
+    # [4] {gs}sub comb.  {ge}- combine two subtitle files with a movie/show            #
     #                                                                          #
     ############################################################################
 """))
@@ -114,6 +116,8 @@ def main():
         concat_videos()
     elif choice in ["3", "cut"]:
         cut_video()
+    elif choice in ["4", "sub", "sub comb"]:
+        combine_sub_with_movie.main()
     elif choice in ["q", "quit", "exit"]:
         clear()
         return

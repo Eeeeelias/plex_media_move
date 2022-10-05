@@ -11,7 +11,7 @@ from sys import platform
 from prompt_toolkit import HTML, print_formatted_text, prompt
 from prompt_toolkit.completion import PathCompleter
 
-from mediainfolib import check_ffmpeg, get_config, get_duration_cv2, get_duration
+from mediainfolib import check_ffmpeg, get_config, get_duration
 
 conf = get_config()
 
@@ -210,6 +210,7 @@ def main():
         except TypeError:
             print("Please make sure you put in all necessary arguments!")
             exit(1)
+            return
 
     dur_en = get_duration(movie_en)
     dur_de = get_duration(movie_de)

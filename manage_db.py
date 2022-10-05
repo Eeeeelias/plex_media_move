@@ -3,7 +3,6 @@ import sqlite3
 import time
 from datetime import datetime
 from sqlite3 import Error
-from typing import List
 from mediainfolib import convert_millis, convert_country, cut_name, convert_size, add_minus, convert_seconds, \
     seperator as sep
 import fetch_infos
@@ -41,7 +40,7 @@ def add_to_db(conn, table, media) -> tuple:
     return curse.lastrowid
 
 
-def create_database(plex_path, db_path, info_shows: List[tuple], info_movies: List[tuple]) -> None:
+def create_database(plex_path, db_path, info_shows: list[tuple], info_movies: list[tuple]) -> None:
     if not os.path.exists(db_path):
         open(db_path, 'a').close()
     sql_create_shows = """ CREATE TABLE IF NOT EXISTS shows (
@@ -182,7 +181,7 @@ def update_sql(table: str, cur: sqlite3.Cursor, info: tuple) -> None:
                  WHERE id = ?"""
 
     if table == "movies":
-        info_sql = (info[3], info[5], info[6], info[7], info[8], info[0])
+        info_sql = (info[3], info[5], info[7], info[6], info[8], info[0])
         cur.execute(sql_movie, info_sql)
     elif table == "shows":
         info_sql = (info[2], info[3], info[4], info[5], info[6], info[0])
@@ -266,7 +265,7 @@ def completeness_check(path, db_names) -> None:
             print(f"[i] \'{i}\' not in your database!")
 
 
-def prettify_out(table: str, rows: List[tuple]) -> str:
+def prettify_out(table: str, rows: list[tuple]) -> str:
     if rows is None:
         return ""
     if table == 'movies':
@@ -276,7 +275,7 @@ def prettify_out(table: str, rows: List[tuple]) -> str:
     return ""
 
 
-def prettify_movies(rows: List[tuple]) -> str:
+def prettify_movies(rows: list[tuple]) -> str:
     max_len_names = max(10, os.get_terminal_size().columns - 96 - 12)
     db_out = ""
     stopper = "    " + "".join([add_minus() for i in range(max_len_names + 96)]) + "\t\n"
@@ -301,7 +300,7 @@ def prettify_movies(rows: List[tuple]) -> str:
     return db_out
 
 
-def prettify_shows(rows: List[tuple]) -> str:
+def prettify_shows(rows: list[tuple]) -> str:
     max_len_names = os.get_terminal_size().columns - 75 - 12
     db_out = ""
     stopper = "    " + "".join([add_minus() for i in range(max_len_names + 75)]) + "\t\n"

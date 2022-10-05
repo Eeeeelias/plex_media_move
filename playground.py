@@ -1,6 +1,8 @@
 # just for testing I swear
+import glob
 import os
 import random
+import re
 import sys
 import time
 from itertools import dropwhile
@@ -24,16 +26,10 @@ plex_path = "P:\\Plex Shows\\TV Shows"
 
 
 def main():
-    import cProfile
-    import pstats
-
-    with cProfile.Profile() as pr:
-        info_shows = fetch_infos.fetch_all("P:\\Plex Shows")
-
-    stats = pstats.Stats(pr)
-    stats.sort_stats(pstats.SortKey.TIME)
-    stats.dump_stats(filename="profiling_without_threading.prof")
+    for path in glob.glob("P:\\Plex Shows\\Movies\\*.mp4"):
+        checksum = fetch_infos.sha256_for_file(path)
+        print(checksum)
 
 
 if __name__ == '__main__':
-    main()
+    print(re.search("\.", "blablabla").group())
