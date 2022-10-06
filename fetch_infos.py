@@ -12,6 +12,15 @@ from mediainfolib import get_duration_cv2, check_ffmpeg, get_language, seperator
 sep = seperator
 
 
+def latest_modified(show):
+    # 0 in case some show is behaving weirdly
+    modified = [0]
+    episodes = glob.glob(show + "/**/*.mkv") + glob.glob(show + "/**/*.mp4")
+    for episode in episodes:
+        modified.append(os.path.getmtime(episode))
+    return max(modified)
+
+
 def get_show_infos(plex_path: str, nr=1) -> list[tuple]:
     _info_shows = []
     info_shows = []
@@ -38,7 +47,7 @@ def search_show(show):
     episodes = 0
     seasons = 0
     size = 0
-    last_modified = 0
+    last_modified = latest_modified(show)
     runtime = 0
     for episode in glob.glob(show + f"{sep}**{sep}*.mp4") + glob.glob(show + f"{sep}**{sep}*.mkv"):
         parts = list(dropwhile(lambda x: x != "TV Shows", episode.split(sep)))[1:]
@@ -49,7 +58,6 @@ def search_show(show):
             pass
         episodes = episodes + 1
         size += os.path.getsize(episode)
-        last_modified = max(os.path.getmtime(episode), last_modified)
         runtime += get_duration_cv2(episode)
     return [0, show_name, seasons, episodes, runtime, size, last_modified]
 
@@ -138,3 +146,29 @@ def fetch_all(overall_path) -> tuple[List[tuple], List[tuple]]:
     # info_shows = get_show_infos(overall_path + f"{sep}TV Shows")
     # info_movies = get_movie_infos(overall_path + f"{sep}Movies")
     return results[0], results[1]
+
+
+def update_shows(db_path: str, plex_path: str) -> List[tuple]:
+    from manage_db import custom_sql
+    _info_shows = []
+    info_shows = []
+    show_dirs = glob.glob(plex_path + f"{sep}TV Shows{sep}*")
+    for show in show_dirs:
+        name = os.path.split(show)[1]
+        sql = f"""SELECT * FROM shows WHERE name='{name.replace("'", "''")}'"""
+        existing_info = custom_sql(db_path, sql)
+        if len(existing_info) > 0:
+            last_modified = latest_modified(show)
+            if existing_info[0][6] == last_modified:
+                print("[i] Show: {}".format(name))
+                _info_shows.append(list(existing_info[0]))
+                continue
+        _info_shows.append(search_show(show))
+
+    id = 1
+    for i in range(len(_info_shows)):
+        if _info_shows[i][3] > 0:
+            _info_shows[i][0] = id
+            info_shows.append(tuple(_info_shows[i]))
+            id += 1
+    return info_shows

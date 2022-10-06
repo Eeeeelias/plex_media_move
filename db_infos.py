@@ -61,6 +61,10 @@ def best_quality(db: str, worst=False):
     return f" [i] '{max_qual[0]}' has the highest quality in your library!"
 
 
+def worst_quality(db: str):
+    return best_quality(db, worst=True)
+
+
 def database_size(db: str):
     return " [i] {} shows and {} movies in your database.".format(get_count_ids("shows", db)[0],
                                                                   get_count_ids("movies", db)[0])

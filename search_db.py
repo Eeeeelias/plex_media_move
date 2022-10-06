@@ -3,11 +3,13 @@ import random
 import re
 
 import db_infos
+from db_infos import media_size, best_quality, database_size, total_watchtime, oldest_movie, worst_quality
 import mediainfolib
 import setup
 from mediainfolib import seperator, clear, cut_name
 from prompt_toolkit import prompt, HTML, print_formatted_text
 import manage_db
+import timeit
 
 
 def give_options(info):
@@ -30,19 +32,8 @@ def give_options(info):
 # could add like oldest entry, most episodes, etc.
 def info_line(db_path):
     try:
-        choice = random.randint(1, 6)
-        if choice == 1:
-            return db_infos.media_size(db_path)
-        elif choice == 2:
-            return db_infos.best_quality(db_path)
-        elif choice == 3:
-            return db_infos.best_quality(db_path, worst=True)
-        elif choice == 4:
-            return db_infos.database_size(db_path)
-        elif choice == 5:
-            return db_infos.total_watchtime(db_path)
-        elif choice == 6:
-            return db_infos.oldest_movie(db_path)
+        return random.choice([media_size, best_quality, worst_quality,
+                              database_size, total_watchtime, oldest_movie])(db_path)
     except:
         return " [i] No cool infos! :("
 
@@ -82,7 +73,8 @@ def search_other(db_path):
             metric = re.sub(r"\d+", "", inp3)
             col_val = re.search(r"\d+", inp3).group()
         except AttributeError:
-            print_formatted_text(HTML("<ansired>The value you're searching for does not work in this context</ansired>"))
+            print_formatted_text(
+                HTML("<ansired>The value you're searching for does not work in this context</ansired>"))
             return "", ""
     else:
         metric = " like "
@@ -135,7 +127,10 @@ def main():
                 print(manage_db.custom_sql(db_path, sql))
             elif inp == "6" or inp == "r" or inp == "reindex db":
                 res = None
-                setup.redo_db()
+                if not os.path.exists(db_path):
+                    setup.redo_db()
+                    continue
+                setup.redo_db(reindex=True)
             elif inp == "q":
                 return
             else:

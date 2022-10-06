@@ -26,10 +26,8 @@ plex_path = "P:\\Plex Shows\\TV Shows"
 
 
 def main():
-    for path in glob.glob("P:\\Plex Shows\\Movies\\*.mp4"):
-        checksum = fetch_infos.sha256_for_file(path)
-        print(checksum)
+    pass
 
 
 if __name__ == '__main__':
-    print(re.search("\.", "blablabla").group())
+    print(fetch_infos.latest_modified("P:\\Plex Shows\\TV Shows\\86"))

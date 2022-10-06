@@ -86,7 +86,7 @@ def set_config():
     exit(0)
 
 
-def redo_db():
+def redo_db(reindex=False):
     start = time.time()
     conf = mediainfolib.get_config()
     if conf['mover']['dest_path'] is not None:
@@ -95,10 +95,14 @@ def redo_db():
         _plex_path = prompt(HTML("<ansiblue>Put in the path to your plex files: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
         plex_path = ensure_path_ex(_plex_path)
     db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
+    if not reindex:
+        print("[i] Rebuilding database... (this could take a while)")
+        info_shows, info_movies = fetch_infos.fetch_all(plex_path)
+    else:
+        info_shows = fetch_infos.update_shows(db_path, plex_path)
+        info_movies = fetch_infos.get_movie_infos(plex_path + f"{seperator}Movies")
     if os.path.exists(db_path):
         os.remove(db_path)
-    print("[i] Rebuilding database... (this could take a while)")
-    info_shows, info_movies = fetch_infos.fetch_all(plex_path)
     manage_db.create_database(plex_path, db_path, info_shows, info_movies)
     end = time.time()
     print("[i] Rebuilding the database finished in {} minutes".format(round((end-start) / 60.0, 2)))
