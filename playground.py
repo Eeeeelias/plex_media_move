@@ -18,9 +18,11 @@ conf_path = data_path + f"{seperator}config.json"
 plex_path = "P:\\Plex Shows\\TV Shows"
 
 
-def main(artist="Unkown"):
-    print(artist)
+def main():
+    filename = "Some<smaller>bigger:or\"/cool|file?name*"
+    name = re.sub(r'[<>:"/\\|?*]', '_', filename)
+    return name
 
 
 if __name__ == '__main__':
-    main()
+    print(main())

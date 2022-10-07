@@ -54,19 +54,19 @@ def songs_with_time(raw_infos, album, album_artist):
     :return: array with (in that order): Author, Name, Start, End
     """
     song_infos = []
+    artist = album_artist if album_artist != "" else "Unknown"
     for line in raw_infos:
         line = line.strip("\n")
         # format: tt:tt Song name - Author
         try:
             match_groups = re.search(r"(\d+:[\d:]*\d+) (.*) [-–] (.*)", line)
-            artist = match_groups.group(3)
+            artist = match_groups.group(3) if album_artist == "Unknown" else album_artist
             name = match_groups.group(2)
             start_track = match_groups.group(1)
         except AttributeError:
             match_groups = re.search(r"(\d+:[\d:]*\d+)[ ]+(.*)", line)
             start_track = match_groups.group(1)
             name = match_groups.group(2)
-            artist = album_artist if album_artist != "" else "Unknown"
         song_infos.append([artist, name, album, start_track])
 
     for i, info in enumerate(song_infos):
@@ -96,13 +96,14 @@ def correct_song_end(song_end):
 def exec_ffmpeg(input_media, song):
     artist = song[0]
     name = song[1]
+    filename = re.sub(r'[<>:"/\\|?*]', '_', name)
     album = song[2] if song[2] != "" else "Unknown album"
     start = song[3]
     end = song[4] if song[4] != "end" else str(mediainfolib.get_duration(input_media))
     output_path = os.path.split(input_media)[0] + f"{sep}{album}"
     if not os.path.exists(output_path):
         os.mkdir(output_path)
-    output_name = f"{output_path}{sep}{name}.mp3"
+    output_name = f"{output_path}{sep}{filename}.mp3"
     ffmpeg = ["ffmpeg", "-loglevel", "warning", "-i", input_media, "-map_metadata", "-1", "-ss", start, "-to", end,
               "-metadata", f"album={album}", "-metadata", f"title={name}", "-metadata", f"TPE2={artist}", "-c", "copy",
               output_name]
