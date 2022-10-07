@@ -1,14 +1,7 @@
 # just for testing I swear
-import glob
-import os
-import random
 import re
-import sys
-import time
-from itertools import dropwhile
-
-import db_infos
-import fetch_infos
+import os
+from prompt_toolkit import prompt, HTML
 import mediainfolib
 from mediainfolib import seperator
 import manage_db
@@ -26,8 +19,9 @@ plex_path = "P:\\Plex Shows\\TV Shows"
 
 
 def main():
-    pass
+    for i in range(13, 201):
+        open(f"P:\\script_testing\\Detektiv Conan s01e0{i}.mp4", "a").close()
 
 
 if __name__ == '__main__':
-    print(fetch_infos.latest_modified("P:\\Plex Shows\\TV Shows\\86"))
+    main()

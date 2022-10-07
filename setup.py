@@ -95,7 +95,7 @@ def redo_db(reindex=False):
         _plex_path = prompt(HTML("<ansiblue>Put in the path to your plex files: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
         plex_path = ensure_path_ex(_plex_path)
     db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
-    if not reindex:
+    if os.path.getsize(db_path) == 0 or not reindex:
         print("[i] Rebuilding database... (this could take a while)")
         info_shows, info_movies = fetch_infos.fetch_all(plex_path)
     else:

@@ -31,7 +31,6 @@ def get_show_infos(plex_path: str, nr=1) -> list[tuple]:
         for show in shows_to_check:
             _info_shows.append(search_show(show))
 
-    # single threaded loop
     id = nr
     for i in range(len(_info_shows)):
         if _info_shows[i][3] > 0:
@@ -47,7 +46,7 @@ def search_show(show):
     episodes = 0
     seasons = 0
     size = 0
-    last_modified = latest_modified(show)
+    last_modified = 0
     runtime = 0
     for episode in glob.glob(show + f"{sep}**{sep}*.mp4") + glob.glob(show + f"{sep}**{sep}*.mkv"):
         parts = list(dropwhile(lambda x: x != "TV Shows", episode.split(sep)))[1:]
@@ -58,6 +57,7 @@ def search_show(show):
             pass
         episodes = episodes + 1
         size += os.path.getsize(episode)
+        last_modified = max(os.path.getmtime(episode), last_modified)
         runtime += get_duration_cv2(episode)
     return [0, show_name, seasons, episodes, runtime, size, last_modified]
 

@@ -5,7 +5,7 @@ from pathlib import Path
 from sys import argv
 from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
-
+from mediainfolib import sorted_alphanumeric
 
 def overview():
     gs = "<ansigreen>"
@@ -64,7 +64,7 @@ def rename_other_weird_format(rename_path):
 
 def loop_shift(path, num_shift):
     offset = float('-inf')
-    for file in glob.glob(path + "/*.mp4"):
+    for file in sorted_alphanumeric(glob.glob(path + "/*.mp4")):
         num_shift, offset = shift_numbers(file, start=num_shift, off=offset)
     for file in glob.glob(path + "/*.mp4"):
         name = re.sub(r"_shift", "", os.path.basename(file))
