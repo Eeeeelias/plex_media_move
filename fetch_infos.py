@@ -6,7 +6,8 @@ import os
 import re
 from itertools import dropwhile
 from typing import AnyStr, List
-from mediainfolib import get_duration_cv2, check_ffmpeg, get_language, seperator,  \
+
+from mediainfolib import get_duration_cv2, check_ffmpeg, get_language, seperator, \
     convert_seconds, get_duration
 
 sep = seperator
@@ -141,14 +142,16 @@ def fetch_all(overall_path) -> tuple[List[tuple], List[tuple]]:
     if not check_ffmpeg():
         exit(1)
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(x, y) for x, y in zip([get_show_infos, get_movie_infos], [overall_path + f"{sep}TV Shows", overall_path + f"{sep}Movies"])]
+        futures = [executor.submit(x, y) for x, y in zip([get_show_infos, get_movie_infos],
+                                                         [overall_path + f"{sep}TV Shows",
+                                                          overall_path + f"{sep}Movies"])]
         results = [f.result() for f in futures]
     # info_shows = get_show_infos(overall_path + f"{sep}TV Shows")
     # info_movies = get_movie_infos(overall_path + f"{sep}Movies")
     return results[0], results[1]
 
 
-def update_shows(db_path: str, plex_path: str) -> List[tuple]:
+def reindex_shows(db_path: str, plex_path: str) -> List[tuple]:
     from manage_db import custom_sql
     _info_shows = []
     info_shows = []
@@ -172,3 +175,42 @@ def update_shows(db_path: str, plex_path: str) -> List[tuple]:
             info_shows.append(tuple(_info_shows[i]))
             id += 1
     return info_shows
+
+
+def reindex_movies(db_path: str, plex_path: str) -> List[tuple]:
+    from manage_db import custom_sql
+    _info_movies = []
+    info_movies = []
+    plex_path = plex_path + f"{sep}Movies"
+    paths_to_check = glob.glob(plex_path + f"{sep}**{sep}*.mp4", recursive=True) + glob.glob(
+        plex_path + f"{sep}**{sep}*.mkv", recursive=True)
+
+    for media in paths_to_check:
+        file_name = os.path.splitext(os.path.basename(media))[0]
+        matches = re.search(r"(.*) \((\d+)\) - (.*)", file_name)
+        try:
+            name = matches.group(1)
+            year = matches.group(2)
+            version = matches.group(3)
+            sql = f"""SELECT * FROM main.movies WHERE name='{name.replace("'", "''")}' 
+                                                  AND year={year} 
+                                                  AND version='{version.replace("'", "''")}' """
+        except AttributeError:
+            matches = re.search(r"(.*) \((\d+)\)", file_name)
+            name = matches.group(1)
+            year = matches.group(2)
+            sql = f"""SELECT * FROM main.movies WHERE name='{name.replace("'", "''")}' AND year={year}"""
+        existing_info = custom_sql(db_path, sql)
+        if len(existing_info) > 0:
+            last_modified = os.path.getmtime(media)
+            if existing_info[0][7] == last_modified:
+                print("[i] Movie: {}".format(name))
+                _info_movies.append(list(existing_info[0]))
+                continue
+        _info_movies.append(list(get_movie_infos(media)[0]))
+    id = 1
+    for i in range(len(_info_movies)):
+        _info_movies[i][0] = id
+        info_movies.append(tuple(_info_movies[i]))
+        id += 1
+    return info_movies

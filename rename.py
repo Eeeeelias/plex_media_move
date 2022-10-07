@@ -7,6 +7,7 @@ from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
 from mediainfolib import sorted_alphanumeric
 
+
 def overview():
     gs = "<ansigreen>"
     ge = "</ansigreen>"

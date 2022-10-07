@@ -92,20 +92,24 @@ def redo_db(reindex=False):
     if conf['mover']['dest_path'] is not None:
         plex_path = conf['mover']['dest_path']
     else:
-        _plex_path = prompt(HTML("<ansiblue>Put in the path to your plex files: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
+        _plex_path = prompt(HTML("<ansiblue>Put in the path to your plex files: </ansiblue>"),
+                            completer=PathCompleter()).lstrip('"').rstrip('"')
         plex_path = ensure_path_ex(_plex_path)
     db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
     if os.path.getsize(db_path) == 0 or not reindex:
         print("[i] Rebuilding database... (this could take a while)")
         info_shows, info_movies = fetch_infos.fetch_all(plex_path)
     else:
-        info_shows = fetch_infos.update_shows(db_path, plex_path)
-        info_movies = fetch_infos.get_movie_infos(plex_path + f"{seperator}Movies")
+        info_shows = fetch_infos.reindex_shows(db_path, plex_path)
+        info_movies = fetch_infos.reindex_movies(db_path, plex_path)
     if os.path.exists(db_path):
         os.remove(db_path)
     manage_db.create_database(plex_path, db_path, info_shows, info_movies)
     end = time.time()
-    print("[i] Rebuilding the database finished in {} minutes".format(round((end-start) / 60.0, 2)))
+    total_time, scale = (round((end - start) / 60.0, 2), "minutes") if (end - start) > 60 \
+        else (round(end - start, 2), "seconds")
+
+    print("[i] Rebuilding the database finished in {} {}".format(total_time, scale))
 
 
 if __name__ == '__main__':
