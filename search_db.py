@@ -1,15 +1,12 @@
 import os
-import random
 import re
-
-import db_infos
-from db_infos import media_size, best_quality, database_size, total_watchtime, oldest_movie, worst_quality
-import mediainfolib
 import setup
+import random
+import manage_db
+import mediainfolib
 from mediainfolib import seperator, clear, cut_name
 from prompt_toolkit import prompt, HTML, print_formatted_text
-import manage_db
-import timeit
+from db_infos import media_size, best_quality, database_size, total_watchtime, oldest_movie, worst_quality
 
 
 def give_options(info):
@@ -131,7 +128,13 @@ def main():
                     setup.redo_db()
                     continue
                 setup.redo_db(reindex=True)
+            elif inp == "6r":
+                if not os.path.exists(db_path):
+                    setup.redo_db()
+                    continue
+                setup.redo_db(reindex=False)
             elif inp == "q":
+                mediainfolib.clear()
                 return
             else:
                 clear()

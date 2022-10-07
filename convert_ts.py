@@ -7,6 +7,8 @@ import sys
 from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
 
+import mediainfolib
+
 
 def overview():
     gs = "<ansigreen>"
@@ -46,9 +48,11 @@ def main():
         path = prompt(HTML("<ansiblue>Put in the path of the folder containing your unconverted files: </ansiblue>"),
                       completer=PathCompleter()).lstrip('"').rstrip('"')
         if path == "q":
+            mediainfolib.clear()
             return
         filetype = prompt(HTML("<ansiblue>Put in the filetype you want to convert (default: .ts): </ansiblue>"))
         if filetype == "q":
+            mediainfolib.clear()
             return
         elif filetype != "":
             converting(path, filetype)

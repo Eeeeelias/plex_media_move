@@ -18,9 +18,8 @@ conf_path = data_path + f"{seperator}config.json"
 plex_path = "P:\\Plex Shows\\TV Shows"
 
 
-def main():
-    for i in range(13, 201):
-        open(f"P:\\script_testing\\Detektiv Conan s01e0{i}.mp4", "a").close()
+def main(artist="Unkown"):
+    print(artist)
 
 
 if __name__ == '__main__':

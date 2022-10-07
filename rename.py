@@ -5,6 +5,8 @@ from pathlib import Path
 from sys import argv
 from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
+
+import mediainfolib
 from mediainfolib import sorted_alphanumeric
 
 
@@ -79,9 +81,11 @@ def main():
         in_path = prompt(HTML("<ansiblue>Put in the path where your files that need shifting are: </ansiblue>"),
                          completer=PathCompleter()).lstrip('"').rstrip('"')
         if in_path == "q":
+            mediainfolib.clear()
             return
         start_pos = prompt(HTML("<ansiblue>Put in the position at which your episodes need to start: </ansiblue>"))
         if start_pos == "q":
+            mediainfolib.clear()
             return
         loop_shift(in_path, int(start_pos))
     else:
