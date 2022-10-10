@@ -7,21 +7,14 @@ import subprocess
 from prompt_toolkit.shortcuts import ProgressBar
 
 import mediainfolib
-from mediainfolib import seperator as sep, data_path
+from mediainfolib import seperator as sep, data_path, get_config
 from prompt_toolkit import print_formatted_text, PromptSession, HTML
 from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit.history import FileHistory
-from prompt_toolkit.key_binding import KeyBindings
 
 session = PromptSession(history=FileHistory(f"{data_path}{sep}.exsongs"))
-kb = KeyBindings()
-cancel = [False]
-
-
-@kb.add('c-c')
-def _(event):
-    cancel[0] = True
-    os.kill(os.getpid(), signal.SIGINT)
+config = get_config()
+in_path = config['mover']['orig_path']
 
 
 def greeting():
@@ -45,15 +38,16 @@ def greeting():
 
 def interactive():
     song_file = session.prompt(HTML("<ansiblue>Paste the .mp3 file you downloaded from youtube: </ansiblue>"),
-                       completer=PathCompleter()).lstrip('"').rstrip('"')
+                               completer=PathCompleter()).lstrip('"').rstrip('"')
     if song_file == "q":
         return [None, None, None, None]
     while not os.path.isfile(song_file):
         print_formatted_text(HTML("<ansired> [w] This is not a file!</ansired>"))
         song_file = session.prompt(HTML("<ansiblue>Paste the mp3 file you downloaded from youtube: </ansiblue>"),
-                           completer=PathCompleter()).lstrip('"').rstrip('"')
+                                   completer=PathCompleter()).lstrip('"').rstrip('"')
     album = session.prompt(HTML("<ansiblue>Specify the album name ([ENTER] to take from file): </ansiblue>"))
-    info = session.prompt(HTML("<ansiblue>Paste the timestamps from youtube (or give a file): </ansiblue>")).lstrip('"').rstrip('"')
+    info = session.prompt(HTML("<ansiblue>Paste the timestamps from youtube (or give a file): </ansiblue>")).lstrip(
+        '"').rstrip('"')
     print_formatted_text(HTML("[i] If the info is not in the right format the Artist might not be recognized.\n"
                               " You can specify the artist here or press [ENTER] to skip"))
     artist = session.prompt(HTML("<ansiblue>Specify the artist: </ansiblue>"))
@@ -90,7 +84,7 @@ def songs_with_time(raw_infos, album, album_artist):
         except IndexError:
             info.append("end")
     if song_infos[-1][1].lower() == "end":
-        song_infos.pop(len(song_infos)-1)
+        song_infos.pop(len(song_infos) - 1)
     return song_infos
 
 
@@ -144,13 +138,9 @@ def main():
     if album == "":
         album = album_auto
     infos = songs_with_time(songs, album, artist)
-    label = "Test"
-    title = f"Extracting {len(infos)} songs"
-    with ProgressBar(key_bindings=kb, title=title) as pb:
-        for song in pb(infos, label=label):
-            #print("[i] Song:", song[1])
-            exec_ffmpeg(raw_in, song)
-            label = label + "a"
+    for song in infos:
+        print("[i] Song:", song[1])
+        exec_ffmpeg(raw_in, song)
 
 
 if __name__ == '__main__':

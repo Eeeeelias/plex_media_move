@@ -27,6 +27,7 @@ def create_table(conn, sql_table) -> bool:
     return True
 
 
+# media is 2d array for speed reasons
 def add_to_db(conn, table, media) -> tuple:
     if table == "show":
         sql = """INSERT INTO shows(id, name, seasons, episodes, runtime, size, modified)
@@ -35,7 +36,7 @@ def add_to_db(conn, table, media) -> tuple:
         sql = """INSERT INTO movies(id, name, year, language, version, runtime, size, modified, type)
                  VALUES(?,?,?,?,?,?,?,?,?)"""
     curse = conn.cursor()
-    curse.execute(sql, media)
+    curse.executemany(sql, media)
     conn.commit()
     return curse.lastrowid
 
@@ -74,12 +75,10 @@ def create_database(plex_path, db_path, info_shows: list[tuple], info_movies: li
         print("[i] Movies created")
     else:
         print("[i] There was an error!")
-    for show in info_shows:
-        last_show_id = add_to_db(connection, "show", show)
-        # print(f"[i] Show {show[1]} added!")
-    for movie in info_movies:
-        last_movie_id = add_to_db(connection, "movie", movie)
-        # print(f"[i] Movie {movie[1]} added!")
+    last_show_id = add_to_db(connection, "show", info_shows)
+    # print(f"[i] Show {show[1]} added!")
+    last_movie_id = add_to_db(connection, "movie", info_movies)
+    # print(f"[i] Movie {movie[1]} added!")
     cur = connection.cursor()
     cur.execute("SELECT name FROM shows")
     list_shows = list(cur.fetchall())

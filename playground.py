@@ -1,9 +1,11 @@
 # just for testing I swear
 import re
 import os
+import timeit
+
 import mediainfolib
 from mediainfolib import seperator
-import manage_db
+from manage_db import *
 
 conf = mediainfolib.get_config()
 db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
@@ -17,12 +19,21 @@ conf_path = data_path + f"{seperator}config.json"
 plex_path = "P:\\Plex Shows\\TV Shows"
 
 
+def make_data():
+    data = []
+    for i in range(1_000_000):
+        tmp = [i, f"test{i}", i, i, i, i, i]
+        data.append(tmp)
+    return data
+
+
 def main():
-    test = ["a", "b", "c"]
-    test.extend(["d", "e"])
-    test.extend(["-map "])
-    print(test)
+    pass
 
 
 if __name__ == '__main__':
+    start = timeit.default_timer()
     main()
+    end = timeit.default_timer()
+    print("Took: {:2f}s".format(end-start))
+    # delete()
