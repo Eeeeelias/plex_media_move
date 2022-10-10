@@ -22,7 +22,7 @@ def give_options():
     #                  movie with two languages                                #
     # [2] {gs}concat{ge}     - concatenate two videos into one video the sum of both   #
     # [3] {gs}cut{ge}        - cut video from x to y to get the relevant parts         #
-    # [4] {gs}sub comb.{ge}  - combine two subtitle files with a movie/show            #
+    # [4] {gs}sub comb.{ge}  - combine srt subtitle files with a movie/show            #
     # [5] {gs}ext. songs{ge} - extract the songs from a long YT video.                 #
     #                                                                          #
     ############################################################################

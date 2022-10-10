@@ -23,45 +23,55 @@ def fetch_files(movie_path):
 
 
 def interactive():
+    relevant_files = []
     movie = prompt(HTML("<ansiblue>[a] Specify the movie you want to have subtitles for (if you give a folder the files"
                         " will be taken from there): </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
     if os.path.isdir(movie):
         return fetch_files(movie)
-    sub_de = prompt(HTML("<ansiblue>[a] Specify the first subtitle file (.srt): </ansiblue>"),
-                    completer=PathCompleter()).lstrip('"').rstrip('"')
-    while not os.path.isfile(sub_de):
-        print_formatted_text(HTML("<ansired> This is not a file!</ansired>"))
-        sub_de = prompt(HTML("<ansiblue>[a] Specify the first subtitle file (.srt): </ansiblue>"),
-                        completer=PathCompleter()).lstrip('"').rstrip('"')
-    sub_en = prompt(HTML("<ansiblue>[a] Specify the second subtitle file (.srt): </ansiblue>"),
-                    completer=PathCompleter()).lstrip('"').rstrip('"')
-    while not os.path.isfile(sub_en):
-        print_formatted_text(HTML("<ansired> This is not a file!</ansired>"))
-        sub_de = prompt(HTML("<ansiblue>[a] Specify the second subtitle file (.srt): </ansiblue>"),
-                        completer=PathCompleter()).lstrip('"').rstrip('"')
-    return [[sub_de, sub_en, movie]]
+    sub_file = prompt(HTML("<ansiblue>[a] Specify a subtitle file (.srt): </ansiblue>"),
+                      completer=PathCompleter()).lstrip('"').rstrip('"')
+    while sub_file != "":
+        while not os.path.isfile(sub_file):
+            print_formatted_text(HTML("<ansired> This is not a file!</ansired>"))
+            sub_file = prompt(HTML("<ansiblue>[a] Specify a subtitle file (.srt): </ansiblue>"),
+                              completer=PathCompleter()).lstrip('"').rstrip('"')
+        relevant_files.append(sub_file)
+        sub_file = prompt(HTML("<ansiblue>[a] Specify another subtitle file ([ENTER] to finish): </ansiblue>"),
+                          completer=PathCompleter()).lstrip('"').rstrip('"')
+    relevant_files.append(movie)
+    return [relevant_files]
 
 
+# needs to be changed!
 def sub_in_movie(movie_files, out_path):
-    sub_de = movie_files[0]
-    sub_en = movie_files[1]
+    subs = [x for x in movie_files if ".srt" in x]
+    subs_with_lang = {}
     try:
-        lan_de = re.search(r"(?<=\.).*(?=\.)", sub_de).group()
-        lan_en = re.search(r"(?<=\.).*(?=\.)", sub_en).group()
+        for sub in subs:
+            lan = re.search(r"(?<=\.).*(?=\.)", sub).group()
+            subs_with_lang[lan] = sub
+
     except AttributeError:
         print_formatted_text(HTML("<ansired>[w] Your subtitles aren't named properly!</ansired>"))
         return
-    movie = movie_files[2]
-    out = out_path + f"{sep}" + os.path.split(movie)[1]
-    print("Movie: {}\n"
-          "{} Subs: {}\n"
-          "{} Subs: {}".format(os.path.split(movie)[1], convert_country(lan_de), os.path.split(sub_de)[1],
-                               convert_country(lan_en), os.path.split(sub_en)[1]))
-    ffmpeg = ["ffmpeg", "-loglevel", "warning", "-i", movie, "-f", "srt", "-i", sub_de, "-f", "srt", "-i", sub_en,
-              "-map", "0:0", "-map", "0:1", "-map", "0:2", "-map", "1:0", "-map", "2:0", "-c:v", "copy", "-c:a", "copy",
-              "-c:s", "srt", "-metadata:s:s:0", f"language={lan_de}", "-metadata:s:s:1", f"language={lan_en}", out]
-    subprocess.run(ffmpeg)
-
+    movie = [x for x in movie_files if ".srt" not in x][0]
+    out = out_path + f"{sep}{os.path.splitext(os.path.basename(movie))[0]}.mkv"
+    print("Movie: {}".format(os.path.split(movie)[1]))
+    inputs = ["ffmpeg", "-loglevel", "warning", "-i", movie]
+    maps = ["-map", "0"]
+    codecs = ["-c:v", "copy", "-c:a", "copy", "-c:s", "srt"]
+    metadata = []
+    for i, (key, value) in enumerate(subs_with_lang.items()):
+        print("{} Subs: {}".format(convert_country(key), os.path.split(value)[1]))
+        sub = ["-f", "srt", "-i", value]
+        new_map = ["-map", f"{i+1}:s"]
+        new_metadata = [f"-metadata:s:s:{i}", f"language={key}"]
+        inputs.extend(sub)
+        maps.extend(new_map)
+        metadata.extend(new_metadata)
+    ffmpeg_full = inputs + maps + codecs + metadata
+    ffmpeg_full.append(out)
+    subprocess.run(ffmpeg_full)
 
 def main():
     if len(sys.argv) == 1:

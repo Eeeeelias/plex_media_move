@@ -37,7 +37,7 @@ def interactive():
         print_formatted_text(HTML("<ansired> [w] This is not a file!</ansired>"))
         song_file = prompt(HTML("<ansiblue>Paste the mp3 file you downloaded from youtube: </ansiblue>"),
                            completer=PathCompleter()).lstrip('"').rstrip('"')
-    album = prompt(HTML("<ansiblue>Specify the album name: </ansiblue>"))
+    album = prompt(HTML("<ansiblue>Specify the album name ([ENTER] to take from file): </ansiblue>"))
     info = prompt(HTML("<ansiblue>Paste the timestamps from youtube (or give a file): </ansiblue>")).lstrip('"').rstrip('"')
     print_formatted_text(HTML("[i] If the info is not in the right format the Artist might not be recognized.\n"
                               " You can specify the artist here or press [ENTER] to skip"))
@@ -74,18 +74,28 @@ def songs_with_time(raw_infos, album, album_artist):
             info.append(song_infos[i + 1][3])
         except IndexError:
             info.append("end")
+    if song_infos[-1][1].lower() == "end":
+        song_infos.pop(len(song_infos)-1)
     return song_infos
 
 
 def song_list(info):
     infos = []
+    album = ""
     if os.path.isfile(info):
         with open(info, 'r', encoding='utf-8') as f:
             for line in f.readlines():
-                infos.append(line)
+                line = line.strip("\n")
+                if line == "--STOP--":
+                    break
+                if len(line) > 1 and not line.startswith("#"):
+                    if re.search(r"\d+:[\d:]*\d+", line) is None:
+                        album = line.strip(":")
+                        continue
+                    infos.append(line.strip())
     else:
         infos = [i for i in info.split("\n") if len(i) > 0]
-    return infos
+    return infos, album
 
 
 # maybe in the future?
@@ -115,7 +125,10 @@ def main():
     raw_in, album, artist, raw_info = interactive()
     if not raw_in:
         return
-    infos = songs_with_time(song_list(raw_info), album, artist)
+    songs, album_auto = song_list(raw_info)
+    if album == "":
+        album = album_auto
+    infos = songs_with_time(songs, album, artist)
     for song in infos:
         print("[i] Song:", song[1])
         exec_ffmpeg(raw_in, song)

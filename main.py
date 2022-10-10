@@ -63,9 +63,7 @@ def main():
         elif tool == "5" or tool == "db search":
             clear()
             search_db.main()
-        elif tool == "clear":
-            clear()
-        elif tool == "close" or tool == "q" or tool == "quit":
+        elif tool in ["close", "q", "quit", "exit"]:
             exit(0)
         else:
             clear()

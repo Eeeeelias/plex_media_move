@@ -1,7 +1,6 @@
 # just for testing I swear
 import re
 import os
-from prompt_toolkit import prompt, HTML
 import mediainfolib
 from mediainfolib import seperator
 import manage_db
@@ -19,10 +18,11 @@ plex_path = "P:\\Plex Shows\\TV Shows"
 
 
 def main():
-    filename = "Some<smaller>bigger:or\"/cool|file?name*"
-    name = re.sub(r'[<>:"/\\|?*]', '_', filename)
-    return name
+    test = ["a", "b", "c"]
+    test.extend(["d", "e"])
+    test.extend(["-map "])
+    print(test)
 
 
 if __name__ == '__main__':
-    print(main())
+    main()
