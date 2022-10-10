@@ -1,12 +1,27 @@
 # I want to extract all the songs from one long video from yt
 import os
 import re
+import signal
 import subprocess
-from mediainfolib import seperator as sep
-from prompt_toolkit import prompt, HTML, print_formatted_text
-from prompt_toolkit.completion import PathCompleter
+
+from prompt_toolkit.shortcuts import ProgressBar
 
 import mediainfolib
+from mediainfolib import seperator as sep, data_path
+from prompt_toolkit import print_formatted_text, PromptSession, HTML
+from prompt_toolkit.completion import PathCompleter
+from prompt_toolkit.history import FileHistory
+from prompt_toolkit.key_binding import KeyBindings
+
+session = PromptSession(history=FileHistory(f"{data_path}{sep}.exsongs"))
+kb = KeyBindings()
+cancel = [False]
+
+
+@kb.add('c-c')
+def _(event):
+    cancel[0] = True
+    os.kill(os.getpid(), signal.SIGINT)
 
 
 def greeting():
@@ -29,19 +44,19 @@ def greeting():
 
 
 def interactive():
-    song_file = prompt(HTML("<ansiblue>Paste the .mp3 file you downloaded from youtube: </ansiblue>"),
+    song_file = session.prompt(HTML("<ansiblue>Paste the .mp3 file you downloaded from youtube: </ansiblue>"),
                        completer=PathCompleter()).lstrip('"').rstrip('"')
     if song_file == "q":
         return [None, None, None, None]
     while not os.path.isfile(song_file):
         print_formatted_text(HTML("<ansired> [w] This is not a file!</ansired>"))
-        song_file = prompt(HTML("<ansiblue>Paste the mp3 file you downloaded from youtube: </ansiblue>"),
+        song_file = session.prompt(HTML("<ansiblue>Paste the mp3 file you downloaded from youtube: </ansiblue>"),
                            completer=PathCompleter()).lstrip('"').rstrip('"')
-    album = prompt(HTML("<ansiblue>Specify the album name ([ENTER] to take from file): </ansiblue>"))
-    info = prompt(HTML("<ansiblue>Paste the timestamps from youtube (or give a file): </ansiblue>")).lstrip('"').rstrip('"')
+    album = session.prompt(HTML("<ansiblue>Specify the album name ([ENTER] to take from file): </ansiblue>"))
+    info = session.prompt(HTML("<ansiblue>Paste the timestamps from youtube (or give a file): </ansiblue>")).lstrip('"').rstrip('"')
     print_formatted_text(HTML("[i] If the info is not in the right format the Artist might not be recognized.\n"
                               " You can specify the artist here or press [ENTER] to skip"))
-    artist = prompt(HTML("<ansiblue>Specify the artist: </ansiblue>"))
+    artist = session.prompt(HTML("<ansiblue>Specify the artist: </ansiblue>"))
     return song_file, album, artist, info
 
 
@@ -129,9 +144,13 @@ def main():
     if album == "":
         album = album_auto
     infos = songs_with_time(songs, album, artist)
-    for song in infos:
-        print("[i] Song:", song[1])
-        exec_ffmpeg(raw_in, song)
+    label = "Test"
+    title = f"Extracting {len(infos)} songs"
+    with ProgressBar(key_bindings=kb, title=title) as pb:
+        for song in pb(infos, label=label):
+            #print("[i] Song:", song[1])
+            exec_ffmpeg(raw_in, song)
+            label = label + "a"
 
 
 if __name__ == '__main__':

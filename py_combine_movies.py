@@ -8,10 +8,11 @@ import sys
 import time
 from sys import platform
 
-from prompt_toolkit import HTML, print_formatted_text, prompt
+from prompt_toolkit import HTML, print_formatted_text, PromptSession, prompt
 from prompt_toolkit.completion import PathCompleter
+from prompt_toolkit.history import FileHistory
 
-from mediainfolib import check_ffmpeg, get_config, get_duration
+from mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep
 
 conf = get_config()
 
@@ -55,6 +56,8 @@ if platform == "win32":
 else:
     seperator = "/"
 
+session = PromptSession(history=FileHistory(f"{data_path}{sep}.movcomb"))
+
 
 def interactive():
     start = """
@@ -83,37 +86,37 @@ def interactive():
         elif prev == "q":
             return 0, 0, 0, 0, 0, 0
 
-    movie_en = prompt(HTML("<ansiblue>[a] Firstly, give the path of the first movie:</ansiblue>"),
+    movie_en = session.prompt(HTML("<ansiblue>[a] Firstly, give the path of the first movie:</ansiblue>"),
                       completer=PathCompleter()).lstrip('"').rstrip('"')
     while not os.path.isfile(movie_en):
         movie_en = (
-            prompt(HTML("<ansiblue>[a] This is not a file! Make sure you spelled the path correctly:</ansiblue>"),
+            session.prompt(HTML("<ansiblue>[a] This is not a file! Make sure you spelled the path correctly:</ansiblue>"),
                    completer=PathCompleter())
                 .lstrip('"')
                 .rstrip('"')
         )
 
-    lan_en = prompt(
+    lan_en = session.prompt(
         HTML("<ansiblue>[a] Please also specify the language using ISO 639-2 codes (e.g. eng, de, jpn): </ansiblue>"))
     print_formatted_text(
         "\n[i] Great, now that we have the first movie let's get the second movie from which we will only take the "
         "audio.")
 
     movie_de = (
-        prompt(HTML("<ansiblue>[a] Please also give the path of this movie:</ansiblue>"), completer=PathCompleter())
+        session.prompt(HTML("<ansiblue>[a] Please also give the path of this movie:</ansiblue>"), completer=PathCompleter())
             .lstrip('"')
             .rstrip('"')
     )
 
     while not os.path.isfile(movie_de):
         movie_de = (
-            prompt(HTML("<ansiblue>[a] This is not a file! Make sure you spelled the path correctly:</ansiblue>"),
+            session.prompt(HTML("<ansiblue>[a] This is not a file! Make sure you spelled the path correctly:</ansiblue>"),
                    completer=PathCompleter())
                 .lstrip('"')
                 .rstrip('"')
         )
 
-    lan_de = prompt(
+    lan_de = session.prompt(
         HTML("<ansiblue>[a] Again, please specify the language using ISO 639-2 codes:</ansiblue>")
     )
     print_formatted_text("[i] Almost done, just two more questions")
@@ -121,7 +124,7 @@ def interactive():
     destination = ""
     if conf['combiner']['default_out'] is None or conf['combiner']['ask_again']:
         destination = (
-            prompt(
+            session.prompt(
                 HTML("<ansiblue>[a] Where do you want your movie to be saved ([ENTER] to put it in $PWD):</ansiblue>"),
                 completer=PathCompleter())
                 .lstrip('"')
@@ -129,7 +132,7 @@ def interactive():
         )
         while not os.path.isdir(destination) or destination == "":
             destination = (
-                prompt(
+                session.prompt(
                     HTML(
                         "<ansiblue>[a] This is not a destination! Make sure you spelled everything "
                         "correctly:</ansiblue>"),
@@ -138,7 +141,7 @@ def interactive():
     if destination == "":
         destination = conf['combiner']['default_out']
 
-    offset = prompt(
+    offset = session.prompt(
         HTML(
             "<ansiblue>[a] Lastly, put in the offset for the movie (e.g. 400ms). Press [ENTER] to let the script "
             "handle this:</ansiblue>")
@@ -156,7 +159,7 @@ def get_prev(path):
     print_formatted_text(
         f'Using:\nMovie1: {vals["mv_en"]}\nMovie2: {vals["mv_de"]}\nLanguage1: {vals["ln_en"]}\nLanguage2: {vals["ln_de"]}\nDestination: {vals["dst"]}'
     )
-    vals["off"] = prompt(HTML("<ansiblue>[a] Okay great, now please specify a new offset: </ansiblue>"))
+    vals["off"] = session.prompt(HTML("<ansiblue>[a] Okay great, now please specify a new offset: </ansiblue>"))
     return (
         vals["mv_en"],
         vals["mv_de"],
@@ -220,11 +223,8 @@ def main():
         offset = f"{diff}ms"
 
     if re.search(r"[sS]\d{2}[eE]\d{2}", movie_en.split(seperator)[-1]) is None:
-        combined_name = re.sub(
-            r"(?<=\(\d{4}\)).*", ".mkv", movie_en.split(seperator)[-1]
-        )
-    else:
-        combined_name = re.sub(r".mp4", ".mkv", movie_en.split(seperator)[-1])
+        combined_name = re.sub(r"(?<=\(\d{4}\)).*", ".mkv", movie_en.split(seperator)[-1])
+    combined_name = re.sub(r".mp4", ".mkv", movie_en.split(seperator)[-1])
 
     if args.output is not None:
         combined_name = args.output + seperator + combined_name

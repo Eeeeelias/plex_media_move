@@ -4,10 +4,13 @@ import re
 import subprocess
 import sys
 
-from prompt_toolkit import print_formatted_text, prompt, HTML
+from prompt_toolkit import print_formatted_text, PromptSession, HTML
 from prompt_toolkit.completion import PathCompleter
+from prompt_toolkit.history import FileHistory
 
-from mediainfolib import seperator as sep, get_config, convert_country
+from mediainfolib import seperator as sep, get_config, convert_country, data_path
+
+session = PromptSession(history=FileHistory(f"{data_path}{sep}.subcomb"))
 
 
 def fetch_files(movie_path):
@@ -24,20 +27,21 @@ def fetch_files(movie_path):
 
 def interactive():
     relevant_files = []
-    movie = prompt(HTML("<ansiblue>[a] Specify the movie you want to have subtitles for (if you give a folder the files"
-                        " will be taken from there): </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
+    movie = session.prompt(
+        HTML("<ansiblue>[a] Specify the movie you want to have subtitles for (if you give a folder the files"
+             " will be taken from there): </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
     if os.path.isdir(movie):
         return fetch_files(movie)
-    sub_file = prompt(HTML("<ansiblue>[a] Specify a subtitle file (.srt): </ansiblue>"),
-                      completer=PathCompleter()).lstrip('"').rstrip('"')
+    sub_file = session.prompt(HTML("<ansiblue>[a] Specify a subtitle file (.srt): </ansiblue>"),
+                              completer=PathCompleter()).lstrip('"').rstrip('"')
     while sub_file != "":
         while not os.path.isfile(sub_file):
             print_formatted_text(HTML("<ansired> This is not a file!</ansired>"))
-            sub_file = prompt(HTML("<ansiblue>[a] Specify a subtitle file (.srt): </ansiblue>"),
-                              completer=PathCompleter()).lstrip('"').rstrip('"')
+            sub_file = session.prompt(HTML("<ansiblue>[a] Specify a subtitle file (.srt): </ansiblue>"),
+                                      completer=PathCompleter()).lstrip('"').rstrip('"')
         relevant_files.append(sub_file)
-        sub_file = prompt(HTML("<ansiblue>[a] Specify another subtitle file ([ENTER] to finish): </ansiblue>"),
-                          completer=PathCompleter()).lstrip('"').rstrip('"')
+        sub_file = session.prompt(HTML("<ansiblue>[a] Specify another subtitle file ([ENTER] to finish): </ansiblue>"),
+                                  completer=PathCompleter()).lstrip('"').rstrip('"')
     relevant_files.append(movie)
     return [relevant_files]
 
@@ -64,7 +68,7 @@ def sub_in_movie(movie_files, out_path):
     for i, (key, value) in enumerate(subs_with_lang.items()):
         print("{} Subs: {}".format(convert_country(key), os.path.split(value)[1]))
         sub = ["-f", "srt", "-i", value]
-        new_map = ["-map", f"{i+1}:s"]
+        new_map = ["-map", f"{i + 1}:s"]
         new_metadata = [f"-metadata:s:s:{i}", f"language={key}"]
         inputs.extend(sub)
         maps.extend(new_map)
@@ -73,13 +77,14 @@ def sub_in_movie(movie_files, out_path):
     ffmpeg_full.append(out)
     subprocess.run(ffmpeg_full)
 
+
 def main():
     if len(sys.argv) == 1:
         try:
             output = get_config()['combiner']['default_out']
         except FileNotFoundError:
             print_formatted_text(HTML("<ansired> Couldn't find config, specify output!</ansired>"))
-            output = prompt(HTML("<ansiblue> Output path: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip(
+            output = session.prompt(HTML("<ansiblue> Output path: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip(
                 '"')
         subs_to_combine = interactive()
     else:
