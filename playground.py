@@ -1,11 +1,10 @@
 # just for testing I swear
-import re
-import os
 import timeit
-
 import mediainfolib
 from mediainfolib import seperator
 from manage_db import *
+from difflib import SequenceMatcher as SM
+
 
 conf = mediainfolib.get_config()
 db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
@@ -35,5 +34,5 @@ if __name__ == '__main__':
     start = timeit.default_timer()
     main()
     end = timeit.default_timer()
-    print("Took: {:2f}s".format(end-start))
+    print("Took: {:.2f}s".format(end-start))
     # delete()

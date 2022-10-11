@@ -1,6 +1,7 @@
 import argparse
 import glob
 import os
+import random
 import re
 import shutil
 import sys
@@ -9,7 +10,7 @@ import traceback
 from sys import platform
 import manage_db
 import mediainfolib
-from mediainfolib import check_database_ex, sorted_alphanumeric
+from mediainfolib import check_database_ex, sorted_alphanumeric, fuzzy_matching
 from prompt_toolkit import prompt, HTML, print_formatted_text
 
 # This script renames, organizes and moves your downloaded media files
@@ -82,6 +83,7 @@ def make_parser():
              "aware that it's season two. You can add "
              "as many of those as you want",
     )
+    parser.add_argument("--no_db", dest="use_db", action="store_true", help="Using this option will prevent the usage of the database")
     return parser
 
 
@@ -282,6 +284,17 @@ def rename_files(path, special):
     return clean_paths, video_titles_new
 
 
+def get_show_name(show_dir, video_title):
+    orig_show_name = re.sub(" [sS][0-9]+[eE][0-9]+.*", "", string=video_title)
+    new_show_name = orig_show_name
+    fuzzy_match = fuzzy_matching(show_dir, orig_show_name)
+    if fuzzy_match is not None:
+        keep_original = prompt(HTML("<ansiblue>[a] Do you want to keep the original name? [y/N] </ansiblue>")).lower()
+        if keep_original != "y":
+            new_show_name = fuzzy_match
+    return new_show_name
+
+
 def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
     moved_videos = set()
     for video_path, video_title in zip(video_paths, video_titles_new):
@@ -347,8 +360,8 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
                 "[i] Moved (Movie): {}".format(new_path.split("/")[-1])
             )
             continue
-
-        show_name = re.sub(" [sS][0-9]+[eE][0-9]+.*", "", string=video_title)
+        # check for show name similarity here and change if needed?
+        show_name = get_show_name(plex_path + "/TV Shows/", video_title)
         season = re.search(r"\d+(?=[eE]\d{1,4})", video_title).group()
         show_path = plex_path + "/TV Shows/" + show_name + "/Season {}/".format(season)
         # for db check
@@ -364,10 +377,7 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
         # make folder for season if it doesn't exist
         if not os.path.exists(show_path):
             print_formatted_text(
-                "[i] New Season, making new folder ({}, Season {})".format(
-                    show_name, season
-                )
-            )
+                "[i] New Season, making new folder ({}, Season {})".format(show_name, season))
             os.makedirs(show_path)
         # if file exists (file_ex_check returns false) add 2 to the file
         duplicate_num = file_ex_check(show_path + video_title, overwrite)
@@ -395,6 +405,7 @@ def main():
         parser = make_parser()
         args = parser.parse_args()
         conf = mediainfolib.get_config()
+        use_db = True
         if conf is not None:
             data_path = conf['database']['db_path']
             db_path = data_path + f"{seperator}media_database.db"
@@ -406,6 +417,7 @@ def main():
             data_path = mediainfolib.data_path
             orig_path = args.orig_path.rstrip(seperator)
             plex_path = args.dest_path.rstrip(seperator)
+            use_db = False if args.use_db else True
             special = [] if args.special is None else args.special
             overwrite = True if args.overwrite else False
             if args.audials:
@@ -428,7 +440,7 @@ def main():
         for path in paths:
             video_path_list, video_titles_renamed = rename_files(path, special)
             moved_files = move_files(video_path_list, video_titles_renamed, plex_path, overwrite)
-            if check_database_ex(db_path):
+            if check_database_ex(db_path) and use_db:
                 manage_db.update_database(moved_files, db_path)
 
         print_formatted_text("[i] Everything done!")

@@ -1,9 +1,11 @@
 import re
-import subprocess
-import sys
 import os
-from sys import platform
+import sys
 import json
+import subprocess
+from sys import platform
+from difflib import SequenceMatcher as SM
+
 try:
     import pycountry
     from prompt_toolkit import prompt, HTML, print_formatted_text
@@ -168,7 +170,7 @@ def convert_country(alpha: str) -> str:
 # for database pretty print
 def cut_name(name, cut) -> str:
     if len(name) >= cut:
-        return name[:cut-3] + "..."
+        return name[:cut - 3] + "..."
     else:
         return name
 
@@ -187,3 +189,15 @@ def add_minus() -> str:
 
 def split_shows(seq, size):
     return (seq[i::size] for i in range(size))
+
+
+def fuzzy_matching(input_dir, u_show):
+    matched_show = None
+    for show in os.listdir(input_dir):
+        ratio = SM(None, show, u_show).ratio()
+        if 1 > ratio > 0.8:
+            print(
+                "[i] \'{}\' and \'{}\' might be the same show. ({:.0f}% similarity)".format(show, u_show, ratio * 100))
+            matched_show = show
+            break
+    return matched_show
