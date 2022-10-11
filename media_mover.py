@@ -97,15 +97,7 @@ def file_ex_check(new_file, overwrite=False):
     if os.path.isfile(new_file):
         print_formatted_text(HTML("<ansired>[w] File already exists!</ansired>"))
         ext = re.search(r"(\.mp4)|(\.mkv)", new_file).group()
-        if (
-                overwrite
-                or prompt(
-            HTML(
-                "<ansiblue>[a] Do you want to overwrite the file? [yN]: </ansiblue>"
-            )
-        )
-                == "y"
-        ):
+        if overwrite or prompt(HTML("<ansiblue>[a] Do you want to overwrite the file? [y/N]: </ansiblue>"))== "y":
             return 0
         i = 2
         new_file = re.sub(ext, f"_{i}" + ext, new_file)
@@ -179,7 +171,8 @@ def movie_checker(movie_title, path, ext=".mp4"):
             while version_name == version_name_existing:
                 version_name_existing = prompt(
                     HTML(
-                        "<ansiblue>[a] Both movies can't have the same version name! Please enter a valid version name: "
+                        "<ansiblue>[a] Both movies can't have the same version name! Please enter a valid version "
+                        "name: "
                         "</ansiblue>"
                     )
                 )
@@ -282,15 +275,22 @@ def rename_files(path, special):
     return clean_paths, video_titles_new
 
 
-def get_show_name(show_dir, video_title):
+def get_show_name_season(show_dir, video_title):
     orig_show_name = re.sub(" [sS][0-9]+[eE][0-9]+.*", "", string=video_title)
+    orig_season = re.search(r"\d+(?=[eE]\d{1,4})", video_title).group()
     new_show_name = orig_show_name
+    new_season = orig_season
     fuzzy_match = fuzzy_matching(show_dir, orig_show_name)
     if fuzzy_match is not None:
         keep_original = prompt(HTML("<ansiblue>[a] Do you want to keep the original name? [y/N] </ansiblue>")).lower()
-        if keep_original != "y":
+        if keep_original == "n":
             new_show_name = fuzzy_match
-    return new_show_name
+            keep_season = prompt(HTML(f"<ansiblue>[a] Do you want to keep the season? (Current: {orig_season})\n"
+                                      f"[ENTER] to keep, digit to override: </ansiblue>")).lower()
+            if keep_season.isdigit():
+                # making sure the leading zero is there
+                new_season = keep_season if keep_season.startswith("0") else f"0{keep_season}"
+    return new_show_name, new_season
 
 
 def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
@@ -306,10 +306,7 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
             ext = re.search(r"(\.mp4)|(\.mkv)", video_title).group()
             # If the movie is a specific version of that movie, make a new folder and put the movie in there
             # as other versions of that movie might get added
-            if (
-                    re.search(r"(?<=\(\d{4}\)) -.*(?=(.mp4)|(.mkv))", video_title)
-                    is not None
-            ):
+            if re.search(r"(?<=\(\d{4}\)) -.*(?=(.mp4)|(.mkv))", video_title) is not None:
                 if overwrite:
                     print_formatted_text("[i] Overwriting existing version of movie")
                     new_path = plex_path + "/Movies/" + video_title
@@ -358,9 +355,10 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
                 "[i] Moved (Movie): {}".format(new_path.split("/")[-1])
             )
             continue
+
         # check for show name similarity here and change if needed?
-        show_name = get_show_name(plex_path + "/TV Shows/", video_title)
-        season = re.search(r"\d+(?=[eE]\d{1,4})", video_title).group()
+        show_name, season = get_show_name_season(plex_path + "/TV Shows/", video_title)
+        video_title = re.sub(r"[sS]\d+(?=[eE]\d)", f"s{season}", video_title)
         show_path = plex_path + "/TV Shows/" + show_name + "/Season {}/".format(season)
         # for db check
         show_path_without_season = plex_path + f"{seperator}TV Shows{seperator}" + show_name
