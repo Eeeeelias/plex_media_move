@@ -152,7 +152,7 @@ def fetch_all(overall_path) -> tuple[List[tuple], List[tuple]]:
 
 
 def reindex_shows(db_path: str, plex_path: str) -> List[tuple]:
-    from manage_db import custom_sql
+    from src.manage_db import custom_sql
     _info_shows = []
     info_shows = []
     show_dirs = glob.glob(plex_path + f"{sep}TV Shows{sep}*")
