@@ -1,12 +1,10 @@
 import os
 import re
-import setup
 import random
-import manage_db
-import mediainfolib
-from mediainfolib import seperator, clear, cut_name
+from src import mediainfolib, setup, manage_db
+from src.mediainfolib import seperator, clear, cut_name
 from prompt_toolkit import prompt, HTML, print_formatted_text
-from db_infos import media_size, best_quality, database_size, total_watchtime, oldest_movie, worst_quality
+from src.db_infos import media_size, best_quality, database_size, total_watchtime, oldest_movie, worst_quality
 
 
 def give_options(info):

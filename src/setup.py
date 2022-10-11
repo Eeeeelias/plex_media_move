@@ -3,12 +3,10 @@ import os
 import sys
 import time
 
-import mediainfolib
-from mediainfolib import data_path, seperator
+from src import mediainfolib, fetch_infos, manage_db
+from src.mediainfolib import data_path, seperator
 from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
-import fetch_infos
-import manage_db
 
 config_path = data_path + f"{seperator}config.json"
 

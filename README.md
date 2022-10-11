@@ -1,23 +1,19 @@
 # Plex Media Move
 
-These are a few scripts to help with renaming and organizing video files to better work with
-Plex (or Jellyfin). So far there are a few scripts, though more may be added in the future.
+This is a small program to help with renaming and organizing video files to better work with
+Plex (or Jellyfin).
 
-## media_mover.py
+## Execute
 
-The main script of this repo: it will rename, organize and move your media files into the 
-appropriate folders for plex to scan and give back to you. For the script to work you have 
-to put in the `origin path` (where your files are currently), the `destination path` (the path
-that plex reads from) and optionally some `special values` for some hard to identify shows/seasons.
-The `-a` param will look at local Audials files but is more of a legacy feature. Using `-o` will result in
-possible duplicate files being overwritten, be careful with this!
+Execute `main.py` like so:
 ```shell
-python3 media_mover.py --op "/path/to/files" --dp "/path/to/plex/library" [--sv "IDENTIFIER;SEASON"] [-a] [-o]
+python3 main.py
 ```
-Alternatively, there is an example batch file ``run_mover.bat`` that you can fit to your needs 
-to make it easier to execute and change program arguments if needed.
+This will start a setup for you to get started. After that you're able to move your files, edit videos,
+edit Episode numbering, convert videos or look up shows in your database.
 
-Your input directory structure should look like this (Assuming you're using Audials):
+For the media mover to work properly, your input directory structure should look like this 
+(Assuming you're using Audials):
 ```
 --/videoFiles
 ----/Audials
@@ -27,33 +23,15 @@ Your input directory structure should look like this (Assuming you're using Audi
 ----/someShow Episode 1.mp4
 ----/someShow Season 2 Episode 1.mp4
 ```
-Then you can just point the origin path to `/videoFiles` and the script will handle everything else
+Then you can just point the origin path to `/videoFiles` and the mover will handle everything else.
+
+## Requirements
+
+The program should install all the needed requirements automatically, but if that fails make sure to have
+`pycountry`, `opencv-python` and `prompt_toolkit` installed.
 
 
-## combine_movies.sh / py_combine_movies.py
-This script allows you to easily combine two movie files into one with two audio tracks. This is intended 
-for combining movies with different languages (e.g. English and German). To use in bash:
-```bash
-./combine_movies.sh "Movie (YYYY) - English.mp4" "Movie (YYYY) - Deutsch.mp4"
-```
-Or python:
-```shell
-python3 py_combine_movies.py -i
-```
-To use an interactive version of the script. For more info on the non-interactive version use `-h`. 
-
-
-## rename.py
-
-A really small script to strip a leading "Watch" and tailing characters after the episode 
-numbering. E.g. Turns ``Watch Parks and Recreation s01e02 720p WEB.mp4`` into 
-`Parks and Recreation s01e02.mp4`. To use this script just execute it with the folder with your 
-video files.
-```shell
-python3 rename.py "P:\<downloaded>\<files>\<folder>\"
-```
-
-## organize_shows.py
+## src/organize_shows.py
 
 This is a script to better organize your already existing media files for TV Shows. Turns 
 this folder structure:

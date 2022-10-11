@@ -5,10 +5,8 @@ import subprocess
 from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit import prompt, HTML, print_formatted_text
 
-import combine_sub_with_movie
-import extract_songs
-import py_combine_movies
-from mediainfolib import clear, seperator as sep
+from src import combine_sub_with_movie, extract_songs, py_combine_movies
+from src.mediainfolib import clear, seperator as sep
 
 
 def give_options():

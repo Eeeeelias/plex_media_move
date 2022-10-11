@@ -1,10 +1,8 @@
 # just for testing I swear
 import timeit
-import mediainfolib
-from mediainfolib import seperator
-from manage_db import *
-from difflib import SequenceMatcher as SM
-
+from src import mediainfolib
+from src.mediainfolib import seperator
+from src.manage_db import *
 
 conf = mediainfolib.get_config()
 db_path = conf['database']['db_path'] + f"{seperator}media_database.db"

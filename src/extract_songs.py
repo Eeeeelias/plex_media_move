@@ -1,13 +1,10 @@
 # I want to extract all the songs from one long video from yt
 import os
 import re
-import signal
 import subprocess
 
-from prompt_toolkit.shortcuts import ProgressBar
-
-import mediainfolib
-from mediainfolib import seperator as sep, data_path, get_config
+from src import mediainfolib
+from src.mediainfolib import seperator as sep, data_path, get_config
 from prompt_toolkit import print_formatted_text, PromptSession, HTML
 from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit.history import FileHistory

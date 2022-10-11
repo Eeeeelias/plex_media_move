@@ -1,16 +1,14 @@
 import argparse
 import glob
 import os
-import random
 import re
 import shutil
 import sys
 import time
 import traceback
 from sys import platform
-import manage_db
-import mediainfolib
-from mediainfolib import check_database_ex, sorted_alphanumeric, fuzzy_matching
+from src import manage_db, mediainfolib
+from src.mediainfolib import check_database_ex, sorted_alphanumeric, fuzzy_matching
 from prompt_toolkit import prompt, HTML, print_formatted_text
 
 # This script renames, organizes and moves your downloaded media files

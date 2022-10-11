@@ -3,9 +3,9 @@ import sqlite3
 import time
 from datetime import datetime
 from sqlite3 import Error
-from mediainfolib import convert_millis, convert_country, cut_name, convert_size, add_minus, convert_seconds, \
+from src.mediainfolib import convert_millis, convert_country, cut_name, convert_size, add_minus, convert_seconds, \
     seperator as sep
-import fetch_infos
+from src import fetch_infos
 
 
 def create_connection(db_file) -> sqlite3.Connection:

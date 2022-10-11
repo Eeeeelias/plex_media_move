@@ -7,7 +7,7 @@ import re
 from itertools import dropwhile
 from typing import AnyStr, List
 
-from mediainfolib import get_duration_cv2, check_ffmpeg, get_language, seperator, \
+from src.mediainfolib import get_duration_cv2, check_ffmpeg, get_language, seperator, \
     convert_seconds, get_duration
 
 sep = seperator

@@ -7,7 +7,7 @@ import sys
 from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
 
-import mediainfolib
+from src import mediainfolib
 
 
 def overview():

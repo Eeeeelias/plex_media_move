@@ -1,8 +1,7 @@
 import math
-import mediainfolib
 import numpy as np
-import manage_db
-from manage_db import get_count_ids
+from src import mediainfolib, manage_db
+from src.manage_db import get_count_ids
 
 
 def sigmoid(x):

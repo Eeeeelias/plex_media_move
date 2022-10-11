@@ -12,7 +12,7 @@ from prompt_toolkit import HTML, print_formatted_text, PromptSession, prompt
 from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit.history import FileHistory
 
-from mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep
+from src.mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep
 
 conf = get_config()
 

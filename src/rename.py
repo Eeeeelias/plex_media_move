@@ -6,8 +6,8 @@ from sys import argv
 from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
 
-import mediainfolib
-from mediainfolib import sorted_alphanumeric
+from src import mediainfolib
+from src.mediainfolib import sorted_alphanumeric
 
 
 def overview():

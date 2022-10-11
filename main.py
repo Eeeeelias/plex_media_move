@@ -1,10 +1,6 @@
-import convert_ts
-import ffmpeg_edits
+from src import ffmpeg_edits, convert_ts, search_db, rename, setup
 import media_mover
-import rename
-import search_db
-import setup
-from mediainfolib import get_config, clear
+from src.mediainfolib import get_config, clear
 from prompt_toolkit import HTML, print_formatted_text, prompt
 
 
