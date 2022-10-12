@@ -25,7 +25,7 @@ def make_data():
 
 
 def main():
-    pass
+    return
 
 
 if __name__ == '__main__':

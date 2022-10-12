@@ -24,12 +24,14 @@ def greetings():
 def default_window(curr_config):
     gs = "<ansigreen>"
     ge = "</ansigreen>"
-    window = "    ############################################################################\n" \
+    window = "\n    ############################################################################\n" \
              "    #                                                                          #\n" \
              "    # Your current config:                                                     #\n"
     for key, value in curr_config.items():
         if type(value) == bool:
             value = "False" if value == 0 else "True"
+        if value is None:
+            value = "None"
         window += f"    # {gs}{key:11}{ge} - {value:58} #\n"
     window += "    #                                                                          #\n" \
               "    ############################################################################\n"
@@ -38,12 +40,12 @@ def default_window(curr_config):
 
 def change_value(config, program):
     default_window(config[program])
-    change = prompt(HTML("<ansiblue>Option you want to change: </ansiblue>"))
+    change = prompt(HTML("<ansiblue>Option you want to change: </ansiblue>")).lstrip('"').rstrip('"')
     if change == "q":
         return config
     while change not in config[program].keys():
         print_formatted_text(HTML("<ansired>[w] Not a valid option!</ansired>"))
-        change = prompt(HTML("<ansiblue>Option you want to change: </ansiblue>"))
+        change = prompt(HTML("<ansiblue>Option you want to change: </ansiblue>")).lstrip('"').rstrip('"')
     print(f"[i] Changing {change}")
     value = prompt(HTML("<ansiblue>New value: </ansiblue>"))
     if value.lower() in ["true", "false"]:
@@ -57,7 +59,7 @@ def main():
     new_config = config
     while 1:
         greetings()
-        choice = prompt(HTML("<ansiblue>Your choice: </ansiblue>"))
+        choice = prompt(HTML("<ansiblue>=> </ansiblue>"))
         if choice in ["1", "media mover", "mover"]:
             new_config = change_value(config, 'mover')
         elif choice in ["2", "combiner"]:
@@ -65,6 +67,7 @@ def main():
         elif choice in ["3", "database", "db"]:
             new_config = change_value(config, 'database')
         elif choice in ["q", "quit", "exit"]:
+            clear()
             return
         setup.write_config_to_file(new_config, config_path)
         clear()

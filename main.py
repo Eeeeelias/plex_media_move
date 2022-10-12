@@ -29,6 +29,7 @@ def greetings():
 
 
 def check_for_setup():
+    from src import setup
     if get_config() is None:
         print("[i] No config found! Running setup...")
         setup.set_config()
@@ -37,20 +38,20 @@ def check_for_setup():
 def main():
     while 1:
         greetings()
-        tool = prompt(HTML("<ansiblue>Your choice: </ansiblue>"))
-        if tool == "1" or tool == "media mover":
+        tool = prompt(HTML("<ansiblue>=> </ansiblue>"))
+        if tool in ["1",  "media mover"]:
             clear()
             media_mover.main()
-        elif tool == "2" or tool == "combiner":
+        elif tool in ["2", "combine", "video edits"]:
             clear()
             ffmpeg_edits.main()
-        elif tool == "3" or tool == "shifting":
+        elif tool in ["3", "shifting"]:
             clear()
             rename.main()
-        elif tool == "4" or tool == "converter":
+        elif tool in ["4", "converter"]:
             clear()
             convert_ts.main()
-        elif tool == "5" or tool == "db search":
+        elif tool in ["5", "db search"]:
             clear()
             search_db.main()
         elif tool == "c":
@@ -63,9 +64,8 @@ def main():
 
 
 if __name__ == '__main__':
+    from src.mediainfolib import get_config, clear
     try:
-        from src.mediainfolib import get_config, clear
-        from src import setup
         check_for_setup()
         from src import ffmpeg_edits, convert_ts, search_db, rename, change_config
         import media_mover

@@ -109,7 +109,7 @@ def cut_video():
 
 def main():
     give_options()
-    choice = prompt(HTML("<ansiblue>Your choice: </ansiblue>"))
+    choice = prompt(HTML("<ansiblue>=> </ansiblue>"))
     if choice in ["1", "combine", "com"]:
         py_combine_movies.main()
     elif choice in ["2", "concat", "cat"]:

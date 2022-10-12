@@ -49,7 +49,7 @@ def search_other(db_path):
     inp2 = prompt(HTML("(Valid values are: {})\n<ansiblue>What do you want to search by? </ansiblue>".format(
         ", ".join(correct_vals.keys())))).lower()
     while inp2 not in correct_vals:
-        inp2 = prompt(HTML("<ansiblue>This is not a valid option!</ansiblue>\nOptions are: {}\n Your choice: ".format(
+        inp2 = prompt(HTML("<ansiblue>This is not a valid option!</ansiblue>\nOptions are: {}\n => ".format(
             ", ".join(correct_vals.keys())))).lower()
     inp3 = prompt(HTML("<ansiblue>Now specify the value you're searching for (for integer based values, you can do "
                        "e.g. >4 to search for all entries with values greater than 4): </ansiblue>")).lower()
@@ -86,16 +86,16 @@ def main():
     conf = mediainfolib.get_config()
     db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
 
-    if db_path is None:
-        print("No database found! Exiting")
-        exit(0)
+    if db_path is None or not os.path.isfile(db_path):
+        print_formatted_text(HTML("<ansired>[w] No database found!</ansired>"))
+        return
 
     # print("Looking at: {}".format(db_path))
     while 1:
         try:
             db_table = ""
             give_options(info_line(db_path))
-            inp = prompt(HTML("<ansiblue>Your choice: </ansiblue>")).lower()
+            inp = prompt(HTML("<ansiblue>=> </ansiblue>")).lower()
             if inp == "1" or inp == "s" or inp == "shows":
                 show = prompt(HTML("<ansiblue>Put in a name for your search: </ansiblue>"))
                 res = manage_db.get_shows(search=show, db_path=db_path)

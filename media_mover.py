@@ -397,6 +397,7 @@ def trash_video(path):
 
 
 def main():
+    conf = None
     try:
         parser = make_parser()
         args = parser.parse_args()
@@ -445,12 +446,16 @@ def main():
             "<ansired>[w] Please make sure your paths are written correctly! Couldn't find files</ansired>")
         )
         exit(1)
-    except TypeError as e:
-        traceback.print_exc()
+    except TypeError:
+        # traceback.print_exc()
+        if conf is not None:
+            for value in conf['mover'].values():
+                if value is None:
+                    print_formatted_text(HTML("<ansired>[w] You don't have the relevant infos in your config!</ansired>"))
+                    return
         print_formatted_text(HTML(
             "<ansired>[w] There was an error with some of the values you put in! Please double-check those and send "
-            "me a message "
-            " if that doesn't help! </ansired>")
+            "me a message if that doesn't help! </ansired>")
         )
         exit(1)
     except AttributeError as e:
