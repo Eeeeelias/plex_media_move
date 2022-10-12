@@ -4,7 +4,8 @@ import random
 from src import mediainfolib, setup, manage_db
 from src.mediainfolib import seperator, clear, cut_name
 from prompt_toolkit import prompt, HTML, print_formatted_text
-from src.db_infos import media_size, best_quality, database_size, total_watchtime, oldest_movie, worst_quality
+from src.db_infos import media_size, best_quality, database_size, total_watchtime, oldest_movie, worst_quality, \
+    num_videos
 
 
 def give_options(info):
@@ -28,7 +29,7 @@ def give_options(info):
 def info_line(db_path):
     try:
         return random.choice([media_size, best_quality, worst_quality,
-                              database_size, total_watchtime, oldest_movie])(db_path)
+                              database_size, total_watchtime, oldest_movie, num_videos])(db_path)
     except:
         return " [i] No cool infos! :("
 

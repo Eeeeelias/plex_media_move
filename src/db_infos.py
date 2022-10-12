@@ -80,3 +80,9 @@ def oldest_movie(db: str):
     oldest = manage_db.custom_sql(db, "SELECT name,MIN(year) FROM main.movies GROUP BY year")[0]
     name = mediainfolib.cut_name(oldest[0], 72 - 46)
     return f" [i] The oldest movie you have is from {oldest[1]} ({name})!"
+
+
+def num_videos(db: str):
+    num_shows = manage_db.custom_sql(db, "SELECT SUM(episodes) FROM main.shows")[0][0]
+    num_movies = manage_db.custom_sql(db, "SELECT COUNT(id) FROm main.movies")[0][0]
+    return f" [i] You have {num_movies + num_shows} video files in your library!"

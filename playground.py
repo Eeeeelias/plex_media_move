@@ -1,8 +1,11 @@
 # just for testing I swear
 import timeit
+
+import src.manage_db
 from src import mediainfolib
 from src.mediainfolib import seperator
 from src.manage_db import *
+from prompt_toolkit import print_formatted_text, HTML
 
 conf = mediainfolib.get_config()
 db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
@@ -25,12 +28,19 @@ def make_data():
 
 
 def main():
-    return
+    pass
+
+
+def num_videos():
+    num_shows = src.manage_db.custom_sql(db_path, "SELECT SUM(episodes) FROM main.shows")[0][0]
+    num_movies = src.manage_db.custom_sql(db_path, "SELECT COUNT(id) FROm main.movies")[0][0]
+    return f"[i] You have {num_movies + num_shows} video files in your library!"
 
 
 if __name__ == '__main__':
     start = timeit.default_timer()
-    main()
+    # line = main()
+    # print(line)
     end = timeit.default_timer()
-    print("Took: {:.2f}s".format(end-start))
+    print("Took: {:.6f}s".format(end-start))
     # delete()

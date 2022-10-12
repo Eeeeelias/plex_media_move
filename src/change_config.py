@@ -24,18 +24,30 @@ def greetings():
 def default_window(curr_config):
     gs = "<ansigreen>"
     ge = "</ansigreen>"
-    window = "\n    ############################################################################\n" \
-             "    #                                                                          #\n" \
-             "    # Your current config:                                                     #\n"
+    window = \
+        "\n    ############################################################################\n" \
+        "    #                                                                          #\n" \
+        "    # Your current config:                                                     #\n"
     for key, value in curr_config.items():
         if type(value) == bool:
             value = "False" if value == 0 else "True"
         if value is None:
             value = "None"
+        value = value.replace("&", "&amp;")
         window += f"    # {gs}{key:11}{ge} - {value:58} #\n"
-    window += "    #                                                                          #\n" \
-              "    ############################################################################\n"
+    window += \
+        "    #                                                                          #\n" \
+        "    ############################################################################\n"
     print_formatted_text(HTML(window))
+
+
+def ensure_bool(curr, change):
+    if type(curr) != bool:
+        return True
+    else:
+        if change.lower() in ["true", "false"]:
+            return True
+    return False
 
 
 def change_value(config, program):
@@ -48,6 +60,9 @@ def change_value(config, program):
         change = prompt(HTML("<ansiblue>Option you want to change: </ansiblue>")).lstrip('"').rstrip('"')
     print(f"[i] Changing {change}")
     value = prompt(HTML("<ansiblue>New value: </ansiblue>"))
+    while not ensure_bool(config[program][change], value):
+        print_formatted_text(HTML("<ansired>[w] Not a valid input! Must be True or False.</ansired>"))
+        value = prompt(HTML("<ansiblue>New value: </ansiblue>")).lstrip('"').rstrip('"')
     if value.lower() in ["true", "false"]:
         value = True if value.lower() == "true" else False
     config[program][change] = value
