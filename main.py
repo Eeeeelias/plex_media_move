@@ -1,9 +1,3 @@
-from src import ffmpeg_edits, convert_ts, search_db, rename, setup
-import media_mover
-from src.mediainfolib import get_config, clear
-from prompt_toolkit import HTML, print_formatted_text, prompt
-
-
 def greetings():
     gs = "<ansigreen>"
     ge = "</ansigreen>"
@@ -26,7 +20,7 @@ def greetings():
     #                                                                          #
     # [5] {gs}db search{ge}   - search through your local media database               #
     #                                                                          #
-    # [i] Using this tool will use your default settings!                      #
+    # [i] Press [c] to change config                                           #
     #                                                                          #
     ############################################################################
     
@@ -59,6 +53,9 @@ def main():
         elif tool == "5" or tool == "db search":
             clear()
             search_db.main()
+        elif tool == "c":
+            clear()
+            change_config.main()
         elif tool in ["close", "q", "quit", "exit"]:
             exit(0)
         else:
@@ -67,7 +64,13 @@ def main():
 
 if __name__ == '__main__':
     try:
+        from src.mediainfolib import get_config, clear
+        from src import setup
         check_for_setup()
+        from src import ffmpeg_edits, convert_ts, search_db, rename, change_config
+        import media_mover
+        from prompt_toolkit import HTML, print_formatted_text, prompt
+        from sys import exit
         main()
     except KeyboardInterrupt:
         print("Exiting")

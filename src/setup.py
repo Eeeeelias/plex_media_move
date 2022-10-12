@@ -55,6 +55,11 @@ def set_database():
     return {"db_path": db_path}
 
 
+def write_config_to_file(config, path):
+    json.dump(config, open(path, 'w'))
+    return
+
+
 def set_config():
     mover = {}
     combiner = {}
@@ -70,7 +75,7 @@ def set_config():
         exit(0)
 
     print_formatted_text(HTML("[i] Saving config at: {}\n".format(config_path)))
-    json.dump({"mover": mover, "combiner": combiner, "database": database}, open(config_path, 'w'))
+    write_config_to_file({"mover": mover, "combiner": combiner, "database": database}, config_path)
     create_db = prompt(HTML("<ansiblue>[a] Do you want to create the database now (If you already have a database it "
                             "will be deleted)? </ansiblue>[y/N] "))
     if create_db.lower() == "y":
