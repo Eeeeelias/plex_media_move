@@ -29,6 +29,7 @@ def create_table(conn, sql_table) -> bool:
 
 # media is 2d array for speed reasons
 def add_to_db(conn, table, media) -> tuple:
+    proper_table = "shows" if table == "show" else "movies"
     if table == "show":
         sql = """INSERT INTO shows(id, name, seasons, episodes, runtime, size, modified)
                  VALUES(?,?,?,?,?,?,?)"""
@@ -38,7 +39,7 @@ def add_to_db(conn, table, media) -> tuple:
     curse = conn.cursor()
     curse.executemany(sql, media)
     conn.commit()
-    return curse.lastrowid
+    return get_max_id(proper_table, curse)
 
 
 def create_database(plex_path, db_path, info_shows: list[tuple], info_movies: list[tuple]) -> None:
@@ -86,8 +87,8 @@ def create_database(plex_path, db_path, info_shows: list[tuple], info_movies: li
     # cur.execute("SELECT name FROM movies")
     # list_movies = list(cur.fetchall())
     # completeness_check(plex_path + f"{sep}Movies", list_movies)
-    print(f"[i] {last_show_id} Shows now in the database!")
-    print(f"[i] {last_movie_id} Movies now in the database!")
+    print(f"[i] {last_show_id[0]} Shows now in the database!")
+    print(f"[i] {last_movie_id[0]} Movies now in the database!")
 
 
 def update_database(additions: set[str], db) -> None:

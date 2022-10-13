@@ -4,10 +4,9 @@ import re
 import subprocess
 import sys
 from sys import exit
-from prompt_toolkit import print_formatted_text, PromptSession, HTML
-from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit.history import FileHistory
-
+from prompt_toolkit.completion import PathCompleter
+from prompt_toolkit import print_formatted_text, PromptSession, HTML
 from src.mediainfolib import seperator as sep, get_config, convert_country, data_path
 
 session = PromptSession(history=FileHistory(f"{data_path}{sep}.subcomb"))
