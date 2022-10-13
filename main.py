@@ -20,7 +20,7 @@ def greetings():
     #                                                                          #
     # [5] {gs}db search{ge}   - search through your local media database               #
     #                                                                          #
-    # [i] Press [c] to change config                                           #
+    # [i] Press [c] to change your config                                      #
     #                                                                          #
     ############################################################################
     

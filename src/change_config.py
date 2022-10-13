@@ -54,7 +54,7 @@ def change_value(config, program):
     default_window(config[program])
     change = prompt(HTML("<ansiblue>Option you want to change: </ansiblue>")).lstrip('"').rstrip('"')
     if change == "q":
-        return config
+        return config, False
     while change not in config[program].keys():
         print_formatted_text(HTML("<ansired>[w] Not a valid option!</ansired>"))
         change = prompt(HTML("<ansiblue>Option you want to change: </ansiblue>")).lstrip('"').rstrip('"')
@@ -66,24 +66,26 @@ def change_value(config, program):
     if value.lower() in ["true", "false"]:
         value = True if value.lower() == "true" else False
     config[program][change] = value
-    return config
+    return config, True
 
 
 def main():
     config = get_config()
     new_config = config
+    changed = False
     while 1:
         greetings()
         choice = prompt(HTML("<ansiblue>=> </ansiblue>"))
         if choice in ["1", "media mover", "mover"]:
-            new_config = change_value(config, 'mover')
+            new_config, changed = change_value(config, 'mover')
         elif choice in ["2", "combiner"]:
-            new_config = change_value(config, 'combiner')
+            new_config, changed = change_value(config, 'combiner')
         elif choice in ["3", "database", "db"]:
-            new_config = change_value(config, 'database')
+            new_config, changed = change_value(config, 'database')
         elif choice in ["q", "quit", "exit"]:
             clear()
             return
         setup.write_config_to_file(new_config, config_path)
         clear()
-        print("[i] Changed config!")
+        if changed:
+            print("[i] Changed config!")

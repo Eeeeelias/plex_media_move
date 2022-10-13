@@ -9,24 +9,37 @@ from sys import argv
 # Program usage: python3 organize_shows.py INPUT_DIR
 # Example: python3 organize_shows.py "P:\Plex\TV Shows"
 
-wrong_episodes = []
-for path in glob.glob(argv[1] + "/**/"):
-    if len(glob.glob(path + "/*.mp4")) == 0:
-        print('skipping:', path)
-        continue
-    for show in glob.glob(path + "/*.mp4"):
 
-        try:
-            season = re.search(r'\d+(?=[eE]\d{1,4})', show).group()
-        except AttributeError:
-            wrong_episodes.append(path)
-            break
+def order(library_path):
+    wrong_episodes = []
+    for path in glob.glob(library_path + "/**/"):
+        if len(glob.glob(path + "/*.mp4")) == 0:
+            print('skipping:', path)
+            continue
+        for show in glob.glob(path + "/*.mp4"):
 
-        if not os.path.exists(path + "/Season {}".format(season)):
-            os.makedirs(path + "/Season {}".format(season))
+            try:
+                season = re.search(r'\d+(?=[eE]\d{1,4})', show).group()
+            except AttributeError:
+                wrong_episodes.append(path)
+                break
 
-        shutil.move(show, path + "/Season {}/".format(season))
-    print("did:", path)
+            if not os.path.exists(path + "/Season {}".format(season)):
+                os.makedirs(path + "/Season {}".format(season))
 
-for i in wrong_episodes:
-    print("CHECK YOUR EPISODES IN:", i)
+            shutil.move(show, path + "/Season {}/".format(season))
+        print("did:", path)
+
+    for i in wrong_episodes:
+        print("CHECK YOUR EPISODES IN:", i)
+
+
+def main(library_path=None):
+    if library_path is None:
+        order(argv[1])
+    else:
+        order(library_path)
+
+
+if __name__ == '__main__':
+    main()

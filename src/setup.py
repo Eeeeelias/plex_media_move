@@ -3,6 +3,7 @@ import os
 import sys
 import time
 
+import src.organize_shows
 from src import mediainfolib, fetch_infos, manage_db
 from src.mediainfolib import data_path, seperator
 from prompt_toolkit import prompt, HTML, print_formatted_text
@@ -55,34 +56,36 @@ def set_database():
     return {"db_path": db_path}
 
 
+def order_library(path):
+    print_formatted_text(HTML("[i] For the first initialisation it is a good idea to order your media library so all"
+                              " shows will get picked up properly"))
+    order = prompt(HTML("<ansiblue>Do you want to order your library? [y/N] </ansiblue>")).lower()
+    if order == "y":
+        src.organize_shows.main(path + f"{seperator}TV Shows")
+    return
+
+
 def write_config_to_file(config, path):
     json.dump(config, open(path, 'w'))
     return
 
 
 def set_config():
-    mover = {}
-    combiner = {}
-    database = {}
     if not os.path.exists(config_path):
         open(config_path, 'a').close()
-    try:
-        mover = set_media_mover()
-        combiner = set_combiner()
-        database = set_database()
-    except KeyboardInterrupt:
-        print("Aborting")
-        exit(0)
+
+    mover = set_media_mover()
+    combiner = set_combiner()
+    database = set_database()
 
     print_formatted_text(HTML("[i] Saving config at: {}\n".format(config_path)))
     write_config_to_file({"mover": mover, "combiner": combiner, "database": database}, config_path)
+    order_library(mover['dest_path'])
     create_db = prompt(HTML("<ansiblue>[a] Do you want to create the database now (If you already have a database it "
                             "will be deleted)? </ansiblue>[y/N] "))
     if create_db.lower() == "y":
         db_path = database['db_path'] + f"{seperator}media_database.db"
-        _plex_path = prompt(HTML("<ansiblue>[a] Put in the path to your plex files: </ansiblue>"),
-                            completer=PathCompleter()).lstrip('"').rstrip('"')
-        plex_path = ensure_path_ex(_plex_path)
+        plex_path = mover['dest_path']
         info_shows, info_movies = fetch_infos.fetch_all(plex_path)
         manage_db.create_database(plex_path, db_path, info_shows, info_movies)
     print_formatted_text("[i] All done!")
