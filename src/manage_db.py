@@ -277,7 +277,7 @@ def prettify_out(table: str, rows: list[tuple]) -> str:
 def prettify_movies(rows: list[tuple]) -> str:
     max_len_names = max(10, os.get_terminal_size().columns - 96 - 12)
     db_out = ""
-    stopper = "    " + "".join([add_minus() for i in range(max_len_names + 96)]) + "\t\n"
+    stopper = "    " + "".join([add_minus() for _ in range(max_len_names + 96)]) + "\t\n"
     head = "    | ID  | Name{:%d}| Year | Language{:7} | Version{:3} | Runtime | Size{:4} | Added{:12} | Type |\t\n" % (
                 max_len_names - 3)
     empty_res = "    | {:4}   {:%d}   {:7}   {:8}   {:9}   {:17}   {:26}    |\t\n" % max_len_names
@@ -302,7 +302,7 @@ def prettify_movies(rows: list[tuple]) -> str:
 def prettify_shows(rows: list[tuple]) -> str:
     max_len_names = os.get_terminal_size().columns - 75 - 12
     db_out = ""
-    stopper = "    " + "".join([add_minus() for i in range(max_len_names + 75)]) + "\t\n"
+    stopper = "    " + "".join([add_minus() for _ in range(max_len_names + 75)]) + "\t\n"
     head = "    | ID  | Name{:%d}| Seasons | Episodes | Runtime{:2} | Added{:12} | Size{:5} |\t\n" % (max_len_names - 3)
     empty_res = "    | {:4}   {:%d}   {:7}   {:8}   {:9}   {:17}   {:5}    |\t\n" % max_len_names
     shows_row = "    | {0:3} | {1:%d} | {2:7} | {3:8} | {4:9} | {5:17} | {6:6} GB |\t\n" % max_len_names

@@ -5,7 +5,6 @@ import src.manage_db
 from src import mediainfolib
 from src.mediainfolib import seperator
 from src.manage_db import *
-from prompt_toolkit import print_formatted_text, HTML
 
 conf = mediainfolib.get_config()
 db_path = conf['database']['db_path'] + f"{seperator}media_database.db"

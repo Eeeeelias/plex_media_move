@@ -47,7 +47,7 @@ if [ ! -d "$PWD/Movies" ]
     mkdir "$PWD/Movies"
 fi
 
-echo "[i] English verion: $input1, video length: $dur_en ms"
+echo "[i] English version: $input1, video length: $dur_en ms"
 echo "[i] German version: $input2, video length: $dur_de ms"
 echo "[i] File will be written to: $combined_name"
 echo "[i] Time difference: $diff ms, offsetting by: $offset"

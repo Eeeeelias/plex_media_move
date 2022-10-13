@@ -5,7 +5,6 @@ import re
 import shutil
 import sys
 import time
-import traceback
 from sys import platform
 from src import manage_db, mediainfolib
 from src.mediainfolib import check_database_ex, sorted_alphanumeric, fuzzy_matching
@@ -112,7 +111,6 @@ def file_ex_check(new_file, overwrite=False):
 def movie_checker(movie_title, path, ext=".mp4"):
     movie_moves = []
     for movie in glob.glob(path + "/*"):
-        title = re.sub(r"(?<=\(\d{4}\)).*", "", movie.split("\\")[-1])
 
         # check if there may already be versions of that movie
         if os.path.isdir(movie) and movie_title in movie:
@@ -232,7 +230,7 @@ def get_movie_year(filename):
                            'movie came out: </ansiblue>'))
         if re.search(r"\d{4}", year) is None:
             year = 1900
-        # get rid of () in case Audials adds it (i.e. when it cant find the year for a movie)
+        # get rid of () in case Audials adds it (i.e. when it can't find the year for a movie)
         filename_clear = re.sub(r" \(\)", "", filename_split[0])
         filename_with_year = filename_clear + f" ({year})" + filename_split[1]
     return filename_with_year
@@ -411,7 +409,6 @@ def main():
             db_path = ""
         # setting variables with argparse if supplied, else from config
         if len(sys.argv) > 1:
-            data_path = mediainfolib.data_path
             orig_path = args.orig_path.rstrip(seperator)
             plex_path = args.dest_path.rstrip(seperator)
             use_db = False if args.use_db else True

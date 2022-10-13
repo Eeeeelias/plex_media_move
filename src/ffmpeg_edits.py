@@ -80,6 +80,8 @@ def cut_positions(start=True):
 def concat_videos():
     example_file_print()
     input_file = prompt(HTML("<ansiblue>Your file: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
+    if input_file == "q":
+        return
     while not os.path.isfile(input_file):
         print_formatted_text(HTML("<ansired> [w] Not a file! Try again.</ansired>"))
         input_file = prompt(HTML("<ansiblue>Your file: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
@@ -92,6 +94,8 @@ def concat_videos():
 
 def cut_video():
     input_file = prompt(HTML("<ansiblue>Video you want to cut: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
+    if input_file == "q":
+        return
     while not os.path.isfile(input_file):
         print_formatted_text(HTML("<ansired> [w] Not a file! Try again.</ansired>"))
         input_file = prompt(HTML("<ansiblue>Your file: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')

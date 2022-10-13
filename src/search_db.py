@@ -6,6 +6,7 @@ from src.mediainfolib import seperator, clear, cut_name
 from prompt_toolkit import prompt, HTML, print_formatted_text
 from src.db_infos import media_size, best_quality, database_size, total_watchtime, oldest_movie, worst_quality, \
     num_videos
+from sys import exit
 
 
 def give_options(info):

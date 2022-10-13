@@ -6,7 +6,7 @@ import re
 import subprocess
 import sys
 import time
-from sys import platform
+from sys import platform, exit
 
 from prompt_toolkit import HTML, print_formatted_text, PromptSession, prompt
 from prompt_toolkit.completion import PathCompleter
@@ -45,7 +45,7 @@ parser.add_argument(
     "-l",
     dest="langs",
     nargs="*",
-    help="The langauges of the audio streams, not using this assumes "
+    help="The languages of the audio streams, not using this assumes "
          "English for the first and German for the second. Usage: "
          "-l jpn de to have audio stream one be Japanese and audio"
          " stream two be German",
@@ -87,11 +87,12 @@ def interactive():
             return 0, 0, 0, 0, 0, 0
 
     movie_en = session.prompt(HTML("<ansiblue>[a] Firstly, give the path of the first movie:</ansiblue>"),
-                      completer=PathCompleter()).lstrip('"').rstrip('"')
+                              completer=PathCompleter()).lstrip('"').rstrip('"')
     while not os.path.isfile(movie_en):
         movie_en = (
-            session.prompt(HTML("<ansiblue>[a] This is not a file! Make sure you spelled the path correctly:</ansiblue>"),
-                   completer=PathCompleter())
+            session.prompt(
+                HTML("<ansiblue>[a] This is not a file! Make sure you spelled the path correctly:</ansiblue>"),
+                completer=PathCompleter())
                 .lstrip('"')
                 .rstrip('"')
         )
@@ -103,15 +104,17 @@ def interactive():
         "audio.")
 
     movie_de = (
-        session.prompt(HTML("<ansiblue>[a] Please also give the path of this movie:</ansiblue>"), completer=PathCompleter())
+        session.prompt(HTML("<ansiblue>[a] Please also give the path of this movie:</ansiblue>"),
+                       completer=PathCompleter())
             .lstrip('"')
             .rstrip('"')
     )
 
     while not os.path.isfile(movie_de):
         movie_de = (
-            session.prompt(HTML("<ansiblue>[a] This is not a file! Make sure you spelled the path correctly:</ansiblue>"),
-                   completer=PathCompleter())
+            session.prompt(
+                HTML("<ansiblue>[a] This is not a file! Make sure you spelled the path correctly:</ansiblue>"),
+                completer=PathCompleter())
                 .lstrip('"')
                 .rstrip('"')
         )

@@ -6,7 +6,7 @@ import os
 import re
 from itertools import dropwhile
 from typing import AnyStr, List
-
+from sys import exit
 from src.mediainfolib import get_duration_cv2, check_ffmpeg, get_language, seperator, \
     convert_seconds, get_duration
 
@@ -68,7 +68,6 @@ def get_movie_infos(plex_path: AnyStr, nr=1) -> List[tuple]:
     movie_nr = nr
     movie_name = ""
     year = 0
-    version = "unique"
     # make it possible to check just a single media
     if os.path.isfile(plex_path):
         paths_to_check = [plex_path]

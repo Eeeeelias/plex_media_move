@@ -2,7 +2,7 @@ import json
 import os
 import sys
 import time
-
+from sys import exit
 import src.organize_shows
 from src import mediainfolib, fetch_infos, manage_db
 from src.mediainfolib import data_path, seperator

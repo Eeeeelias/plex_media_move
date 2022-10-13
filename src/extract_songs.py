@@ -2,7 +2,7 @@
 import os
 import re
 import subprocess
-
+from sys import exit
 from src import mediainfolib
 from src.mediainfolib import seperator as sep, data_path, get_config
 from prompt_toolkit import print_formatted_text, PromptSession, HTML

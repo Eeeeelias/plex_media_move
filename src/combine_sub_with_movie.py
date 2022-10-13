@@ -3,7 +3,7 @@ import os
 import re
 import subprocess
 import sys
-
+from sys import exit
 from prompt_toolkit import print_formatted_text, PromptSession, HTML
 from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit.history import FileHistory
@@ -30,6 +30,8 @@ def interactive():
     movie = session.prompt(
         HTML("<ansiblue>[a] Specify the movie you want to have subtitles for (if you give a folder the files"
              " will be taken from there): </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
+    if movie == "q":
+        return None
     if os.path.isdir(movie):
         return fetch_files(movie)
     sub_file = session.prompt(HTML("<ansiblue>[a] Specify a subtitle file (.srt): </ansiblue>"),
@@ -84,9 +86,10 @@ def main():
             output = get_config()['combiner']['default_out']
         except FileNotFoundError:
             print_formatted_text(HTML("<ansired> Couldn't find config, specify output!</ansired>"))
-            output = session.prompt(HTML("<ansiblue> Output path: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip(
-                '"')
+            output = session.prompt(HTML("<ansiblue> Output path: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
         subs_to_combine = interactive()
+        if subs_to_combine is None:
+            return
     else:
         if sys.argv[1] == "-h":
             print("argument 1: path containing .srt files\nargument 2: output path")
