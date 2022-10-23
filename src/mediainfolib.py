@@ -96,7 +96,11 @@ def get_duration_cv2(filename) -> int:
     data = cv2.VideoCapture(filename)
     frames = data.get(cv2.CAP_PROP_FRAME_COUNT)
     fps = data.get(cv2.CAP_PROP_FPS)
-    return round(frames / fps)
+    try:
+        duration = round(frames / fps)
+    except ZeroDivisionError:
+        duration = 0
+    return duration
 
 
 def convert_seconds(secs) -> str:
