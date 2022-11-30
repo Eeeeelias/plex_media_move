@@ -42,11 +42,15 @@ else:
 
 
 strings_to_match = {
-    "2nd Season ": "s02",
-    "Season 2 ": "s02",
-    "S2 ": "s02",
-    "3 Episode ": "s03e0",
-    "Episode ": "e0",
+    "2nd Season ": "S02",
+    "Season 2 ": "S02",
+    "Season 3 ": "S03",
+    "Season 4 ": "S04",
+    "Season 5 ": "S05",
+    "S2 ": "S02",
+    "3 Episode ": "S03E0",
+    "OVA ": "E00",
+    "Episode ": "E0",
 }
 
 

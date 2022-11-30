@@ -1,5 +1,7 @@
 # just for testing I swear
+import glob
 import timeit
+from difflib import SequenceMatcher as SM
 
 import src.manage_db
 from src import mediainfolib
@@ -37,9 +39,12 @@ def num_videos():
 
 
 if __name__ == '__main__':
-    start = timeit.default_timer()
-    # line = main()
-    # print(line)
-    end = timeit.default_timer()
-    print("Took: {:.6f}s".format(end-start))
-    # delete()
+    dur = 0
+    music = glob.glob("P:\\Music\\Music\\**\\*.mp3") + glob.glob("P:\\Music\\Music\\**\\*.m4a") + glob.glob("P:\\Music\\Music\\**\\*.wma")
+    for i in music:
+        dur += mediainfolib.get_duration(i)
+        print(f"{i}: {dur}")
+    print(mediainfolib.convert_millis(dur))
+    ratio = SM(None, "Shokugeki no Souma", "Shokugeki no Souma: Ni no Sara").ratio()
+    print(ratio)
+

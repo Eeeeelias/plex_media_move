@@ -12,7 +12,11 @@ from prompt_toolkit import HTML, print_formatted_text, PromptSession, prompt
 from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit.history import FileHistory
 
-from src.mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep
+# importing is buggy?
+if len(sys.argv) == 1:
+    from src.mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep
+else:
+    from mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep
 
 conf = get_config()
 
@@ -279,8 +283,11 @@ def main():
             exit(1)
     else:
         print("[i] Files combined!")
-    if prompt(HTML("<ansiblue>Do you want try again? [y/N] </ansiblue>")).lower() == "y":
-        main()
+    if args.interactive or len(sys.argv) == 1:
+        if prompt(HTML("<ansiblue>Do you want try again? [y/N] </ansiblue>")).lower() == "y":
+            main()
+        else:
+            return
     else:
         exit(0)
 

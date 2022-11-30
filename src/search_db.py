@@ -1,7 +1,7 @@
 import os
 import re
 import random
-from src import mediainfolib, setup, manage_db
+from src import mediainfolib, setup, manage_db, show_stats
 from src.mediainfolib import seperator, clear, cut_name
 from prompt_toolkit import prompt, HTML, print_formatted_text
 from src.db_infos import media_size, best_quality, database_size, total_watchtime, oldest_movie, worst_quality, \
@@ -21,6 +21,7 @@ def give_options(info):
     # What would you like to do?                                               #
     # Search:  [1] {gs}shows{ge}    [2] {gs}movies{ge}    [3] {gs}custom search{ge}                    #
     # Execute: [4] {gs}deletion{ge} [5] {gs}SQL{ge}       [6] {gs}reindex db{ge}                       #
+    # Show:    [7] {gs}stats{ge}                                                       #
     #                                                                          #
     ############################################################################
     """))
@@ -133,6 +134,9 @@ def main():
                     setup.redo_db()
                     continue
                 setup.redo_db(reindex=False)
+            elif inp in ["7", "stats"]:
+                show_stats.all_stats(db_path)
+                continue
             elif inp == "q":
                 mediainfolib.clear()
                 return

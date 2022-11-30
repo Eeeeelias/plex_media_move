@@ -16,7 +16,7 @@ def sigmoid(x):
         return sig
 
 
-def quality_score(episodes: int, duration: int, size: int):
+def _quality_score(episodes: int, duration: int, size: int):
     size_per_episode = size / episodes
     dur_episode = duration/episodes
     score = size_per_episode / dur_episode
@@ -41,7 +41,7 @@ def best_quality(db: str, worst=False):
         episodes = show[3]
         duration = show[4]
         size = show[5]
-        scores[name] = quality_score(episodes, duration, size)
+        scores[name] = _quality_score(episodes, duration, size)
 
     data = np.array(list(scores.values()))
     normalized_scores = (data - data.min()) / (data.max() - data.min())
