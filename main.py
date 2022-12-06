@@ -1,3 +1,6 @@
+import os
+
+
 def greetings():
     gs = "<ansigreen>"
     ge = "</ansigreen>"
@@ -28,6 +31,53 @@ def greetings():
     """))
 
 
+def greetings_big():
+    files_info = []
+    gs = "<ansigreen>"
+    ge = "</ansigreen>"
+    source_files, n_videos, n_folders = get_source_files()
+    top_info = f"Found {n_videos} video(s) in {n_folders} folder(s):".ljust(37)
+    for keys, values in source_files.items():
+        files_info.append(keys)
+        files_info.extend(values)
+        files_info.append("")
+    print_formatted_text(HTML(f"""
+    ####################################################################################################################
+    #                                                                          # {top_info} #
+    # This little tool helps you sort, convert, combine or fix your media      #                                       #
+    # files so you can easily give them to Plex or Jellyfin.                   # {current_files_info(0, files_info)} #
+    # Just select what you want to do:                                         # {current_files_info(1, files_info)} #
+    #                                                                          # {current_files_info(2, files_info)} #
+    #                                                                          # {current_files_info(3, files_info)} #
+    # [1] {gs}media mover{ge} - moves your media files to your plex folder             # {current_files_info(4, files_info)} #
+    #                                                                          # {current_files_info(5, files_info)} #
+    # [2] {gs}video edits{ge} - combine, concatenate or cut videos                     # {current_files_info(6, files_info)} #
+    #                                                                          # {current_files_info(7, files_info)} #
+    # [3] {gs}shifting{ge}    - shift all episode numbers of a show by a given         # {current_files_info(8, files_info)} #
+    #                   amount                                                 # {current_files_info(9, files_info)} #
+    #                                                                          # {current_files_info(10, files_info)} #
+    # [4] {gs}converter{ge}   - convert folders of weird formats (like .ts) into .mp4  # {current_files_info(11, files_info)} #
+    #                                                                          # {current_files_info(12, files_info)} #
+    # [5] {gs}db search{ge}   - search through your local media database               # {current_files_info(13, files_info)} #
+    #                                                                          # {current_files_info(14, files_info)} #
+    # [i] Press [c] to change your config                                      # {current_files_info(15, files_info)} #
+    #                                                                          # {current_files_info(16, files_info)} #
+    ####################################################################################################################
+
+
+    """))
+
+
+def current_files_info(c: int, files: list):
+    if c > len(files) - 1:
+        return " " * 37
+    if os.path.isdir(files[c]):
+        return f"<ansigreen>{cut_name(files[c], 37, pos='left')}</ansigreen>".ljust(60)
+    if c == 16 and len(files) > 16:
+        return f". . . ({len(files[16:])} more)".ljust(37)
+    return f"{cut_name(files[c], 37, pos='mid')}".ljust(37)
+
+
 def check_for_setup():
     from src import setup
     if get_config() is None:
@@ -36,35 +86,43 @@ def check_for_setup():
 
 
 def main():
-    while 1:
-        greetings()
+    # define a dictionary mapping tool names to functions
+    tools = {
+        "1": media_mover.main,
+        "media mover": media_mover.main,
+        "2": ffmpeg_edits.main,
+        "combine": ffmpeg_edits.main,
+        "video edits": ffmpeg_edits.main,
+        "3": rename.main,
+        "shifting": rename.main,
+        "4": convert_ts.main,
+        "converter": convert_ts.main,
+        "5": search_db.main,
+        "db search": search_db.main,
+        "c": change_config.main,
+        "close": exit,
+        "q": exit,
+        "quit": exit,
+        "exit": exit,
+    }
+
+    while True:
+        if os.get_terminal_size().columns >= 120:
+            greetings_big()
+        else:
+            greetings()
         tool = prompt(HTML("<ansiblue>=> </ansiblue>"))
-        if tool in ["1",  "media mover"]:
+        # check if the user entered a valid tool name
+        if tool in tools:
             clear()
-            media_mover.main()
-        elif tool in ["2", "combine", "video edits"]:
-            clear()
-            ffmpeg_edits.main()
-        elif tool in ["3", "shifting"]:
-            clear()
-            rename.main()
-        elif tool in ["4", "converter"]:
-            clear()
-            convert_ts.main()
-        elif tool in ["5", "db search"]:
-            clear()
-            search_db.main()
-        elif tool == "c":
-            clear()
-            change_config.main()
-        elif tool in ["close", "q", "quit", "exit"]:
-            exit(0)
+            # call the corresponding function
+            tools[tool]()
         else:
             clear()
 
 
 if __name__ == '__main__':
-    from src.mediainfolib import get_config, clear
+    from src.mediainfolib import get_config, clear, get_source_files, cut_name
     try:
         check_for_setup()
         from src import ffmpeg_edits, convert_ts, search_db, rename, change_config
@@ -74,4 +132,4 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         print("Exiting")
-        exit(0)
+        exit()

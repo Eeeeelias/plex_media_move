@@ -1,3 +1,4 @@
+import glob
 import re
 import os
 import sys
@@ -57,6 +58,25 @@ def check_ffmpeg() -> bool:
         return False
     except Exception:
         print("There was an error with ffmpeg checking, please try again.")
+
+
+# return all source videos that can be found, with a number indicating the amount
+def get_source_files() -> tuple:
+    source_path = get_config()['mover']['orig_path']
+    source_files = {}
+    n_files = 0
+    n_paths = 0
+    for path in glob.glob(source_path + f"{seperator}**{seperator}*", recursive=True):
+        if not os.path.isfile(path):
+            continue
+        src_path, name = os.path.split(path)
+        n_files += 1
+        if source_files.get(src_path) is None:
+            source_files[src_path] = [name]
+            n_paths += 1
+        else:
+            source_files.get(src_path).append(name)
+    return source_files, n_files, n_paths
 
 
 def get_duration(filename) -> int:
@@ -171,12 +191,16 @@ def convert_country(alpha: str) -> str:
     return "Undefined"
 
 
-# for database pretty print
-def cut_name(name, cut) -> str:
-    if len(name) >= cut:
-        return name[:cut - 3] + "..."
-    else:
+# for cutting names to appropriate size with dots to indicate shortening
+def cut_name(name, cut, pos='right') -> str:
+    if len(name) < cut:
         return name
+    if pos == 'right':
+        return name[:cut - 3] + "..."
+    if pos == 'mid':
+        return name[:cut-13] + "..." + name[-10:]
+    if pos == 'left':
+        return "..." + name[len(name) - cut + 3:]
 
 
 def convert_size(size, tb=False) -> float:

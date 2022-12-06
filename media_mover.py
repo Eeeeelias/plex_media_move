@@ -40,7 +40,6 @@ else:
     env = "HOME"
     folder = ".pmm"
 
-
 strings_to_match = {
     "2nd Season ": "S02",
     "Season 2 ": "S02",
@@ -84,7 +83,8 @@ def make_parser():
              "aware that it's season two. You can add "
              "as many of those as you want",
     )
-    parser.add_argument("--no_db", dest="use_db", action="store_true", help="Using this option will prevent the usage of the database")
+    parser.add_argument("--no_db", dest="use_db", action="store_true",
+                        help="Using this option will prevent the usage of the database")
     return parser
 
 
@@ -100,7 +100,7 @@ def file_ex_check(new_file, overwrite=False):
     if os.path.isfile(new_file):
         print_formatted_text(HTML("<ansired>[w] File already exists!</ansired>"))
         ext = re.search(r"(\.mp4)|(\.mkv)", new_file).group()
-        if overwrite or prompt(HTML("<ansiblue>[a] Do you want to overwrite the file? [y/N]: </ansiblue>"))== "y":
+        if overwrite or prompt(HTML("<ansiblue>[a] Do you want to overwrite the file? [y/N]: </ansiblue>")) == "y":
             return 0
         i = 2
         new_file = re.sub(ext, f"_{i}" + ext, new_file)
@@ -195,25 +195,17 @@ def show_checker(path):
     if "Movies" in path or len(path) < 2:
         return path
 
-    for video in path:
-        video_sizes.append(os.path.getsize(video))
+    video_sizes = [os.path.getsize(video) for video in path]
     avg_vid_size = sum(video_sizes) / len(video_sizes)
 
     for video in path:
         vid_size = os.path.getsize(video)
         if avg_vid_size * 0.6 > vid_size:
-            print_formatted_text(
-                HTML(
-                    '<ansired>[w] Video with name "{}" unusually small: {} MB</ansired>'.format(
-                        video.split(seperator)[-1], round(vid_size / (1024 ** 2))
-                    )
-                )
-            )
-            move = prompt(
-                HTML(
-                    "<ansiblue>[a] Do you want to [m]ove the file regardless, [s]kip it or [d]elete it?: </ansiblue>"
-                )
-            )
+            print_formatted_text(HTML(
+                '<ansired>[w] Video with name "{}" unusually small: {} MB</ansired>'.format(
+                    video.split(seperator)[-1], round(vid_size / (1024 ** 2)))))
+            move = prompt(HTML(
+                "<ansiblue>[a] Do you want to [m]ove the file regardless, [s]kip it or [d]elete it?: </ansiblue>"))
             if move.lower() == "" or move.lower() == "s":
                 continue
             elif move.lower() == "d":
@@ -252,21 +244,33 @@ def rename_files(path, special):
 
     for title in video_titles:
         print_formatted_text("[i] Found: {}".format(title))
-
         special_season = [x for x in extra_episode_info.keys() if x in title]
         if special_season:
-            title = title.replace(
-                "Episode ", "s0{}e0".format(extra_episode_info.get(special_season[0]))
-            )
+            title = title.replace("Episode ", "S0{}E0".format(extra_episode_info.get(special_season[0])))
+
+        # match = re.search(r"((.+ S?)(\d+).*|.*)(Episode (\d+))", title)
+        # # title_match = re.search(r"(.+)\s(((\d+(st|nd|rd|th)) Season )|(S\d+) |(Season \d+ |\d+ ))(?=Episode)", title)
+        # title_match = re.search(r"((.+)\s)?(S\d+|Season \d+|\d+(st|nd|rd|th) Season|\d+)? (Episode)", title)
+        # ext = os.path.splitext(title)[1]
+        # if match:
+        #     if match.group(3):
+        #         season = match.group(3)
+        #     else:
+        #         season = "1"
+        #
+        #     episode = match.group(5)
+        #     if title_match:
+        #         print(title_match.group(2))
+        #         title = f"{title_match.group(2)} S0{season}E0{episode}{ext}"
 
         for possible_match in strings_to_match.keys():
-            if re.search(possible_match, title) is not None:
-                title = title.replace(possible_match, strings_to_match[possible_match])
+           if re.search(possible_match, title) is not None:
+               title = title.replace(possible_match, strings_to_match[possible_match])
 
         # mind the space at the beginning
         if re.search(r" [eE]\d{2,4}", title) is not None:
             # possible that e might be upper case
-            title = title.replace("e0", "s01e0").replace("E0", "s01e0")
+            title = title.replace("e0", "S01E0").replace("E0", "S01E0")
             video_titles_new.append(title)
         else:
             title_with_year = title
@@ -452,7 +456,8 @@ def main():
         if conf is not None:
             for value in conf['mover'].values():
                 if value is None:
-                    print_formatted_text(HTML("<ansired>[w] You don't have the relevant infos in your config!</ansired>"))
+                    print_formatted_text(
+                        HTML("<ansired>[w] You don't have the relevant infos in your config!</ansired>"))
                     return
         print_formatted_text(HTML(
             "<ansired>[w] There was an error with some of the values you put in! Please double-check those and send "
