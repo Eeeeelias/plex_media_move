@@ -68,16 +68,6 @@ def greetings_big():
     """))
 
 
-def current_files_info(c: int, files: list):
-    if c > len(files) - 1:
-        return " " * 37
-    if os.path.isdir(files[c]):
-        return f"<ansigreen>{cut_name(files[c], 37, pos='left')}</ansigreen>".ljust(60)
-    if c == 16 and len(files) > 16:
-        return f". . . ({len(files[16:])} more)".ljust(37)
-    return f"{cut_name(files[c], 37, pos='mid')}".ljust(37)
-
-
 def check_for_setup():
     from src import setup
     if get_config() is None:
@@ -100,6 +90,8 @@ def main():
         "5": search_db.main,
         "db search": search_db.main,
         "c": change_config.main,
+        "6": file_editor.main,
+        "file editor": file_editor.main,
         "close": exit,
         "q": exit,
         "quit": exit,
@@ -122,10 +114,10 @@ def main():
 
 
 if __name__ == '__main__':
-    from src.mediainfolib import get_config, clear, get_source_files, cut_name
+    from src.mediainfolib import get_config, clear, get_source_files, current_files_info
     try:
         check_for_setup()
-        from src import ffmpeg_edits, convert_ts, search_db, rename, change_config
+        from src import ffmpeg_edits, convert_ts, search_db, rename, change_config, file_editor
         import media_mover
         from prompt_toolkit import HTML, print_formatted_text, prompt
         from sys import exit

@@ -26,7 +26,7 @@ def _quality_score(episodes: int, duration: int, size: int):
 def media_size(db: str):
     show_size = manage_db.custom_sql(db, "SELECT SUM(size) FROM main.shows")[0][0]
     movie_size = manage_db.custom_sql(db, "SELECT SUM(size) FROM main.movies")[0][0]
-    size_tb = mediainfolib.convert_size(show_size + movie_size, tb=True)
+    size_tb = mediainfolib.convert_size(show_size + movie_size, unit='tb')
     if size_tb > 1:
         return f" [i] Your Media library is {size_tb} TB! (woah that's big)"
     else:

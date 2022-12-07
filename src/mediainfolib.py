@@ -62,6 +62,12 @@ def check_ffmpeg() -> bool:
 
 # return all source videos that can be found, with a number indicating the amount
 def get_source_files() -> tuple:
+    """
+    Retrieves the list of files in the `source_path` specified in the `get_config()` dictionary, including files in
+    subdirectories.
+    Returns a tuple containing the list of files, the number of files, and the number of directories as its elements.
+    The filenames in each directory are sorted alphabetically.
+    """
     source_path = get_config()['mover']['orig_path']
     source_files = {}
     n_files = 0
@@ -76,7 +82,20 @@ def get_source_files() -> tuple:
             n_paths += 1
         else:
             source_files.get(src_path).append(name)
+    for key in source_files.keys():
+        source_files[key] = sorted_alphanumeric(source_files.get(key))
     return source_files, n_files, n_paths
+
+
+def current_files_info(c: int, files: list, max_len=37):
+    if c > len(files) - 1:
+        return " " * max_len
+    if os.path.isdir(files[c]):
+        return f"<ansigreen>{cut_name(files[c], max_len, pos='left')}</ansigreen>".ljust(max_len + 23)
+    if c == 16 and len(files) > 16 and max_len == 37:
+        return f". . . ({len(files[16:])} more)".ljust(max_len)
+
+    return f"{cut_name(files[c], max_len, pos='mid')}".ljust(max_len)
 
 
 def get_duration(filename) -> int:
@@ -203,11 +222,14 @@ def cut_name(name, cut, pos='right') -> str:
         return "..." + name[len(name) - cut + 3:]
 
 
-def convert_size(size, tb=False) -> float:
+def convert_size(size, unit='gb') -> float:
     size_gb = size / (1024 ** 3)
-    if tb:
+    if unit == 'tb':
         size_tb = size_gb / 1000
         return round(size_tb, 2)
+    if unit == 'mb':
+        size_mb = size_gb * 1000
+        return round(size_mb, 2)
     return round(size_gb, 2)
 
 
