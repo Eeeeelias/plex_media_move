@@ -96,7 +96,7 @@ def get_source_files() -> tuple:
     return source_files, n_files, n_paths
 
 
-def current_files_info(c: int, files: list, max_len=37):
+def current_files_info(c: int, files: list, max_len=37) -> str:
     if c > len(files) - 1:
         return " " * max_len
     if os.path.isdir(files[c]):
@@ -188,7 +188,7 @@ def sorted_alphanumeric(data) -> list:
     return sorted(data, key=alphanum_key)
 
 
-def clear():
+def clear() -> int:
     return os.system('cls' if os.name == 'nt' else 'clear')
 
 
@@ -254,7 +254,7 @@ def split_shows(seq, size):
     return (seq[i::size] for i in range(size))
 
 
-def fuzzy_matching(input_dir, u_show):
+def fuzzy_matching(input_dir, u_show) -> str:
     matched_show = None
     for show in os.listdir(input_dir):
         ratio = SM(None, show, u_show).ratio()
@@ -266,6 +266,17 @@ def fuzzy_matching(input_dir, u_show):
     return matched_show
 
 
-def avg_video_size(path):
+def avg_video_size(path) -> float:
     video_sizes = [os.path.getsize(video) for video in path]
     return sum(video_sizes) / len(video_sizes)
+
+
+def write_video_list(video, path, c=0):
+    with open(f'{path}/video_list.tmp', 'a') as f:
+        f.write(f"{c};{video}\n")
+
+
+def remove_video_list(path):
+    file = f'{path}/video_list.tmp'
+    if os.path.isfile(file):
+        os.remove(file)

@@ -75,6 +75,11 @@ def check_for_setup():
         setup.set_config()
 
 
+def exit_rm():
+    remove_video_list(get_config()['mover']['orig_path'])
+    exit(0)
+
+
 def main():
     # define a dictionary mapping tool names to functions
     tools = {
@@ -92,10 +97,10 @@ def main():
         "c": change_config.main,
         "6": file_editor.main,
         "file editor": file_editor.main,
-        "close": exit,
-        "q": exit,
-        "quit": exit,
-        "exit": exit,
+        "close": exit_rm,
+        "q": exit_rm,
+        "quit": exit_rm,
+        "exit": exit_rm,
     }
 
     while True:
@@ -107,14 +112,13 @@ def main():
         # check if the user entered a valid tool name
         if tool in tools:
             clear()
-            # call the corresponding function
             tools[tool]()
         else:
             clear()
 
 
 if __name__ == '__main__':
-    from src.mediainfolib import get_config, clear, get_source_files, current_files_info
+    from src.mediainfolib import get_config, clear, get_source_files, current_files_info, remove_video_list
     try:
         check_for_setup()
         from src import ffmpeg_edits, convert_ts, search_db, rename, change_config, file_editor
@@ -124,4 +128,5 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         print("Exiting")
+        remove_video_list(get_config()['mover']['orig_path'])
         exit()
