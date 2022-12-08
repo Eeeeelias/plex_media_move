@@ -7,7 +7,7 @@ import sys
 import time
 from sys import platform
 from src import manage_db, mediainfolib
-from src.mediainfolib import check_database_ex, sorted_alphanumeric, fuzzy_matching
+from src.mediainfolib import check_database_ex, sorted_alphanumeric, fuzzy_matching, avg_video_size
 from prompt_toolkit import prompt, HTML, print_formatted_text
 
 # This script renames, organizes and moves your downloaded media files
@@ -195,8 +195,7 @@ def show_checker(path):
     if "Movies" in path or len(path) < 2:
         return path
 
-    video_sizes = [os.path.getsize(video) for video in path]
-    avg_vid_size = sum(video_sizes) / len(video_sizes)
+    avg_vid_size = avg_video_size(path)
 
     for video in path:
         vid_size = os.path.getsize(video)

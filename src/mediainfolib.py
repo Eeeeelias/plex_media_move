@@ -68,11 +68,20 @@ def get_source_files() -> tuple:
     Returns a tuple containing the list of files, the number of files, and the number of directories as its elements.
     The filenames in each directory are sorted alphabetically.
     """
-    source_path = get_config()['mover']['orig_path']
+    config = get_config()
+    source_path = config['mover']['orig_path']
+    try:
+        filetypes = config['mover']['filetypes'].split(' ')
+    except KeyError:
+        from src.change_config import default_configs
+        default_configs(config, ('mover', 'filetypes'))
+        filetypes = config['mover']['filetypes'].split(' ')
     source_files = {}
     n_files = 0
     n_paths = 0
-    for path in glob.glob(source_path + f"{seperator}**{seperator}*", recursive=True):
+    file_list = [path for pattern in filetypes
+                 for path in glob.glob(source_path + f'{seperator}**{seperator}*' + pattern, recursive=True)]
+    for path in file_list:
         if not os.path.isfile(path):
             continue
         src_path, name = os.path.split(path)
@@ -95,6 +104,10 @@ def current_files_info(c: int, files: list, max_len=37):
     if c == 16 and len(files) > 16 and max_len == 37:
         return f". . . ({len(files[16:])} more)".ljust(max_len)
 
+    ep = re.search(r"[Ss]\d+[Ee]\d+.*", files[c])
+    if ep is not None:
+        cut = len(ep.group()) if len(ep.group()) < 20 else 20
+        return f"{cut_name(files[c], max_len, pos='mid', mid=cut)}".ljust(max_len)
     return f"{cut_name(files[c], max_len, pos='mid')}".ljust(max_len)
 
 
@@ -211,13 +224,13 @@ def convert_country(alpha: str) -> str:
 
 
 # for cutting names to appropriate size with dots to indicate shortening
-def cut_name(name, cut, pos='right') -> str:
+def cut_name(name, cut, pos='right', mid=10) -> str:
     if len(name) < cut:
         return name
     if pos == 'right':
         return name[:cut - 3] + "..."
     if pos == 'mid':
-        return name[:cut-13] + "..." + name[-10:]
+        return name[:cut - (mid + 3)] + "..." + name[-mid:]
     if pos == 'left':
         return "..." + name[len(name) - cut + 3:]
 
@@ -251,3 +264,8 @@ def fuzzy_matching(input_dir, u_show):
             matched_show = show
             break
     return matched_show
+
+
+def avg_video_size(path):
+    video_sizes = [os.path.getsize(video) for video in path]
+    return sum(video_sizes) / len(video_sizes)

@@ -69,6 +69,16 @@ def change_value(config, program):
     return config, True
 
 
+def default_configs(config, value):
+    default_filetypes = '.mp4 .mkv .ts'
+    default_fuzzy_match = 0.85
+    if value[1] == 'filetypes':
+        config[value[0]][value[1]] = default_filetypes
+    if value[1] == 'fuzzy_match':
+        config[value[0]][value[1]] = default_fuzzy_match
+    setup.write_config_to_file(config, config_path)
+
+
 def main():
     config = get_config()
     new_config = config
