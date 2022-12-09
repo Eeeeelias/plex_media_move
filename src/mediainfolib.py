@@ -271,9 +271,12 @@ def avg_video_size(path) -> float:
     return sum(video_sizes) / len(video_sizes)
 
 
-def write_video_list(video, path, c=0):
-    with open(f'{path}/video_list.tmp', 'a') as f:
-        f.write(f"{c};{video}\n")
+def write_video_list(videos, path):
+    with open(f'{path}/video_list.tmp', 'w') as f:
+        for video in videos:
+            for info in video:
+                f.write(str(info) + ";")
+            f.write("\n")
 
 
 def remove_video_list(path):
