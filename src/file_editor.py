@@ -1,7 +1,9 @@
 import os.path
 import re
+
+import media_mover
 from src.mediainfolib import get_source_files, current_files_info, convert_size, convert_millis, get_duration, \
-    seperator as sep, avg_video_size, clear, remove_video_list, get_config, write_video_list
+    seperator as sep, avg_video_size, clear, remove_video_list, get_config, write_video_list, read_existing_list
 from prompt_toolkit import print_formatted_text, HTML, prompt
 
 
@@ -86,7 +88,8 @@ def set_season(num_list: list, src_path: str, season: str):
         season = 1
 
     for file in files:
-        if file[0] in str(num_list):
+        # if num list is empty, all values should be considered
+        if file[0] in str(num_list) or num_list == []:
             file[3] = f"S0{season}"
         new_files.append(tuple(file))
 
@@ -153,15 +156,6 @@ def get_files():
     return files_info, avg_vid_sizes
 
 
-def read_existing_list(src_path: str):
-    files = []
-    with open(f'{src_path}/video_list.tmp', 'r') as f:
-        for line in f.readlines():
-            files.append(line.strip().split(";"))
-            files[-1] = files[-1][:-1]
-    return files
-
-
 def main():
     # gets all the files and stores suspiciously small files in another list
     files, small_files = get_files()
@@ -184,5 +178,7 @@ def main():
             delete_sussy(nums, src_path, modifier)
         if funct == "s":
             set_season(nums, src_path, modifier)
+        if funct == "m":
+            media_mover.main()
         clear()
         window_draw = True

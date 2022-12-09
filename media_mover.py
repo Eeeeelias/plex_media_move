@@ -7,7 +7,7 @@ import sys
 import time
 from sys import platform
 from src import manage_db, mediainfolib
-from src.mediainfolib import check_database_ex, sorted_alphanumeric, fuzzy_matching, avg_video_size
+from src.mediainfolib import check_database_ex, sorted_alphanumeric, fuzzy_matching, avg_video_size, read_existing_list
 from prompt_toolkit import prompt, HTML, print_formatted_text
 
 # This script renames, organizes and moves your downloaded media files
@@ -239,6 +239,14 @@ def rename_files(path, special):
     clean_paths = show_checker(sorted_alphanumeric(video_paths))
     video_titles = [os.path.basename(title) for title in clean_paths]
     extra_episode_info = special_info(special)
+    if os.path.isfile(f"{path}/video_list.tmp"):
+        possible_special = read_existing_list(path)
+        if len(set([x[3] for x in possible_special if x != "SXX"])) > 0:
+            extras = []
+            for poss in possible_special:
+                if poss[3] != "SXX":
+                    extras.append(f"{os.path.basename(poss[1])};{int(poss[3][1:])}")
+            extra_episode_info.update(special_info(extras))
     print_formatted_text("\n[i] Origin path: {}".format(path))
 
     for title in video_titles:
@@ -247,24 +255,9 @@ def rename_files(path, special):
         if special_season:
             title = title.replace("Episode ", "S0{}E0".format(extra_episode_info.get(special_season[0])))
 
-        # match = re.search(r"((.+ S?)(\d+).*|.*)(Episode (\d+))", title)
-        # # title_match = re.search(r"(.+)\s(((\d+(st|nd|rd|th)) Season )|(S\d+) |(Season \d+ |\d+ ))(?=Episode)", title)
-        # title_match = re.search(r"((.+)\s)?(S\d+|Season \d+|\d+(st|nd|rd|th) Season|\d+)? (Episode)", title)
-        # ext = os.path.splitext(title)[1]
-        # if match:
-        #     if match.group(3):
-        #         season = match.group(3)
-        #     else:
-        #         season = "1"
-        #
-        #     episode = match.group(5)
-        #     if title_match:
-        #         print(title_match.group(2))
-        #         title = f"{title_match.group(2)} S0{season}E0{episode}{ext}"
-
         for possible_match in strings_to_match.keys():
-           if re.search(possible_match, title) is not None:
-               title = title.replace(possible_match, strings_to_match[possible_match])
+            if re.search(possible_match, title) is not None:
+                title = title.replace(possible_match, strings_to_match[possible_match])
 
         # mind the space at the beginning
         if re.search(r" [eE]\d{2,4}", title) is not None:

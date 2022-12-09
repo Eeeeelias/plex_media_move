@@ -283,3 +283,12 @@ def remove_video_list(path):
     file = f'{path}/video_list.tmp'
     if os.path.isfile(file):
         os.remove(file)
+
+
+def read_existing_list(src_path: str):
+    files = []
+    with open(f'{src_path}/video_list.tmp', 'r') as f:
+        for line in f.readlines():
+            files.append(line.strip().split(";"))
+            files[-1] = files[-1][:-1]
+    return files
