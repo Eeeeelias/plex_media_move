@@ -3,7 +3,8 @@ import re
 
 import media_mover
 from src.mediainfolib import get_source_files, current_files_info, convert_size, convert_millis, get_duration, \
-    seperator as sep, avg_video_size, clear, remove_video_list, get_config, write_video_list, read_existing_list
+    seperator as sep, avg_video_size, clear, remove_video_list, get_config, write_video_list, read_existing_list, \
+    cut_name, season_episode_matcher
 from prompt_toolkit import print_formatted_text, HTML, prompt
 
 
@@ -39,46 +40,34 @@ def input_parser(input: str) -> tuple:
     return sorted(nums), funct, modifier
 
 
-def show_all_files(files_info, avg_vid_sizes, vid_lengths=None):
-    gs = "<ansigreen>"
-    ge = "</ansigreen>"
-    border_bar = "#" * 98
+def show_all_files(ex):
+    border_bar = "#" * 114
+    empty_row = "#{:112}#".format(" ")
     display_string = f"""{border_bar}\n"""
-    spacing_num = len(str(len(files_info)))
-    correct_counter = 0
-    curr_dir = ""
-    vid_lengths_new = {}
+    header_string = "# {:<6}{:<40}{:<34}{:<6}{:<7}{:<10}{:<7} #"
+    file_string = "# <ansigreen>{:<6}</ansigreen>{:<40}{:<34}{:<6}{:<7}{:<10}{:<7} #"
+    small_string = "# <ansigreen>{:<6}</ansigreen>{:<40}{:<34}{:<6}{:<7}<ansired>{:<10}</ansired>{:<7} #"
     print_formatted_text(HTML(display_string), end='')
-
-    for i in range(len(files_info)):
-        if os.path.isdir(files_info[i]) or len(files_info[i]) == 0:
-            display_string = f"# ".ljust(spacing_num + 4) + current_files_info(i, files_info, 90) + " #\n"
-            print_formatted_text(HTML(display_string), end='')
-            correct_counter += 1
-            curr_dir = files_info[i] if len(files_info[i]) > 0 else curr_dir
-            continue
-
-        file_path = f"{curr_dir}{sep}{files_info[i]}"
-
-        size_bytes = os.path.getsize(file_path)
-
-        size_str = f"  <ansired>{convert_size(size_bytes, unit='mb')} MB</ansired>".rjust(33) \
-            if file_path in avg_vid_sizes else f"  {convert_size(size_bytes, unit='mb')} MB".rjust(14)
-
-        duration_vid = get_duration(file_path) if not vid_lengths else vid_lengths.get(file_path)
-        length_str = f"  {convert_millis(duration_vid)}".rjust(12)
-
-        vid_lengths_new[file_path] = duration_vid
-        front_spacing = spacing_num - len(str(i - correct_counter))
-        display_string = f"# {gs}[{i - correct_counter}]{ge} ".ljust(29 + front_spacing) + \
-                         f"{current_files_info(i, files_info, 65 - len(str(i - correct_counter)) - front_spacing)}" \
-                         f"{size_str}{length_str} #\n"
-        print_formatted_text(HTML(display_string), end='')
-
+    print(header_string.format("Nr.", "Filename", "Title", "S.", "Ep.", "Size", "Dur."))
+    # files info be like:
+    # [vid_nr, video, media_name, "SXX", "EXX", "N", duration_vid]
+    # [     0,     1,          2,     3,     4,   5,            6]
+    #  [1]    Show.mp4 Show S01 E01 N 4h 33m
+    prev = ""
+    for file in ex:
+        if prev != os.path.split(file[1])[0]:
+            prev = os.path.split(file[1])[0]
+            print(empty_row)
+        if file[5] == "N":
+            print_string = file_string
+        else:
+            print_string = small_string
+        print_formatted_text(HTML(print_string.format(
+            f"[{file[0]}]", cut_name(os.path.basename(file[1]), 39, pos="mid"), cut_name(file[2], 33), file[3], file[4],
+            f"{int(convert_size(int(file[6]), unit='mb'))} MB", convert_millis(int(file[7])))))
     display_string = f"{border_bar}\n\t"
     # clear()
     print_formatted_text(HTML(display_string))
-    return vid_lengths_new
 
 
 def set_season(num_list: list, src_path: str, season: str):
@@ -112,8 +101,7 @@ def delete_sussy(nums, src_path, modifier=None):
         return
 
 
-def get_files():
-    src_path = get_config()['mover']['orig_path']
+def get_files(src_path):
     source_files, n_videos, n_folders = get_source_files()
     files_info = []
     avg_vid_sizes = []
@@ -127,8 +115,11 @@ def get_files():
             file_name = os.path.splitext(os.path.basename(video))[0]
             file_match = re.match(r"(.+) (Episode \d+|[sS]\d+[eE]\d+|\(\d{4}\))(.*)", file_name)
             media_name = file_match.group(1) if file_match else file_name
+            duration_vid = get_duration(video)
+            size_vid = os.path.getsize(video)
+            season, episode = season_episode_matcher(os.path.basename(video))
 
-            videos.append([vid_nr, video, media_name, "SXX", "EXX", "N"])
+            videos.append([vid_nr, video, media_name, f"S0{season}", f"E0{episode}", "N", size_vid, duration_vid])
             vid_nr += 1
             if avg_vid_size and avg_vid_size * 0.6 > os.path.getsize(video):
                 videos[-1][5] = "S"
@@ -137,7 +128,7 @@ def get_files():
         files_info.extend(values)
         files_info.append("")
 
-    # just don't overwrite the old stuff that might've been changed
+    # switch this with the above and make it more fast that way, also watch out for potential new files
     if os.path.isfile(f"{src_path}/video_list.tmp"):
         ex_files = read_existing_list(src_path)
         new_videos = []
@@ -153,19 +144,20 @@ def get_files():
         videos = new_videos
 
     write_video_list(videos, src_path)
-    return files_info, avg_vid_sizes
 
 
 def main():
-    # gets all the files and stores suspiciously small files in another list
-    files, small_files = get_files()
-    vid_lengths = show_all_files(files, small_files)
+    print("Loading...")
     src_path = get_config()['mover']['orig_path']
+    get_files(src_path)
+    clear()
+    show_all_files(read_existing_list(src_path))
     window_draw = False
     while True:
         if window_draw:
-            files, small_files = get_files()
-            show_all_files(files, small_files, vid_lengths)
+            get_files(src_path)
+            ex = read_existing_list(src_path)
+            show_all_files(ex)
         action = prompt(HTML("<ansiblue>=> </ansiblue>"))
         if action.lower() == "q":
             clear()

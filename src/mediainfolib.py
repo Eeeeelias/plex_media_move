@@ -235,15 +235,15 @@ def cut_name(name, cut, pos='right', mid=10) -> str:
         return "..." + name[len(name) - cut + 3:]
 
 
-def convert_size(size, unit='gb') -> float:
+def convert_size(size, unit='gb', r=2) -> float:
     size_gb = size / (1024 ** 3)
     if unit == 'tb':
         size_tb = size_gb / 1000
-        return round(size_tb, 2)
+        return round(size_tb, r)
     if unit == 'mb':
         size_mb = size_gb * 1000
-        return round(size_mb, 2)
-    return round(size_gb, 2)
+        return round(size_mb, r)
+    return round(size_gb, r)
 
 
 def add_minus() -> str:
@@ -292,3 +292,14 @@ def read_existing_list(src_path: str):
             files.append(line.strip().split(";"))
             files[-1] = files[-1][:-1]
     return files
+
+
+def season_episode_matcher(filename):
+    # when it's easy lol
+    match = re.match(r"(.*)[sS](\d+)[eE](\d+)", filename)
+    if match:
+        return int(match.group(2)), int(match.group(3))
+    # where it starts getting difficult
+    match_simple = re.match(r".*Episode (\d+)", filename)
+    if match_simple:
+        return 1, int(match_simple.group(1))
