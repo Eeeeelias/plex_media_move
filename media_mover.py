@@ -273,6 +273,20 @@ def rename_files(path, special):
     return clean_paths, video_titles_new
 
 
+def viewer_rename(num_list, src_path, modifier):
+    paths = []
+    names = []
+    files = read_existing_list(src_path)
+
+    for file in files:
+        # if num list is empty, all values should be considered
+        if file[0] in str(num_list) or num_list == []:
+            ext = os.path.splitext(file[1])[1]
+            paths.append(file[1])
+            names.append(f"{file[2]} {file[3]}{file[4]}{ext}")
+    return paths, names
+
+
 def get_show_name_season(show_dir, video_title):
     orig_show_name = re.sub(" [sS][0-9]+[eE][0-9]+.*", "", string=video_title)
     orig_season = re.search(r"\d+(?=[eE]\d{1,4})", video_title).group()

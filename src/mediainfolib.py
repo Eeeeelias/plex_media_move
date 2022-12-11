@@ -271,6 +271,10 @@ def avg_video_size(path) -> float:
     return sum(video_sizes) / len(video_sizes)
 
 
+def strip_show_name(raw):
+    return re.sub(r"((Season \d+|\d+(nd|rd|th) Season)? Episode \d+|[sS]\d+[eE]\d+|\(\d{4}\))(.*)", "", raw).strip()
+
+
 def write_video_list(videos, path):
     with open(f'{path}/video_list.tmp', 'w') as f:
         for video in videos:

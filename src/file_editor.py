@@ -2,10 +2,31 @@ import os.path
 import re
 
 import media_mover
-from src.mediainfolib import get_source_files, current_files_info, convert_size, convert_millis, get_duration, \
+from src import manage_db
+from src.mediainfolib import get_source_files, convert_size, convert_millis, get_duration, \
     seperator as sep, avg_video_size, clear, remove_video_list, get_config, write_video_list, read_existing_list, \
-    cut_name, season_episode_matcher
+    cut_name, season_episode_matcher, check_database_ex, strip_show_name
 from prompt_toolkit import print_formatted_text, HTML, prompt
+
+
+def help_window():
+    gs = "<ansigreen>"
+    ge = "</ansigreen>"
+    bs = "<ansiblue>"
+    be = "</ansiblue>"
+    ys = "<ansiyellow>"
+    ye = "</ansiyellow>"
+    print_formatted_text(HTML(f"""
+    ##################################################################################################################
+    # Commands always work in the same pattern: {gs}[nrs. to consider]{ge}{bs}[function]{be}{ys}[optional info]{ye}                          #
+    # For example: {gs}0-5{ge}{bs}s{be}{ys}14{ye} sets the season for the files 0 through 5 to 14                                            #
+    # Supplying no nrs. to consider automatically considers all files.                                               #
+    #                                                                                                                #
+    # Available functions are: {bs}t{be} - set title, {bs}s{be} - set season, {bs}e{be} - set episode, {bs}m{be} - move files, {bs}d{be} - delete            #
+    #                                                                                                                #
+    # Tip: Using {bs}d{be} without other specifiers deletes all suspiciously small files (marked in red)                     #
+    ##################################################################################################################
+    """))
 
 
 def input_parser(input: str) -> tuple:
@@ -15,7 +36,7 @@ def input_parser(input: str) -> tuple:
     # 12,5,20m - move files 12, 5 and 20
     # m - moves all files
 
-    match = re.match(r"(\d+|\d+ ?- ?\d+|\d+((, ?)\d+)*)?([a-zA-Z])(\d+)?", input)
+    match = re.match(r"(\d+|\d+ ?- ?\d+|\d+((, ?)\d+)*)?([a-zA-Z])(.*)?", input)
     marker = match.group(1)
     funct = match.group(4)
     modifier = match.group(5)
@@ -29,7 +50,7 @@ def input_parser(input: str) -> tuple:
     if "-" in marker:
         nums = marker.split("-")
         nums = [int(x) for x in nums]
-        for x in range(nums[0]+1, nums[-1]):
+        for x in range(nums[0] + 1, nums[-1]):
             nums.append(x)
     elif "," in marker:
         nums = marker.split(",")
@@ -41,12 +62,12 @@ def input_parser(input: str) -> tuple:
 
 
 def show_all_files(ex):
-    border_bar = "#" * 114
-    empty_row = "#{:112}#".format(" ")
+    border_bar = "    " + "#" * 114
+    empty_row = "    #{:112}#".format(" ")
     display_string = f"""{border_bar}\n"""
-    header_string = "# {:<6}{:<40}{:<34}{:<6}{:<7}{:<10}{:<7} #"
-    file_string = "# <ansigreen>{:<6}</ansigreen>{:<40}{:<34}{:<6}{:<7}{:<10}{:<7} #"
-    small_string = "# <ansigreen>{:<6}</ansigreen>{:<40}{:<34}{:<6}{:<7}<ansired>{:<10}</ansired>{:<7} #"
+    header_string = "    # {:<6}{:<40}{:<34}{:<6}{:<7}{:<10}{:<7} #"
+    file_string = "    # <ansigreen>{:<6}</ansigreen>{:<40}{:<34}{:<6}{:<7}{:<10}{:<7} #"
+    small_string = "    # <ansigreen>{:<6}</ansigreen>{:<40}{:<34}{:<6}{:<7}<ansired>{:<10}</ansired>{:<7} #"
     print_formatted_text(HTML(display_string), end='')
     print(header_string.format("Nr.", "Filename", "Title", "S.", "Ep.", "Size", "Dur."))
     # files info be like:
@@ -67,6 +88,7 @@ def show_all_files(ex):
             f"{int(convert_size(int(file[6]), unit='mb'))} MB", convert_millis(int(file[7])))))
     display_string = f"{border_bar}\n\t"
     # clear()
+    print(empty_row)
     print_formatted_text(HTML(display_string))
 
 
@@ -95,6 +117,21 @@ def set_ep_numbers(num_list: list, src_path: str, ep: str):
         if file[0] in str(num_list) or num_list == []:
             file[4] = f"E0{int(ep) + i}"
         new_files.append(tuple(file))
+    write_video_list(new_files, src_path)
+
+
+def set_title(num_list: list, src_path: str, title: str):
+    new_files = []
+    files = read_existing_list(src_path)
+    if not title:
+        print_formatted_text(HTML("<ansired> No title provided!"))
+        return
+
+    for i, file in enumerate(files):
+        if file[0] in str(num_list) or num_list == []:
+            file[2] = title.strip() if title != "\d" else strip_show_name(os.path.basename(file[1]))
+        new_files.append(tuple(file))
+
     write_video_list(new_files, src_path)
 
 
@@ -137,8 +174,7 @@ def get_files(src_path):
             if found:
                 continue
             file_name = os.path.splitext(os.path.basename(video))[0]
-            media_name = re.sub(
-                r"((Season \d+|\d+(nd|rd|th) Season)? Episode \d+|[sS]\d+[eE]\d+|\(\d{4}\))(.*)", "", file_name).strip()
+            media_name = strip_show_name(file_name)
             duration_vid = get_duration(video)
             size_vid = os.path.getsize(video)
             season, episode = season_episode_matcher(os.path.basename(video))
@@ -160,7 +196,15 @@ def get_files(src_path):
 
 def main():
     print("Loading...")
-    src_path = get_config()['mover']['orig_path']
+    conf = get_config()
+    src_path = conf['mover']['orig_path']
+    funcs = {
+        'd': delete_sussy,
+        's': set_season,
+        'e': set_ep_numbers,
+        't': set_title,
+        'm': media_mover.viewer_rename,
+    }
     get_files(src_path)
     clear()
     show_all_files(read_existing_list(src_path))
@@ -170,21 +214,34 @@ def main():
             get_files(src_path)
             ex = read_existing_list(src_path)
             show_all_files(ex)
+        window_draw = True
         action = prompt(HTML("<ansiblue>=> </ansiblue>"))
+        if action.lower() == "help":
+            help_window()
+            action = prompt(HTML("<ansiblue>=> </ansiblue>"))
         if action.lower() == "q":
             clear()
             return
         if action.lower() == "q!":
             remove_video_list(src_path)
             exit(0)
-        nums, funct, modifier = input_parser(action)
-        if funct == "d":
-            delete_sussy(nums, src_path, modifier)
-        if funct == "s":
-            set_season(nums, src_path, modifier)
-        if funct == "e":
-            set_ep_numbers(nums, src_path, modifier)
-        if funct == "m":
-            media_mover.main()
+
+        # if none of the above apply, check for function
+        nums, funct_name, modifier = input_parser(action)
+        funct = funcs.get(funct_name)
+
+        if funct:
+            if funct_name == "m":
+                paths, names = media_mover.viewer_rename(nums, src_path, modifier)
+                moved = media_mover.move_files(paths, names, conf['mover']['dest_path'], conf['mover']['overwrite'])
+                data_path = conf['database']['db_path']
+                db_path = data_path + f"{sep}media_database.db"
+                if check_database_ex(conf['database']['db_path']):
+                    manage_db.update_database(moved, db_path)
+            else:
+                funct(nums, src_path, modifier)
+        else:
+            clear()
+            print_formatted_text(HTML("<ansired>    Not a valid command!</ansired>"))
+            continue
         clear()
-        window_draw = True
