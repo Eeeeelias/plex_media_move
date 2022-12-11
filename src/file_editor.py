@@ -85,6 +85,19 @@ def set_season(num_list: list, src_path: str, season: str):
     write_video_list(new_files, src_path)
 
 
+def set_ep_numbers(num_list: list, src_path: str, ep: str):
+    new_files = []
+    files = read_existing_list(src_path)
+    if not ep:
+        ep = 1
+
+    for i, file in enumerate(files):
+        if file[0] in str(num_list) or num_list == []:
+            file[4] = f"E0{int(ep) + i}"
+        new_files.append(tuple(file))
+    write_video_list(new_files, src_path)
+
+
 def delete_sussy(nums, src_path, modifier=None):
     try:
         curr_files = read_existing_list(src_path)
@@ -103,45 +116,44 @@ def delete_sussy(nums, src_path, modifier=None):
 
 def get_files(src_path):
     source_files, n_videos, n_folders = get_source_files()
-    files_info = []
-    avg_vid_sizes = []
+    ex_videos = read_existing_list(src_path) if os.path.isfile(f"{src_path}/video_list.tmp") else []
     vid_nr = 0
     videos = []
     avg_vid_size = None
+
     for keys, values in source_files.items():
+        # just getting the average show file size
         if "Movies" not in keys and len(values) > 2:
             avg_vid_size = avg_video_size([f"{keys}{sep}{x}" for x in values])
+        # actually going through each directory
         for video in [f"{keys}{sep}{x}" for x in values]:
+            # checking through the existing videos first, to use those values if possible
+            found = False
+            for ex in ex_videos:
+                if video == ex[1]:
+                    found = True
+                    videos.append(ex)
+                    break
+            if found:
+                continue
             file_name = os.path.splitext(os.path.basename(video))[0]
-            file_match = re.match(r"(.+) (Episode \d+|[sS]\d+[eE]\d+|\(\d{4}\))(.*)", file_name)
-            media_name = file_match.group(1) if file_match else file_name
+            media_name = re.sub(
+                r"((Season \d+|\d+(nd|rd|th) Season)? Episode \d+|[sS]\d+[eE]\d+|\(\d{4}\))(.*)", "", file_name).strip()
             duration_vid = get_duration(video)
             size_vid = os.path.getsize(video)
             season, episode = season_episode_matcher(os.path.basename(video))
+            ep_str = f"E0{episode}" if episode else f"NaN"
+            s_str = f"S0{season}" if season else f"NaN"
 
-            videos.append([vid_nr, video, media_name, f"S0{season}", f"E0{episode}", "N", size_vid, duration_vid])
+            videos.append([vid_nr, video, media_name, s_str, ep_str, "N", size_vid, duration_vid])
             vid_nr += 1
             if avg_vid_size and avg_vid_size * 0.6 > os.path.getsize(video):
                 videos[-1][5] = "S"
-                avg_vid_sizes.append(video)
-        files_info.append(keys)
-        files_info.extend(values)
-        files_info.append("")
 
-    # switch this with the above and make it more fast that way, also watch out for potential new files
-    if os.path.isfile(f"{src_path}/video_list.tmp"):
-        ex_files = read_existing_list(src_path)
-        new_videos = []
-        for video in videos:
-            found = False
-            for ex_video in ex_files:
-                if video[1] == ex_video[1]:
-                    new_videos.append(ex_video)
-                    found = True
-                    break
-            if not found:
-                new_videos.append(video)
-        videos = new_videos
+    # fixing up the numbering
+    if ex_videos:
+        for i, video in enumerate(videos):
+            video[0] = i
 
     write_video_list(videos, src_path)
 
@@ -170,6 +182,8 @@ def main():
             delete_sussy(nums, src_path, modifier)
         if funct == "s":
             set_season(nums, src_path, modifier)
+        if funct == "e":
+            set_ep_numbers(nums, src_path, modifier)
         if funct == "m":
             media_mover.main()
         clear()

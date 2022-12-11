@@ -300,6 +300,13 @@ def season_episode_matcher(filename):
     if match:
         return int(match.group(2)), int(match.group(3))
     # where it starts getting difficult
-    match_simple = re.match(r".*Episode (\d+)", filename)
-    if match_simple:
-        return 1, int(match_simple.group(1))
+    match_episode = re.match(r".*Episode (\d+)", filename)
+    episode = int(match_episode.group(1)) if match_episode else None
+    if not episode:
+        return None, None
+    match_season = re.match(r".*(Season (\d+)|(\d+)(nd|rd|th) Season)", filename)
+    if match_season:
+        season = match_season.group(2) if match_season.group(2) else match_season.group(3)
+    else:
+        season = 1
+    return season, episode
