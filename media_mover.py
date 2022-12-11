@@ -283,7 +283,11 @@ def viewer_rename(num_list, src_path, modifier):
         if file[0] in str(num_list) or num_list == []:
             ext = os.path.splitext(file[1])[1]
             paths.append(file[1])
-            names.append(f"{file[2]} {file[3]}{file[4]}{ext}")
+            if file[3] != "NaN":
+                names.append(f"{file[2]} {file[3]}{file[4]}{ext}")
+            else:
+                name_with_year = get_movie_year(os.path.basename(file[1]))
+                names.append(f"{name_with_year}")
     return paths, names
 
 
@@ -308,9 +312,7 @@ def get_show_name_season(show_dir, video_title):
 def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
     moved_videos = set()
     for video_path, video_title in zip(video_paths, video_titles_new):
-        print_formatted_text(
-            "[i] Original title: {}".format(os.path.basename(video_path))
-        )
+        print_formatted_text("[i] Original title: {}".format(os.path.basename(video_path)))
 
         # Taking care of movies here
         if re.search("[sS][0-9]+[eE][0-9]+", video_title) is None:
@@ -370,7 +372,7 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
 
         # check for show name similarity here and change if needed?
         show_name, season = get_show_name_season(plex_path + "/TV Shows/", video_title)
-        video_title = re.sub(r"[sS]\d+(?=[eE]\d)", f"s{season}", video_title)
+        video_title = re.sub(r"[sS]\d+(?=[eE]\d)", f"S{season}", video_title)
         show_path = plex_path + "/TV Shows/" + show_name + "/Season {}/".format(season)
         # for db check
         show_path_without_season = plex_path + f"{seperator}TV Shows{seperator}" + show_name

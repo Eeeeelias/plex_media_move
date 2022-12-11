@@ -60,8 +60,10 @@ def greetings_big():
     #                                                                          # {current_files_info(12, files_info)} #
     # [5] {gs}db search{ge}   - search through your local media database               # {current_files_info(13, files_info)} #
     #                                                                          # {current_files_info(14, files_info)} #
-    # [i] Press [c] to change your config                                      # {current_files_info(15, files_info)} #
+    # [6] {gs}file view{ge}   - view and modify all found files                        # {current_files_info(15, files_info)} #
     #                                                                          # {current_files_info(16, files_info)} #
+    # [i] Press [c] to change your config                                      # {current_files_info(17, files_info)} #
+    #                                                                          # {current_files_info(18, files_info)} #
     ####################################################################################################################
 
 

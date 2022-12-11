@@ -24,7 +24,7 @@ def help_window():
     #                                                                                                                #
     # Available functions are: {bs}t{be} - set title, {bs}s{be} - set season, {bs}e{be} - set episode, {bs}m{be} - move files, {bs}d{be} - delete            #
     #                                                                                                                #
-    # Tip: Using {bs}d{be} without other specifiers deletes all suspiciously small files (marked in red)                     #
+    # Tip: Using {bs}d{be} without other specifiers deletes all suspiciously small files (marked in <ansired>red</ansired>)                     #
     ##################################################################################################################
     """))
 
@@ -233,6 +233,9 @@ def main():
         if funct:
             if funct_name == "m":
                 paths, names = media_mover.viewer_rename(nums, src_path, modifier)
+                print(paths)
+                print(names)
+                i = input("fs")
                 moved = media_mover.move_files(paths, names, conf['mover']['dest_path'], conf['mover']['overwrite'])
                 data_path = conf['database']['db_path']
                 db_path = data_path + f"{sep}media_database.db"
