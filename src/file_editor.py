@@ -2,7 +2,7 @@ import os.path
 import re
 
 import media_mover
-from src import manage_db
+from src import manage_db, convert_ts
 from src.mediainfolib import get_source_files, convert_size, convert_millis, get_duration, \
     seperator as sep, avg_video_size, clear, remove_video_list, get_config, write_video_list, read_existing_list, \
     cut_name, season_episode_matcher, check_database_ex, strip_show_name
@@ -203,6 +203,7 @@ def main():
         's': set_season,
         'e': set_ep_numbers,
         't': set_title,
+        'c': convert_ts.viewer_convert,
         'm': media_mover.viewer_rename,
     }
     get_files(src_path)
@@ -233,9 +234,6 @@ def main():
         if funct:
             if funct_name == "m":
                 paths, names = media_mover.viewer_rename(nums, src_path, modifier)
-                print(paths)
-                print(names)
-                i = input("fs")
                 moved = media_mover.move_files(paths, names, conf['mover']['dest_path'], conf['mover']['overwrite'])
                 data_path = conf['database']['db_path']
                 db_path = data_path + f"{sep}media_database.db"
