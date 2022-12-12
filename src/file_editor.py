@@ -22,7 +22,8 @@ def help_window():
     # For example: {gs}0-5{ge}{bs}s{be}{ys}14{ye} sets the season for the files 0 through 5 to 14                                            #
     # Supplying no nrs. to consider automatically considers all files.                                               #
     #                                                                                                                #
-    # Available functions are: {bs}t{be} - set title, {bs}s{be} - set season, {bs}e{be} - set episode, {bs}m{be} - move files, {bs}d{be} - delete            #
+    # Available functions are:                                                                                       #
+    # {bs}t{be} - set title, {bs}s{be} - set season, {bs}e{be} - set episode, {bs}m{be} - move files, {bs}d{be} - delete, {bs}c{be} - convert, {bs}r{be} - refresh           #
     #                                                                                                                #
     # Tip: Using {bs}d{be} without other specifiers deletes all suspiciously small files (marked in <ansired>red</ansired>)                     #
     ##################################################################################################################
@@ -35,17 +36,19 @@ def input_parser(input: str) -> tuple:
     # 3-6d - delete episode 3 through 6
     # 12,5,20m - move files 12, 5 and 20
     # m - moves all files
-
-    match = re.match(r"(\d+|\d+ ?- ?\d+|\d+((, ?)\d+)*)?([a-zA-Z])(.*)?", input)
-    marker = match.group(1)
-    funct = match.group(4)
-    modifier = match.group(5)
-
-    if funct is None:
-        raise TypeError
+    marker = []
+    marker_set = False
+    funct_and_mod = {}
+    for command in input.split(";"):
+        match = re.match(r"(\d+|\d+ ?- ?\d+|\d+((, ?)\d+)*)?([a-zA-Z])(.*)?", command)
+        marker = match.group(1) if match.group(1) and not marker_set else marker
+        marker_set = True
+        funct = match.group(4)
+        modifier = match.group(5) if match.group(5) else None
+        funct_and_mod[funct] = modifier
 
     if not marker:
-        return [], funct, modifier
+        return marker, funct_and_mod
 
     if "-" in marker:
         nums = marker.split("-")
@@ -58,7 +61,7 @@ def input_parser(input: str) -> tuple:
     else:
         nums = [int(marker)]
 
-    return sorted(nums), funct, modifier
+    return sorted(nums), funct_and_mod
 
 
 def show_all_files(ex):
@@ -85,7 +88,7 @@ def show_all_files(ex):
             print_string = small_string
         print_formatted_text(HTML(print_string.format(
             f"[{file[0]}]", cut_name(os.path.basename(file[1]), 39, pos="mid"), cut_name(file[2], 33), file[3], file[4],
-            f"{int(convert_size(int(file[6]), unit='mb'))} MB", convert_millis(int(file[7])))))
+            f"{int(convert_size(int(file[6]), unit='mb'))} MB", convert_millis(int(file[7]))).replace("&", "&amp;")))
     display_string = f"{border_bar}\n\t"
     # clear()
     print(empty_row)
@@ -101,7 +104,8 @@ def set_season(num_list: list, src_path: str, season: str):
     for file in files:
         # if num list is empty, all values should be considered
         if file[0] in str(num_list) or num_list == []:
-            file[3] = f"S0{season}"
+            # converting to an int here to get rid of leading zeroes
+            file[3] = f"S0{int(season)}"
         new_files.append(tuple(file))
 
     write_video_list(new_files, src_path)
@@ -113,9 +117,11 @@ def set_ep_numbers(num_list: list, src_path: str, ep: str):
     if not ep:
         ep = 1
 
-    for i, file in enumerate(files):
+    i = 0
+    for file in files:
         if file[0] in str(num_list) or num_list == []:
             file[4] = f"E0{int(ep) + i}"
+            i += 1
         new_files.append(tuple(file))
     write_video_list(new_files, src_path)
 
@@ -220,6 +226,9 @@ def main():
         if action.lower() == "help":
             help_window()
             action = prompt(HTML("<ansiblue>=> </ansiblue>"))
+        if action.lower() == "r":
+            clear()
+            continue
         if action.lower() == "q":
             clear()
             return
@@ -228,21 +237,26 @@ def main():
             exit(0)
 
         # if none of the above apply, check for function
-        nums, funct_name, modifier = input_parser(action)
-        funct = funcs.get(funct_name)
-
-        if funct:
-            if funct_name == "m":
-                paths, names = media_mover.viewer_rename(nums, src_path, modifier)
-                moved = media_mover.move_files(paths, names, conf['mover']['dest_path'], conf['mover']['overwrite'])
-                data_path = conf['database']['db_path']
-                db_path = data_path + f"{sep}media_database.db"
-                if check_database_ex(conf['database']['db_path']):
-                    manage_db.update_database(moved, db_path)
-            else:
-                funct(nums, src_path, modifier)
-        else:
+        try:
+            nums, funcs_dict = input_parser(action)
+        except AttributeError:
             clear()
-            print_formatted_text(HTML("<ansired>    Not a valid command!</ansired>"))
+            print_formatted_text(HTML("<ansired>    Not a well formed command!</ansired>"))
             continue
+        for funct_name, modifier in funcs_dict.items():
+            funct = funcs.get(funct_name)
+            if funct:
+                if funct_name == "m":
+                    paths, names = media_mover.viewer_rename(nums, src_path, modifier)
+                    moved = media_mover.move_files(paths, names, conf['mover']['dest_path'], conf['mover']['overwrite'])
+                    data_path = conf['database']['db_path']
+                    db_path = data_path + f"{sep}media_database.db"
+                    if check_database_ex(db_path):
+                        manage_db.update_database(moved, db_path)
+                else:
+                    funct(nums, src_path, modifier)
+            else:
+                clear()
+                print_formatted_text(HTML("<ansired>    Not a valid command!</ansired>"))
+                break
         clear()
