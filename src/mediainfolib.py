@@ -96,7 +96,7 @@ def get_source_files() -> tuple:
     return source_files, n_files, n_paths
 
 
-def current_files_info(c: int, files: list, max_len=37) -> str:
+def current_files_info(c: int, files: list, max_len=36) -> str:
     if c > len(files) - 1:
         return " " * max_len
     if os.path.isdir(files[c]):

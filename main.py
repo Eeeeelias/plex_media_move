@@ -36,15 +36,15 @@ def greetings_big():
     gs = "<ansigreen>"
     ge = "</ansigreen>"
     source_files, n_videos, n_folders = get_source_files()
-    top_info = f"Found {n_videos} video(s) in {n_folders} folder(s):".ljust(37)
+    top_info = f"Found {n_videos} video(s) in {n_folders} folder(s):".ljust(36)
     for keys, values in source_files.items():
         files_info.append(keys)
         files_info.extend(values)
         files_info.append("")
     print_formatted_text(HTML(f"""
-    ####################################################################################################################
+    ###################################################################################################################
     #                                                                          # {top_info} #
-    # This little tool helps you sort, convert, combine or fix your media      #                                       #
+    # This little tool helps you sort, convert, combine or fix your media      #                                      #
     # files so you can easily give them to Plex or Jellyfin.                   # {current_files_info(0, files_info)} #
     # Just select what you want to do:                                         # {current_files_info(1, files_info)} #
     #                                                                          # {current_files_info(2, files_info)} #
@@ -64,7 +64,7 @@ def greetings_big():
     #                                                                          # {current_files_info(16, files_info)} #
     # [i] Press [c] to change your config                                      # {current_files_info(17, files_info)} #
     #                                                                          # {current_files_info(18, files_info)} #
-    ####################################################################################################################
+    ###################################################################################################################
 
 
     """.replace("&", "&amp;")))
