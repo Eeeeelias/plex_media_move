@@ -17,9 +17,12 @@ def sigmoid(x):
 
 
 def _quality_score(episodes: int, duration: int, size: int):
-    size_per_episode = size / episodes
-    dur_episode = duration/episodes
-    score = size_per_episode / dur_episode
+    try:
+        size_per_episode = size / episodes
+        dur_episode = duration/episodes
+        score = size_per_episode / dur_episode
+    except ZeroDivisionError:
+        return 0
     return score
 
 

@@ -103,7 +103,7 @@ def set_season(num_list: list, src_path: str, season: str):
 
     for file in files:
         # if num list is empty, all values should be considered
-        if file[0] in str(num_list) or num_list == []:
+        if int(file[0]) in num_list or num_list == []:
             # converting to an int here to get rid of leading zeroes
             file[3] = f"S0{int(season)}"
         new_files.append(tuple(file))
@@ -119,7 +119,7 @@ def set_ep_numbers(num_list: list, src_path: str, ep: str):
 
     i = 0
     for file in files:
-        if file[0] in str(num_list) or num_list == []:
+        if int(file[0]) in num_list or num_list == []:
             file[4] = f"E0{int(ep) + i}"
             i += 1
         new_files.append(tuple(file))
@@ -134,7 +134,7 @@ def set_title(num_list: list, src_path: str, title: str):
         return
 
     for i, file in enumerate(files):
-        if file[0] in str(num_list) or num_list == []:
+        if int(file[0]) in num_list or num_list == []:
             file[2] = title.strip() if title != "\d" else strip_show_name(os.path.basename(file[1]))
         new_files.append(tuple(file))
 
@@ -241,7 +241,7 @@ def main():
             nums, funcs_dict = input_parser(action)
         except AttributeError:
             clear()
-            print_formatted_text(HTML("<ansired>    Not a well formed command!</ansired>"))
+            print_formatted_text(HTML("<ansired>    Not a well formed command! Use  \"help\" to get more info</ansired>"))
             continue
         for funct_name, modifier in funcs_dict.items():
             funct = funcs.get(funct_name)

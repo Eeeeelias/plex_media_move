@@ -5,9 +5,11 @@ import re
 import shutil
 import sys
 import time
+import logging
 from sys import platform
 from src import manage_db, mediainfolib
-from src.mediainfolib import check_database_ex, sorted_alphanumeric, fuzzy_matching, avg_video_size, read_existing_list
+from src.mediainfolib import check_database_ex, sorted_alphanumeric, fuzzy_matching, avg_video_size, read_existing_list, \
+    data_path
 from prompt_toolkit import prompt, HTML, print_formatted_text
 
 # This script renames, organizes and moves your downloaded media files
@@ -51,6 +53,16 @@ strings_to_match = {
     "OVA ": "E00",
     "Episode ": "E0",
 }
+
+logger = logging.getLogger('mover')
+
+log_file = f"{data_path}/mover.log"
+file_handler = logging.FileHandler(log_file)
+logger.addHandler(file_handler)
+console_handler = logging.StreamHandler()
+logger.addHandler(console_handler)
+
+logger.setLevel(logging.DEBUG)
 
 
 def make_parser():
@@ -280,7 +292,7 @@ def viewer_rename(num_list, src_path, modifier):
 
     for file in files:
         # if num list is empty, all values should be considered
-        if file[0] in str(num_list) or num_list == []:
+        if int(file[0]) in num_list or num_list == []:
             ext = os.path.splitext(file[1])[1]
             paths.append(file[1])
             if file[3] != "NaN":
@@ -311,9 +323,10 @@ def get_show_name_season(show_dir, video_title):
 
 def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
     moved_videos = set()
+    if len(video_paths) > 0:
+        logger.debug(f"\n[i] {time.strftime('%Y-%m-%d %H:%M:%S')} - received {len(video_paths)} files to move")
     for video_path, video_title in zip(video_paths, video_titles_new):
-        print_formatted_text("[i] Original title: {}".format(os.path.basename(video_path)))
-
+        logger.info("[i] Original title: {}".format(os.path.basename(video_path)))
         # Taking care of movies here
         if re.search("[sS][0-9]+[eE][0-9]+", video_title) is None:
             movie_title = re.sub(r"(?<=\(\d{4}\)).*", "", video_title)
@@ -322,14 +335,14 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
             # as other versions of that movie might get added
             if re.search(r"(?<=\(\d{4}\)) -.*(?=(.mp4)|(.mkv))", video_title) is not None:
                 if overwrite:
-                    print_formatted_text("[i] Overwriting existing version of movie")
+                    logger.info("[i] Overwriting existing version of movie")
                     new_path = plex_path + "/Movies/" + video_title
                     shutil.move(video_path, new_path)
                     moved_videos.add(new_path)
                     continue
                 if not os.path.exists(plex_path + "/Movies/" + movie_title):
                     os.makedirs(plex_path + "/Movies/" + movie_title)
-                    print_formatted_text("[i] Made new folder: {}".format(movie_title))
+                    logger.info("[i] Made new folder: {}".format(movie_title))
                 new_path = plex_path + "/Movies/" + movie_title + "/" + video_title
                 duplicate_num = file_ex_check(new_path, overwrite)
                 if duplicate_num != 0:
@@ -357,17 +370,13 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
                         plex_path + "/Movies/{}".format(video_title), movie_paths[1]
                     )
                     moved_videos.add(movie_paths[1])
-                    print_formatted_text(
-                        "[i] Moved (Movie): {}".format(movie_paths[1].split("/")[-1])
-                    )
+                    logger.info("[i] Moved (Movie): {}".format(movie_paths[1].split("/")[-1]))
                     shutil.move(video_path, movie_paths[0])
                     moved_videos.add(movie_paths[0])
                 else:
                     shutil.move(video_path, new_path)
                     moved_videos.add(new_path)
-            print_formatted_text(
-                "[i] Moved (Movie): {}".format(new_path.split("/")[-1])
-            )
+            logger.info("[i] Moved (Movie): {}".format(new_path.split("/")[-1]))
             continue
 
         # check for show name similarity here and change if needed?
@@ -379,15 +388,12 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
 
         # make folder for show if it doesn't exist
         if not os.path.exists(plex_path + "/TV Shows/" + show_name):
-            print_formatted_text(
-                "[i] New Show, making new folder ({})".format(show_name)
-            )
+            logger.info("[i] New Show, making new folder ({})".format(show_name))
             os.makedirs(plex_path + "/TV Shows/" + show_name)
 
         # make folder for season if it doesn't exist
         if not os.path.exists(show_path):
-            print_formatted_text(
-                "[i] New Season, making new folder ({}, Season {})".format(show_name, season))
+            logger.info("[i] New Season, making new folder ({}, Season {})".format(show_name, season))
             os.makedirs(show_path)
         # if file exists (file_ex_check returns false) add 2 to the file
         duplicate_num = file_ex_check(show_path + video_title, overwrite)
@@ -397,7 +403,7 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
             time.sleep(2)
         shutil.move(video_path, show_path + video_title)
         moved_videos.add(show_path_without_season)
-        print_formatted_text("[i] Moved (TV-Show): {}".format(video_title))
+        logger.info("[i] Moved (TV-Show): {}".format(video_title))
     return moved_videos
 
 
@@ -411,15 +417,13 @@ def trash_video(path):
 
 
 def main():
-    conf = None
     try:
         parser = make_parser()
         args = parser.parse_args()
         conf = mediainfolib.get_config()
         use_db = True
-        if conf is not None:
-            data_path = conf['database']['db_path']
-            db_path = data_path + f"{seperator}media_database.db"
+        if conf:
+            db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
         else:
             print_formatted_text("[i] Consider running setup.py to set up default values and a database!")
             db_path = ""
@@ -461,7 +465,7 @@ def main():
         exit(1)
     except TypeError:
         # traceback.print_exc()
-        if conf is not None:
+        if conf:
             for value in conf['mover'].values():
                 if value is None:
                     print_formatted_text(
