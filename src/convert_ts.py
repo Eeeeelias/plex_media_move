@@ -28,13 +28,15 @@ def overview():
 
 def ffmpeg_convert(path, filetype=".ts"):
     dirname, name = os.path.split(path)
-    new_name = re.sub(f"{filetype}", ".mp4", os.path.basename(path))
-    print(f"[i] Converting to : {pathlib.Path(dirname, new_name)}")
-    subprocess.run(["ffmpeg", "-loglevel", "warning", "-i", path, "-c", "copy", pathlib.Path(dirname, new_name)])
+    new_name = re.sub(f"\.{filetype[1:]}$", ".mp4", os.path.basename(path))
+    new_path = pathlib.Path(dirname, new_name)
+    print(f"[i] Converting to : {new_path}")
+    subprocess.run(["ffmpeg", "-loglevel", "warning", "-i", path, "-c", "copy", new_path])
     print("[i] Removing original file")
     time.sleep(0.5)
     try:
-        os.remove(path)
+        if os.path.isfile(new_path):
+            os.remove(path)
     except PermissionError:
         print("Permission Error, continuing!")
         return
@@ -45,7 +47,7 @@ def viewer_convert(num_list: list, src_path: str, filetype: str):
     filetype = filetype if filetype else ".ts"
 
     for file in files:
-        if file[0] in str(num_list) or num_list == []:
+        if int(file[0]) in num_list or num_list == []:
             ffmpeg_convert(file[1], filetype)
 
 
