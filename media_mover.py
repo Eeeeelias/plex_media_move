@@ -256,7 +256,7 @@ def rename_files(path, special):
         if len(set([x[3] for x in possible_special if x != "SXX"])) > 0:
             extras = []
             for poss in possible_special:
-                if poss[3] != "SXX":
+                if poss[3] != "SXX" and poss[3] != "NaN":
                     extras.append(f"{os.path.basename(poss[1])};{int(poss[3][1:])}")
             extra_episode_info.update(special_info(extras))
     print_formatted_text("\n[i] Origin path: {}".format(path))

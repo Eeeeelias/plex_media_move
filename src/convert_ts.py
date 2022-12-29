@@ -44,9 +44,11 @@ def ffmpeg_convert(path, filetype=".ts"):
 
 def viewer_convert(num_list: list, src_path: str, filetype: str):
     files = mediainfolib.read_existing_list(src_path)
-    filetype = filetype if filetype else ".ts"
+    filetype = filetype if filetype else "tbd"
 
     for file in files:
+        if filetype == "tbd":
+            filetype = os.path.splitext(file[1])[1]
         if int(file[0]) in num_list or num_list == []:
             ffmpeg_convert(file[1], filetype)
 
