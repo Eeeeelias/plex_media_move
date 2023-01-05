@@ -128,15 +128,16 @@ def movie_checker(movie_title, path, ext=".mp4"):
     movie_moves = []
     for movie in glob.glob(path + "/*"):
 
+        if (os.path.isfile(movie) or os.path.isdir(movie)) and movie_title in movie:
+            print_formatted_text(HTML('<ansired>[w] "{}" exists already. Overwrite [y/N]?</ansired>'.format(movie_title)))
+            overwrite = prompt(HTML("<ansiblue>=></ansiblue>"))
+            if overwrite.lower() == "y":
+                movie_moves.append(path + "/" + movie_title + ext)
+                continue
         # check if there may already be versions of that movie
         if os.path.isdir(movie) and movie_title in movie:
             print_formatted_text(
-                HTML(
-                    '<ansired>[w] Versions of "{}" exist. Please name this version</ansired>'.format(
-                        movie_title
-                    )
-                )
-            )
+                HTML('<ansired>[w] Versions of "{}" exist. Please name this version</ansired>'.format(movie_title)))
             version_name = prompt(HTML("<ansiblue>[a] Version name: </ansiblue>"))
             if version_name == "":
                 movie_title_version = movie_title + ext
@@ -144,30 +145,18 @@ def movie_checker(movie_title, path, ext=".mp4"):
                 movie_title_version = movie_title + " - " + version_name + ext
             while os.path.isfile(movie + "/" + movie_title_version):
                 version_name = prompt(
-                    HTML(
-                        "<ansiblue>[a] This version already exists! Give a valid name: </ansiblue>"
-                    )
-                )
+                    HTML("<ansiblue>[a] This version already exists! Give a valid name: </ansiblue>"))
                 movie_title_version = movie_title + " - " + version_name + ext
-            print_formatted_text(
-                "[i] Movie is now called: {}".format(movie_title_version)
-            )
+            print_formatted_text("[i] Movie is now called: {}".format(movie_title_version))
             movie_moves.append(movie + "/" + movie_title_version)
 
         # check if the movie exists already and move both to a folder with a given version name
         elif os.path.isfile(movie) and movie_title in movie:
             print_formatted_text(
-                HTML(
-                    '<ansired>[w] "{}" exists already. Do you want to add the current one as a version?</ansired>'.format(
-                        movie_title
-                    )
-                )
-            )
-            version_name = prompt(
-                HTML(
-                    "<ansiblue>[a] Put in the name of the version or press [ENTER] to skip this file: </ansiblue>"
-                )
-            )
+                HTML('<ansired>[w] "{}" exists already. Do you want to add the current one as a version?</ansired>'.format(
+                        movie_title)))
+            version_name = prompt(HTML(
+                "<ansiblue>[a] Put in the name of the version or press [ENTER] to skip this file: </ansiblue>"))
             # skip if wanted
             if version_name == "":
                 return None
@@ -177,10 +166,7 @@ def movie_checker(movie_title, path, ext=".mp4"):
             print("[i] Movie is now called: {}".format(movie_title_version))
             print("[i] Now please also add a version name to the existing movie")
             version_name_existing = prompt(
-                HTML(
-                    "<ansiblue>[a] Input the version name of the existing movie: </ansiblue>"
-                )
-            )
+                HTML("<ansiblue>[a] Input the version name of the existing movie: </ansiblue>"))
             exist_vers_name = movie_title + " - " + version_name_existing + ext
             while version_name == version_name_existing:
                 version_name_existing = prompt(
