@@ -4,6 +4,7 @@ from typing import List
 from src.mediainfolib import data_path, seperator as sep, cut_name, clear
 from prompt_toolkit import HTML, print_formatted_text, prompt
 
+
 def read_log():
     log_file = data_path + f"{sep}mover.log"
     changed_files = []
@@ -41,10 +42,9 @@ def print_logs(media: List, length = 20):
     test = f"    # <ansigreen>{'Original Name'.ljust(old_size)}</ansigreen> | <ansigreen>{'New Name'.ljust(new_size)}</ansigreen> | <ansigreen>{'Type'.ljust(type_size)}</ansigreen> | <ansigreen>{'Time'.ljust(time_size)}</ansigreen> #"
     print(top)
     print_formatted_text(HTML(test))
-    for i in media[length::-1]:
+    for i in media[len(media) - length:]:
         print(f"    # {cut_name(i[0], old_size, pos='mid').ljust(old_size)} | {cut_name(i[1], new_size, pos='mid').ljust(new_size)} | {i[2].ljust(type_size)} | {i[3]} #")
     print(top)
-
 
 
 def main():

@@ -19,8 +19,8 @@ def fetch_files(movie_path):
     rel_folder = []
     # for folder in movie_path:
     folder = movie_path
-    if glob.glob(folder + "/*.srt") and not glob.glob(folder + "/.tmp"):
-        rel_folder.append(glob.glob(folder + "/*"))
+    if glob.glob(folder + "/*.srt") or glob.glob(folder + "/*.ass") and not glob.glob(folder + "/.tmp"):
+        rel_folder.append([x for x in glob.glob(folder + "/*") if os.path.isfile(x)])
     return rel_folder
 
 
@@ -33,12 +33,12 @@ def interactive():
         return None
     if os.path.isdir(movie):
         return fetch_files(movie)
-    sub_file = session.prompt(HTML("<ansiblue>[a] Specify a subtitle file (.srt): </ansiblue>"),
+    sub_file = session.prompt(HTML("<ansiblue>[a] Specify a subtitle file (.srt or .ass): </ansiblue>"),
                               completer=PathCompleter()).lstrip('"').rstrip('"')
     while sub_file != "":
         while not os.path.isfile(sub_file):
             print_formatted_text(HTML("<ansired> This is not a file!</ansired>"))
-            sub_file = session.prompt(HTML("<ansiblue>[a] Specify a subtitle file (.srt): </ansiblue>"),
+            sub_file = session.prompt(HTML("<ansiblue>[a] Specify a subtitle file (.srt or .ass): </ansiblue>"),
                                       completer=PathCompleter()).lstrip('"').rstrip('"')
         relevant_files.append(sub_file)
         sub_file = session.prompt(HTML("<ansiblue>[a] Specify another subtitle file ([ENTER] to finish): </ansiblue>"),
@@ -47,9 +47,12 @@ def interactive():
     return [relevant_files]
 
 
-# needs to be changed!
 def sub_in_movie(movie_files, out_path):
-    subs = [x for x in movie_files if ".srt" in x]
+    ext = set(os.path.splitext(x)[1] for x in movie_files)
+    sub_type = ".srt" if {".srt"}.issubset(ext) else ".ass"
+
+    subs = [x for x in movie_files if sub_type in x]
+
     subs_with_lang = {}
     try:
         for sub in subs:
@@ -59,16 +62,16 @@ def sub_in_movie(movie_files, out_path):
     except AttributeError:
         print_formatted_text(HTML("<ansired>[w] Your subtitles aren't named properly!</ansired>"))
         return
-    movie = [x for x in movie_files if ".srt" not in x][0]
+    movie = [x for x in movie_files if sub_type not in x][0]
     out = out_path + f"{sep}{os.path.splitext(os.path.basename(movie))[0]}.mkv"
     print("Movie: {}".format(os.path.split(movie)[1]))
     inputs = ["ffmpeg", "-loglevel", "warning", "-i", movie]
     maps = ["-map", "0"]
-    codecs = ["-c:v", "copy", "-c:a", "copy", "-c:s", "srt"]
+    codecs = ["-c:v", "copy", "-c:a", "copy", "-c:s", sub_type[1:]]
     metadata = []
     for i, (key, value) in enumerate(subs_with_lang.items()):
         print("{} Subs: {}".format(convert_country(key), os.path.split(value)[1]))
-        sub = ["-f", "srt", "-i", value]
+        sub = ["-f", sub_type[1:], "-i", value]
         new_map = ["-map", f"{i + 1}:s"]
         new_metadata = [f"-metadata:s:s:{i}", f"language={key}"]
         inputs.extend(sub)
@@ -76,6 +79,7 @@ def sub_in_movie(movie_files, out_path):
         metadata.extend(new_metadata)
     ffmpeg_full = inputs + maps + codecs + metadata
     ffmpeg_full.append(out)
+    print(ffmpeg_full)
     subprocess.run(ffmpeg_full)
 
 
@@ -91,7 +95,7 @@ def main():
             return
     else:
         if sys.argv[1] == "-h":
-            print("argument 1: path containing .srt files\nargument 2: output path")
+            print("argument 1: path containing .srt or .ass files\nargument 2: output path")
             exit(0)
         subs_to_combine = fetch_files(sys.argv[1])
         output = sys.argv[2]
