@@ -219,8 +219,8 @@ def get_movie_year(filename):
     filename_with_year = filename
     filename_split = os.path.splitext(filename)
     if re.search(r"\(\d{4}\)", filename_split[0]) is None:
-        year = prompt(HTML('<ansiblue>[a] This movie appears to not have a proper year! Please specify the year the '
-                           'movie came out: </ansiblue>'))
+        year = prompt(HTML(f'<ansiblue>[a] \"{filename_split[0]}\" appears to not have a proper year! Please specify '
+                           f'the year the movie came out: </ansiblue>'))
         if re.search(r"\d{4}", year) is None:
             year = 1900
         # get rid of () in case Audials adds it (i.e. when it can't find the year for a movie)
