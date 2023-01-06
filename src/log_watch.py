@@ -1,6 +1,8 @@
 import re
-from mediainfolib import data_path, seperator as sep
-
+import os
+from typing import List
+from src.mediainfolib import data_path, seperator as sep, cut_name, clear
+from prompt_toolkit import HTML, print_formatted_text, prompt
 
 def read_log():
     log_file = data_path + f"{sep}mover.log"
@@ -29,11 +31,35 @@ def read_log():
     return changed_files
 
 
-def print_logs():
-    pass
+def print_logs(media: List, length = 20):
+    term_size = os.get_terminal_size().columns - 6
+    type_size = 7
+    time_size = 19
+    old_size = int((term_size - type_size - time_size) / 2) - 6
+    new_size = int((term_size - type_size - time_size) / 2) - 7
+    top = "    " +'#' * term_size
+    test = f"    # <ansigreen>{'Original Name'.ljust(old_size)}</ansigreen> | <ansigreen>{'New Name'.ljust(new_size)}</ansigreen> | <ansigreen>{'Type'.ljust(type_size)}</ansigreen> | <ansigreen>{'Time'.ljust(time_size)}</ansigreen> #"
+    print(top)
+    print_formatted_text(HTML(test))
+    for i in media[length::-1]:
+        print(f"    # {cut_name(i[0], old_size, pos='mid').ljust(old_size)} | {cut_name(i[1], new_size, pos='mid').ljust(new_size)} | {i[2].ljust(type_size)} | {i[3]} #")
+    print(top)
 
 
-if __name__ == "__main__":
+
+def main():
+    curr_length = 20
     logs = read_log()
-    for entry in logs:
-        print(entry)
+    while True:
+        print_logs(logs, curr_length)
+        inp = prompt(HTML("<ansiblue>=> </ansiblue>"))
+        if inp.lower() == "m":
+            curr_length += 20
+        if inp.lower() == "a":
+            curr_length = len(logs)
+        if inp.lower() == "l":
+            curr_length = int(curr_length / 2)
+        if inp.lower() == "q":
+            clear()
+            return
+        clear()

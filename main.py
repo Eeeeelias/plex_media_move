@@ -99,6 +99,7 @@ def main():
         "c": change_config.main,
         "6": file_editor.main,
         "file editor": file_editor.main,
+        "log": log_watch.main,
         "close": exit_rm,
         "q": exit_rm,
         "quit": exit_rm,
@@ -123,7 +124,7 @@ if __name__ == '__main__':
     from src.mediainfolib import get_config, clear, get_source_files, current_files_info, remove_video_list
     try:
         check_for_setup()
-        from src import ffmpeg_edits, convert_ts, search_db, rename, change_config, file_editor
+        from src import ffmpeg_edits, convert_ts, search_db, rename, change_config, file_editor, log_watch
         import media_mover
         from prompt_toolkit import HTML, print_formatted_text, prompt
         from sys import exit
