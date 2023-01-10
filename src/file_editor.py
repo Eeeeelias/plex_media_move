@@ -65,14 +65,15 @@ def input_parser(input: str) -> tuple:
 
 
 def show_all_files(ex):
-    border_bar = "    " + "#" * 114
-    empty_row = "    #{:112}#".format(" ")
+    term_size = os.get_terminal_size().columns - 6
+    border_bar = "    " + "#" * term_size
+    empty_row = f"    #{' '.ljust(term_size-2)}#"
     display_string = f"""{border_bar}\n"""
-    header_string = "    # {:<6}{:<40}{:<34}{:<6}{:<7}{:<10}{:<7} #"
-    file_string = "    # <ansigreen>{:<6}</ansigreen>{:<40}{:<34}{:<6}{:<7}{:<10}{:<7} #"
-    small_string = "    # <ansigreen>{:<6}</ansigreen>{:<40}{:<34}{:<6}{:<7}<ansired>{:<10}</ansired>{:<7} #"
+    name_string = int((term_size - 6 - 6 - 7 - 10 - 7) / 2) - 5
+    header_string = f"    # {'Nr.'.ljust(6)}{'Filename'.ljust(name_string+3)}{'Title'.ljust(name_string+3)}" \
+                    f"{'S.'.ljust(6)}{'Ep.'.ljust(7)}{'Size'.ljust(10)}{'Dur.'.ljust(7)} #"
     print_formatted_text(HTML(display_string), end='')
-    print(header_string.format("Nr.", "Filename", "Title", "S.", "Ep.", "Size", "Dur."))
+    print(header_string)
     # files info be like:
     # [vid_nr, video, media_name, "SXX", "EXX", "N", duration_vid]
     # [     0,     1,          2,     3,     4,   5,            6]
@@ -82,13 +83,14 @@ def show_all_files(ex):
         if prev != os.path.split(file[1])[0]:
             prev = os.path.split(file[1])[0]
             print(empty_row)
-        if file[5] == "N":
-            print_string = file_string
-        else:
-            print_string = small_string
-        print_formatted_text(HTML(print_string.format(
-            f"[{file[0]}]", cut_name(os.path.basename(file[1]), 39, pos="mid"), cut_name(file[2], 33), file[3], file[4],
-            f"{int(convert_size(int(file[6]), unit='mb'))} MB", convert_millis(int(file[7]))).replace("&", "&amp;")))
+
+        size = f'{int(convert_size(int(file[6]), unit="mb"))} MB'.ljust(10)
+        size = f'<ansired>{size}</ansired>' if file[5] != "N" else size
+        print_formatted_text(
+            HTML(f"    # <ansigreen>{f'[{file[0]}]'.ljust(6)}</ansigreen>"
+                 f"{cut_name(os.path.basename(file[1]), name_string, pos='mid').ljust(name_string+3)}"
+                 f"{cut_name(file[2], name_string).ljust(name_string+3)}{file[3].ljust(6)}{file[4].ljust(7)}"
+                 f"{size}{convert_millis(int(file[7])).replace('&', '&amp;').ljust(7)} #"))
     display_string = f"{border_bar}\n\t"
     # clear()
     print(empty_row)
@@ -130,7 +132,7 @@ def set_title(num_list: list, src_path: str, title: str):
     new_files = []
     files = read_existing_list(src_path)
     if not title:
-        print_formatted_text(HTML("<ansired> No title provided!"))
+        print_formatted_text(HTML("<ansired> No title provided!</ansired>"))
         return
 
     for i, file in enumerate(files):
