@@ -96,19 +96,24 @@ def get_source_files() -> tuple:
     return source_files, n_files, n_paths
 
 
-def current_files_info(c: int, files: list, max_len=36) -> str:
-    if c > len(files) - 1:
-        return " " * max_len
-    if os.path.isdir(files[c]):
-        return f"<ansigreen>{cut_name(files[c], max_len, pos='left')}</ansigreen>".ljust(max_len + 23)
-    if c == 16 and len(files) > 16 and max_len == 37:
-        return f". . . ({len(files[16:])} more)".ljust(max_len)
+def current_files_info(c: int, files: list, max_len=36) -> list:
+    display_list = []
+    for i in range(c+1):
+        if i > len(files) - 1:
+            display_list.append(" " * max_len)
+        elif os.path.isdir(files[i]):
+            display_list.append(f"<ansigreen>{cut_name(files[i], max_len, pos='left')}</ansigreen>".ljust(max_len + 23))
+        elif i == 16 and len(files) > 16 and max_len == 37:
+            display_list.append(f". . . ({len(files[16:])} more)".ljust(max_len))
+        else:
+            ep = re.search(r"[Ss]\d+[Ee]\d+.*", files[i])
+            if ep is not None:
+                cut = len(ep.group()) if len(ep.group()) < 20 else 20
+                display_list.append(f"{cut_name(files[i], max_len, pos='mid', mid=cut)}".ljust(max_len))
+                continue
+            display_list.append(f"{cut_name(files[i], max_len, pos='mid')}".ljust(max_len))
 
-    ep = re.search(r"[Ss]\d+[Ee]\d+.*", files[c])
-    if ep is not None:
-        cut = len(ep.group()) if len(ep.group()) < 20 else 20
-        return f"{cut_name(files[c], max_len, pos='mid', mid=cut)}".ljust(max_len)
-    return f"{cut_name(files[c], max_len, pos='mid')}".ljust(max_len)
+    return display_list
 
 
 def get_duration(filename) -> int:

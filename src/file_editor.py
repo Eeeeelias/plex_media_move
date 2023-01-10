@@ -67,10 +67,10 @@ def input_parser(input: str) -> tuple:
 def show_all_files(ex):
     term_size = os.get_terminal_size().columns - 6
     border_bar = "    " + "#" * term_size
-    empty_row = f"    #{' '.ljust(term_size-2)}#"
+    empty_row = f"    #{' '.ljust(term_size - 2)}#"
     display_string = f"""{border_bar}\n"""
     name_string = int((term_size - 6 - 6 - 7 - 10 - 7) / 2) - 5
-    header_string = f"    # {'Nr.'.ljust(6)}{'Filename'.ljust(name_string+3)}{'Title'.ljust(name_string+3)}" \
+    header_string = f"    # {'Nr.'.ljust(6)}{'Filename'.ljust(name_string + 3)}{'Title'.ljust(name_string + 3)}" \
                     f"{'S.'.ljust(6)}{'Ep.'.ljust(7)}{'Size'.ljust(10)}{'Dur.'.ljust(7)} #"
     print_formatted_text(HTML(display_string), end='')
     print(header_string)
@@ -88,8 +88,8 @@ def show_all_files(ex):
         size = f'<ansired>{size}</ansired>' if file[5] != "N" else size
         print_formatted_text(
             HTML(f"    # <ansigreen>{f'[{file[0]}]'.ljust(6)}</ansigreen>"
-                 f"{cut_name(os.path.basename(file[1]), name_string, pos='mid').ljust(name_string+3)}"
-                 f"{cut_name(file[2], name_string).ljust(name_string+3)}{file[3].ljust(6)}{file[4].ljust(7)}"
+                 f"{cut_name(os.path.basename(file[1]), name_string, pos='mid').ljust(name_string + 3)}"
+                 f"{cut_name(file[2], name_string).ljust(name_string + 3)}{file[3].ljust(6)}{file[4].ljust(7)}"
                  f"{size}{convert_millis(int(file[7])).replace('&', '&amp;').ljust(7)} #"))
     display_string = f"{border_bar}\n\t"
     # clear()
@@ -243,7 +243,8 @@ def main():
             nums, funcs_dict = input_parser(action)
         except AttributeError:
             clear()
-            print_formatted_text(HTML("<ansired>    Not a well formed command! Use  \"help\" to get more info</ansired>"))
+            print_formatted_text(
+                HTML("<ansired>    Not a well formed command! Use  \"help\" to get more info</ansired>"))
             continue
         for funct_name, modifier in funcs_dict.items():
             funct = funcs.get(funct_name)

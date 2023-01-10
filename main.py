@@ -41,29 +41,30 @@ def greetings_big():
         files_info.append(keys)
         files_info.extend(values)
         files_info.append("")
+    display_files = current_files_info(18, files_info)
     print_formatted_text(HTML(f"""
     ###################################################################################################################
     #                                                                          # {top_info} #
     # This little tool helps you sort, convert, combine or fix your media      #                                      #
-    # files so you can easily give them to Plex or Jellyfin.                   # {current_files_info(0, files_info)} #
-    # Just select what you want to do:                                         # {current_files_info(1, files_info)} #
-    #                                                                          # {current_files_info(2, files_info)} #
-    #                                                                          # {current_files_info(3, files_info)} #
-    # [1] {gs}media mover{ge} - moves your media files to your plex folder             # {current_files_info(4, files_info)} #
-    #                                                                          # {current_files_info(5, files_info)} #
-    # [2] {gs}video edits{ge} - combine, concatenate or cut videos                     # {current_files_info(6, files_info)} #
-    #                                                                          # {current_files_info(7, files_info)} #
-    # [3] {gs}shifting{ge}    - shift all episode numbers of a show by a given         # {current_files_info(8, files_info)} #
-    #                   amount                                                 # {current_files_info(9, files_info)} #
-    #                                                                          # {current_files_info(10, files_info)} #
-    # [4] {gs}converter{ge}   - convert folders of weird formats (like .ts) into .mp4  # {current_files_info(11, files_info)} #
-    #                                                                          # {current_files_info(12, files_info)} #
-    # [5] {gs}db search{ge}   - search through your local media database               # {current_files_info(13, files_info)} #
-    #                                                                          # {current_files_info(14, files_info)} #
-    # [6] {gs}file view{ge}   - view and modify all found files                        # {current_files_info(15, files_info)} #
-    #                                                                          # {current_files_info(16, files_info)} #
-    # [i] Press [c] to change your config                                      # {current_files_info(17, files_info)} #
-    #                                                                          # {current_files_info(18, files_info)} #
+    # files so you can easily give them to Plex or Jellyfin.                   # {display_files[0]} #
+    # Just select what you want to do:                                         # {display_files[1]} #
+    #                                                                          # {display_files[2]} #
+    #                                                                          # {display_files[3]} #
+    # [1] {gs}media mover{ge} - moves your media files to your plex folder             # {display_files[4]} #
+    #                                                                          # {display_files[5]} #
+    # [2] {gs}video edits{ge} - combine, concatenate or cut videos                     # {display_files[6]} #
+    #                                                                          # {display_files[7]} #
+    # [3] {gs}shifting{ge}    - shift all episode numbers of a show by a given         # {display_files[8]} #
+    #                   amount                                                 # {display_files[9]} #
+    #                                                                          # {display_files[10]} #
+    # [4] {gs}converter{ge}   - convert folders of weird formats (like .ts) into .mp4  # {display_files[11]} #
+    #                                                                          # {display_files[12]} #
+    # [5] {gs}db search{ge}   - search through your local media database               # {display_files[13]} #
+    #                                                                          # {display_files[14]} #
+    # [6] {gs}file view{ge}   - view and modify all found files                        # {display_files[15]} #
+    #                                                                          # {display_files[16]} #
+    # [i] Press [c] to change your config                                      # {display_files[17]} #
+    #                                                                          # {display_files[18]} #
     ###################################################################################################################
 
 
@@ -82,7 +83,9 @@ def exit_rm():
     exit(0)
 
 
-def main():
+def get_options():
+    from src import ffmpeg_edits, convert_ts, search_db, rename, change_config, file_editor, log_watch
+    import media_mover
     # define a dictionary mapping tool names to functions
     tools = {
         "1": media_mover.main,
@@ -105,12 +108,20 @@ def main():
         "quit": exit_rm,
         "exit": exit_rm,
     }
+    return tools
 
+
+def main():
+    startup = True
+    tools = {}
     while True:
         if os.get_terminal_size().columns >= 120:
             greetings_big()
         else:
             greetings()
+        if startup:
+            tools = get_options()
+            startup = False
         tool = prompt(HTML("<ansiblue>=> </ansiblue>"))
         # check if the user entered a valid tool name
         if tool in tools:
@@ -123,11 +134,10 @@ def main():
 if __name__ == '__main__':
     from src.mediainfolib import get_config, clear, get_source_files, current_files_info, remove_video_list
     try:
-        check_for_setup()
-        from src import ffmpeg_edits, convert_ts, search_db, rename, change_config, file_editor, log_watch
-        import media_mover
+        import time
         from prompt_toolkit import HTML, print_formatted_text, prompt
         from sys import exit
+        check_for_setup()
         main()
     except KeyboardInterrupt:
         print("Exiting")
