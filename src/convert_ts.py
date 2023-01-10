@@ -44,13 +44,16 @@ def ffmpeg_convert(path, filetype=".ts"):
 
 def viewer_convert(num_list: list, src_path: str, filetype: str):
     files = mediainfolib.read_existing_list(src_path)
-    filetype = filetype if filetype else "tbd"
-
+    file_ext = filetype if filetype else "tbd"
     for file in files:
-        if filetype == "tbd":
-            filetype = os.path.splitext(file[1])[1]
+        if file_ext == "tbd":
+            file_ext = os.path.splitext(file[1])[1]
+        if file_ext == ".mp4":
+            file_ext = filetype if filetype else "tbd"
+            continue
         if int(file[0]) in num_list or num_list == []:
-            ffmpeg_convert(file[1], filetype)
+            ffmpeg_convert(file[1], file_ext)
+        file_ext = filetype if filetype else "tbd"
 
 
 def converting(unconverted_path, filetype=".ts"):
