@@ -159,9 +159,9 @@ def delete_sussy(nums, src_path, modifier=None):
         return
 
 
-def get_files(src_path):
-    source_files, n_videos, n_folders = get_source_files()
-    ex_videos = read_existing_list(src_path) if os.path.isfile(f"{src_path}/video_list.tmp") else []
+def get_files(src_path, list_path):
+    source_files, n_videos, n_folders = get_source_files(src_path)
+    ex_videos = read_existing_list(list_path) if os.path.isfile(f"{list_path}/video_list.tmp") else []
     vid_nr = 0
     videos = []
     avg_vid_size = None
@@ -199,13 +199,14 @@ def get_files(src_path):
         for i, video in enumerate(videos):
             video[0] = i
 
-    write_video_list(videos, src_path)
+    write_video_list(videos, list_path)
 
 
 def main():
     print("Loading...")
     conf = get_config()
     src_path = conf['mover']['orig_path']
+    vid_path = conf['mover']['orig_path']
     funcs = {
         'd': delete_sussy,
         's': set_season,
@@ -214,13 +215,13 @@ def main():
         'c': convert_ts.viewer_convert,
         'm': media_mover.viewer_rename,
     }
-    get_files(src_path)
+    get_files(vid_path, src_path)
     clear()
-    show_all_files(read_existing_list(src_path))
+    show_all_files(read_existing_list(vid_path))
     window_draw = False
     while True:
         if window_draw:
-            get_files(src_path)
+            get_files(vid_path, src_path)
             ex = read_existing_list(src_path)
             show_all_files(ex)
         window_draw = True
@@ -237,6 +238,16 @@ def main():
         if action.lower() == "q!":
             remove_video_list(src_path)
             exit(0)
+
+        # ability to change dirs
+        if action.lower().split(" ")[0] == "cd":
+            if not os.path.isdir(action[3:]):
+                clear()
+                print_formatted_text(HTML("<ansired>    Not a directory!</ansired>"))
+                continue
+            vid_path = action[3:]
+            clear()
+            continue
 
         # if none of the above apply, check for function
         try:

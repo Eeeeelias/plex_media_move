@@ -61,7 +61,7 @@ def check_ffmpeg() -> bool:
 
 
 # return all source videos that can be found, with a number indicating the amount
-def get_source_files() -> tuple:
+def get_source_files(video_folder=None) -> tuple:
     """
     Retrieves the list of files in the `source_path` specified in the `get_config()` dictionary, including files in
     subdirectories.
@@ -69,7 +69,7 @@ def get_source_files() -> tuple:
     The filenames in each directory are sorted alphabetically.
     """
     config = get_config()
-    source_path = config['mover']['orig_path']
+    source_path = video_folder if video_folder else config['mover']['orig_path']
     try:
         filetypes = config['mover']['filetypes'].split(' ')
     except KeyError:
