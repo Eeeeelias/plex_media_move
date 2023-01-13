@@ -14,7 +14,7 @@ from prompt_toolkit.history import FileHistory
 
 # importing is buggy?
 if len(sys.argv) == 1:
-    from src.mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep
+    from src.mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep, FileValidator
 else:
     from mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep
 
@@ -65,22 +65,22 @@ session = PromptSession(history=FileHistory(f"{data_path}{sep}.movcomb"))
 
 def interactive():
     start = """
-    [i] ===================================================================== [i]
-    [i]                        Movie Combine                                  [i]
-    [i] ===================================================================== [i]
-    [i] This script will help you combine two movies to have a smaller movie  [i]
-    [i] with two audio streams and one video. Its intended use is to merge    [i]
-    [i] movies that just differ in their audio language so to save on storage [i]
-    [i] space. For example:                                                   [i]
-    [i] Jurassic Park (1993) - English.mp4 and                                [i]
-    [i] Jurassic Park (1993) - Deutsch.mp4 to                                 [i]
-    [i] =>  Jurassic Park (1993).mkv (1 video stream, 2 audio streams)        [i]
-    [i]                                                                       [i]
-    [i] Now, let's get right to it!                                           [i]
-    [i] ===================================================================== [i] 
-    """
+    ############################################################################
+    #                             Combine two Videos!                          #
+    #                                                                          #
+    #  Jurrasic Park (1993) - Ver1.mp4   |  Jurrasic Park (1993) - Ver1.mp4    #
+    #  <ansigreen>§§§§§§§ Video Track 1 §§§§§§§§§</ansigreen>   |  <ansiyellow>§§§§§§§ Video Track 2 §§§§§§§§§</ansiyellow>    #
+    #  <ansiblue>~~~~~~~ Audio Track 1 ~~~~~~~~~</ansiblue>   |  <ansicyan>~~~~~~~ Audio Track 2 ~~~~~~~~~</ansicyan>    #
+    #                                                                          #
+    # =>        | Jurrasic Park (1993).mkv        |                            #
+    #           | <ansigreen>§§§§§§§ Video Track 1 §§§§§§§§§</ansigreen> |                            #
+    #           | <ansiblue>~~~~~~~ Audio Track 1 ~~~~~~~~~</ansiblue> |                            #
+    #           | <ansicyan>~~~~~~~ Audio Track 2 ~~~~~~~~~</ansicyan> |                            #
+    #                                                                          #
+    ############################################################################ 
+"""
 
-    print_formatted_text(start)
+    print_formatted_text(HTML(start))
     if os.path.isfile(os.path.expanduser("~/prev")):
         prev = prompt(
             HTML("<ansiblue>[a] Do you want to use the previous movie with a different offset? [y/N]: </ansiblue>"))
@@ -91,37 +91,17 @@ def interactive():
             return 0, 0, 0, 0, 0, 0
 
     movie_en = session.prompt(HTML("<ansiblue>[a] Firstly, give the path of the first movie:</ansiblue>"),
-                              completer=PathCompleter()).lstrip('"').rstrip('"')
-    while not os.path.isfile(movie_en):
-        movie_en = (
-            session.prompt(
-                HTML("<ansiblue>[a] This is not a file! Make sure you spelled the path correctly:</ansiblue>"),
-                completer=PathCompleter())
-                .lstrip('"')
-                .rstrip('"')
-        )
-
+                              completer=PathCompleter(), validator=FileValidator()).lstrip('"').rstrip('"')
+    if movie_en == 'q':
+        return 0, 0, 0, 0, 0, 0
     lan_en = session.prompt(
         HTML("<ansiblue>[a] Please also specify the language using ISO 639-2 codes (e.g. eng, de, jpn): </ansiblue>"))
     print_formatted_text(
         "\n[i] Great, now that we have the first movie let's get the second movie from which we will only take the "
         "audio.")
 
-    movie_de = (
-        session.prompt(HTML("<ansiblue>[a] Please also give the path of this movie:</ansiblue>"),
-                       completer=PathCompleter())
-            .lstrip('"')
-            .rstrip('"')
-    )
-
-    while not os.path.isfile(movie_de):
-        movie_de = (
-            session.prompt(
-                HTML("<ansiblue>[a] This is not a file! Make sure you spelled the path correctly:</ansiblue>"),
-                completer=PathCompleter())
-                .lstrip('"')
-                .rstrip('"')
-        )
+    movie_de = (session.prompt(HTML("<ansiblue>[a] Please also give the path of this movie:</ansiblue>"),
+                               completer=PathCompleter(), validator=FileValidator()).lstrip('"').rstrip('"'))
 
     lan_de = session.prompt(
         HTML("<ansiblue>[a] Again, please specify the language using ISO 639-2 codes:</ansiblue>")
@@ -184,6 +164,7 @@ def delete_movies(movie_en, movie_de):
         time.sleep(2)
         os.remove(movie_en)
         os.remove(movie_de)
+        os.remove(os.path.expanduser("~/prev"))
     return
 
 

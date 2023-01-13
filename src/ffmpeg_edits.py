@@ -6,7 +6,7 @@ from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit import prompt, HTML, print_formatted_text
 
 from src import combine_sub_with_movie, extract_songs, py_combine_movies
-from src.mediainfolib import clear, seperator as sep
+from src.mediainfolib import clear, seperator as sep, FileValidator
 
 
 def give_options():
@@ -79,28 +79,18 @@ def cut_positions(start=True):
 
 def concat_videos():
     example_file_print()
-    input_file = prompt(HTML("<ansiblue>Your file: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
+    input_file = prompt(HTML("<ansiblue>Your file: </ansiblue>"), completer=PathCompleter(), validator=FileValidator()).lstrip('"').rstrip('"')
     if input_file == "q":
         return
-    while not os.path.isfile(input_file):
-        print_formatted_text(HTML("<ansired> [w] Not a file! Try again.</ansired>"))
-        input_file = prompt(HTML("<ansiblue>Your file: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
-        if input_file == "q":
-            return
     new_file = concat_video_name(input_file)
     print("[i] New file will be: {}".format(new_file))
     subprocess.run(["ffmpeg", "-f", "concat", "-safe", "0", "-i", input_file, "-c", "copy", new_file])
 
 
 def cut_video():
-    input_file = prompt(HTML("<ansiblue>Video you want to cut: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
+    input_file = prompt(HTML("<ansiblue>Video you want to cut: </ansiblue>"), completer=PathCompleter(), validator=FileValidator()).lstrip('"').rstrip('"')
     if input_file == "q":
         return
-    while not os.path.isfile(input_file):
-        print_formatted_text(HTML("<ansired> [w] Not a file! Try again.</ansired>"))
-        input_file = prompt(HTML("<ansiblue>Your file: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
-        if input_file == "q":
-            return
     start = cut_positions()
     end = cut_positions(start=False)
     new_file = cut_video_name(input_file)

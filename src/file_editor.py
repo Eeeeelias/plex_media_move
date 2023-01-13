@@ -1,8 +1,10 @@
 import os.path
 import re
 
+from prompt_toolkit.completion import PathCompleter
+
 import media_mover
-from src import manage_db, convert_ts
+from src import manage_db, convert_ts, change_config
 from src.mediainfolib import get_source_files, convert_size, convert_millis, get_duration, \
     seperator as sep, avg_video_size, clear, remove_video_list, get_config, write_video_list, read_existing_list, \
     cut_name, season_episode_matcher, check_database_ex, strip_show_name
@@ -206,7 +208,7 @@ def main():
     print("Loading...")
     conf = get_config()
     src_path = conf['mover']['orig_path']
-    vid_path = conf['mover']['orig_path']
+    vid_path = conf['viewer']['default_view']
     funcs = {
         'd': delete_sussy,
         's': set_season,

@@ -4,7 +4,7 @@ import re
 import subprocess
 from sys import exit
 from src import mediainfolib
-from src.mediainfolib import seperator as sep, data_path, get_config
+from src.mediainfolib import seperator as sep, data_path, get_config, FileValidator
 from prompt_toolkit import print_formatted_text, PromptSession, HTML
 from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit.history import FileHistory
@@ -35,13 +35,9 @@ def greeting():
 
 def interactive():
     song_file = session.prompt(HTML("<ansiblue>Paste the .mp3 file you downloaded from youtube: </ansiblue>"),
-                               completer=PathCompleter()).lstrip('"').rstrip('"')
+                               completer=PathCompleter(), validator=FileValidator()).lstrip('"').rstrip('"')
     if song_file == "q":
         return [None, None, None, None]
-    while not os.path.isfile(song_file):
-        print_formatted_text(HTML("<ansired> [w] This is not a file!</ansired>"))
-        song_file = session.prompt(HTML("<ansiblue>Paste the mp3 file you downloaded from youtube: </ansiblue>"),
-                                   completer=PathCompleter()).lstrip('"').rstrip('"')
     album = session.prompt(HTML("<ansiblue>Specify the album name ([ENTER] to take from file): </ansiblue>"))
     info = session.prompt(HTML("<ansiblue>Paste the timestamps from youtube (or give a file): </ansiblue>")).lstrip(
         '"').rstrip('"')

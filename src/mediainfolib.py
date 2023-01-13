@@ -6,6 +6,8 @@ import json
 import subprocess
 from sys import platform
 from difflib import SequenceMatcher as SM
+from prompt_toolkit.validation import Validator, ValidationError
+
 
 try:
     import pycountry
@@ -29,6 +31,20 @@ data_path = os.getenv(env) + seperator + folder
 if not os.path.exists(data_path):
     os.mkdir(data_path)
 config_path = data_path + f"{seperator}config.json"
+
+
+class PathValidator(Validator):
+    def validate(self, document):
+        text = document.text
+        if text and text != 'q' and not os.path.isdir(text):
+            raise ValidationError(message='This is not a directory!')
+
+
+class FileValidator(Validator):
+    def validate(self, document):
+        text = document.text
+        if text and text != 'q' and not os.path.isfile(text):
+            raise ValidationError(message='This is not a file!')
 
 
 def get_config() -> dict:
@@ -71,11 +87,11 @@ def get_source_files(video_folder=None) -> tuple:
     config = get_config()
     source_path = video_folder if video_folder else config['mover']['orig_path']
     try:
-        filetypes = config['mover']['filetypes'].split(' ')
+        filetypes = config['viewer']['filetypes'].split(' ')
     except KeyError:
         from src.change_config import default_configs
-        default_configs(config, ('mover', 'filetypes'))
-        filetypes = config['mover']['filetypes'].split(' ')
+        default_configs(config)
+        filetypes = config['viewer']['filetypes'].split(' ')
     source_files = {}
     n_files = 0
     n_paths = 0

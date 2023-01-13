@@ -14,6 +14,7 @@ def greetings():
     # [1] {gs}media mover{ge}                                                          #
     # [2] {gs}combiner{ge}                                                             #
     # [3] {gs}database{ge}                                                             #
+    # [4] {gs}viewer{ge}                                                               #
     #                                                                          #
     ############################################################################
 
@@ -30,7 +31,7 @@ def default_window(curr_config):
         "    # Your current config:                                                     #\n"
     for key, value in curr_config.items():
         if type(value) == bool:
-            value = "False" if value == 0 else "True"
+            value = "False" if not value else "True"
         if value is None:
             value = "None"
         value = value.replace("&", "&amp;")
@@ -69,13 +70,9 @@ def change_value(config, program):
     return config, True
 
 
-def default_configs(config, value):
-    default_filetypes = '.mp4 .mkv .ts'
-    default_fuzzy_match = 0.85
-    if value[1] == 'filetypes':
-        config[value[0]][value[1]] = default_filetypes
-    if value[1] == 'fuzzy_match':
-        config[value[0]][value[1]] = default_fuzzy_match
+def default_configs(config: dict):
+    config['mover'].pop('filetypes')
+    config.update({'viewer': {'default_view': config['mover']['orig_path'], 'filetypes': '.mkv .mp4 .ts'}})
     setup.write_config_to_file(config, config_path)
 
 
@@ -92,6 +89,8 @@ def main():
             new_config, changed = change_value(config, 'combiner')
         elif choice in ["3", "database", "db"]:
             new_config, changed = change_value(config, 'database')
+        elif choice in ["4", "viewer"]:
+            new_config, changed = change_value(config, 'viewer')
         elif choice in ["q", "quit", "exit"]:
             clear()
             return

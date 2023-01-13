@@ -8,6 +8,7 @@ import time
 from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
 from src import mediainfolib
+from src.mediainfolib import PathValidator
 
 
 def overview():
@@ -71,7 +72,7 @@ def main():
     if len(sys.argv) == 1:
         overview()
         path = prompt(HTML("<ansiblue>Put in the path of the folder containing your unconverted files: </ansiblue>"),
-                      completer=PathCompleter()).lstrip('"').rstrip('"')
+                      completer=PathCompleter(), validator=PathValidator()).lstrip('"').rstrip('"')
         if path == "q":
             mediainfolib.clear()
             return

@@ -56,6 +56,13 @@ def set_database():
     return {"db_path": db_path}
 
 
+def set_viewer(orig_path):
+    default_view = orig_path
+    print_formatted_text(HTML("[i] Default values for viewer (ENTER to skip)"))
+    filetypes = prompt(HTML("<ansiblue>[a] Put in the filetypes you want to see (space separated): </ansiblue>"))
+    return {"default_view": default_view, "filetypes": filetypes}
+
+
 def order_library(path):
     print_formatted_text(HTML("[i] For the first initialisation it is a good idea to order your media library so all"
                               " shows will get picked up properly"))
@@ -77,9 +84,10 @@ def set_config():
     mover = set_media_mover()
     combiner = set_combiner()
     database = set_database()
+    viewer = set_viewer(mover.get("orig_path"))
 
     print_formatted_text(HTML("[i] Saving config at: {}\n".format(config_path)))
-    write_config_to_file({"mover": mover, "combiner": combiner, "database": database}, config_path)
+    write_config_to_file({"mover": mover, "combiner": combiner, "database": database, "viewer": viewer}, config_path)
     order_library(mover['dest_path'])
     create_db = prompt(HTML("<ansiblue>[a] Do you want to create the database now (If you already have a database it "
                             "will be deleted)? </ansiblue>[y/N] "))

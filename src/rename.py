@@ -7,7 +7,7 @@ from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
 
 from src import mediainfolib
-from src.mediainfolib import sorted_alphanumeric
+from src.mediainfolib import sorted_alphanumeric, PathValidator
 
 
 def overview():
@@ -79,7 +79,7 @@ def main():
     if len(argv) == 1:
         overview()
         in_path = prompt(HTML("<ansiblue>Put in the path where your files that need shifting are: </ansiblue>"),
-                         completer=PathCompleter()).lstrip('"').rstrip('"')
+                         completer=PathCompleter(), validator=PathValidator()).lstrip('"').rstrip('"')
         if in_path == "q":
             mediainfolib.clear()
             return
