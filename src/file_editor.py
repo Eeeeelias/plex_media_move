@@ -219,7 +219,7 @@ def main():
     }
     get_files(vid_path, src_path)
     clear()
-    show_all_files(read_existing_list(vid_path))
+    show_all_files(read_existing_list(src_path))
     window_draw = False
     while True:
         if window_draw:

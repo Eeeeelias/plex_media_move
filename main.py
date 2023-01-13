@@ -23,6 +23,8 @@ def greetings():
     #                                                                          #
     # [5] {gs}db search{ge}   - search through your local media database               #
     #                                                                          #
+    # [6] {gs}file view{ge}   - view and modify all found files                        #
+    #                                                                          #
     # [i] Press [c] to change your config                                      #
     #                                                                          #
     ############################################################################
