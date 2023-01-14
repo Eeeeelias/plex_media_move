@@ -39,11 +39,15 @@ def print_logs(media: List, length = 20):
     old_size = int((term_size - type_size - time_size) / 2) - 6
     new_size = int((term_size - type_size - time_size) / 2) - 7
     top = "    " +'#' * term_size
-    test = f"    # <ansigreen>{'Original Name'.ljust(old_size)}</ansigreen> | <ansigreen>{'New Name'.ljust(new_size)}</ansigreen> | <ansigreen>{'Type'.ljust(type_size)}</ansigreen> | <ansigreen>{'Time'.ljust(time_size)}</ansigreen> #"
+    header = f"    # <ansigreen>{'Original Name'.ljust(old_size)}</ansigreen> | " \
+             f"<ansigreen>{'New Name'.ljust(new_size)}</ansigreen> | <ansigreen>{'Type'.ljust(type_size)}" \
+             f"</ansigreen> | <ansigreen>{'Time'.ljust(time_size)}</ansigreen> #"
     print(top)
-    print_formatted_text(HTML(test))
+    print_formatted_text(HTML(header))
     for i in media[len(media) - length:]:
-        print(f"    # {cut_name(i[0], old_size, pos='mid').ljust(old_size)} | {cut_name(i[1], new_size, pos='mid').ljust(new_size)} | {i[2].ljust(type_size)} | {i[3]} #")
+        print_formatted_text(HTML(f"    # {cut_name(i[0], old_size, pos='mid').ljust(old_size)} | "
+                                  f"{cut_name(i[1], new_size, pos='mid').ljust(new_size)} | "
+                                  f"{i[2].ljust(type_size)} | {i[3]} #"))
     print(top)
 
 

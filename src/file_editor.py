@@ -100,9 +100,13 @@ def show_all_files(ex):
 
         size = f'{int(convert_size(int(file[6]), unit="mb"))} MB'.ljust(10)
         size = f'<ansired>{size}</ansired>' if file[5] != "N" else size
+        fileext = os.path.splitext(os.path.basename(file[1]))[1]
+        filename = f'<ansiyellow>{cut_name(os.path.basename(file[1]), name_string, pos="mid").ljust(name_string + 3)}' \
+                   f'</ansiyellow>' if fileext != '.mp4' and fileext != '.mkv' else \
+            f'{cut_name(os.path.basename(file[1]), name_string, pos="mid").ljust(name_string + 3)}'
+        # print the actual line
         print_formatted_text(
-            HTML(f"    # <ansigreen>{f'[{file[0]}]'.ljust(6)}</ansigreen>"
-                 f"{cut_name(os.path.basename(file[1]), name_string, pos='mid').ljust(name_string + 3)}"
+            HTML(f"    # <ansigreen>{f'[{file[0]}]'.ljust(6)}</ansigreen>{filename}"
                  f"{cut_name(file[2], name_string).ljust(name_string + 3)}{file[3].ljust(6)}{file[4].ljust(7)}"
                  f"{size}{convert_millis(int(file[7])).replace('&', '&amp;').ljust(7)} #"))
     display_string = f"{border_bar}\n\t"

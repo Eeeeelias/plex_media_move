@@ -35,7 +35,7 @@ def default_window(curr_config):
         if value is None:
             value = "None"
         value = value.replace("&", "&amp;")
-        window += f"    # {gs}{key:11}{ge} - {value:58} #\n"
+        window += f"    # {gs}{key:12}{ge} - {value:57} #\n"
     window += \
         "    #                                                                          #\n" \
         "    ############################################################################\n"
