@@ -1,7 +1,6 @@
 import os.path
 import re
-
-from prompt_toolkit.completion import PathCompleter
+from prompt_toolkit.validation import Validator, ValidationError
 
 import media_mover
 from src import manage_db, convert_ts, change_config
@@ -9,6 +8,19 @@ from src.mediainfolib import get_source_files, convert_size, convert_millis, get
     seperator as sep, avg_video_size, clear, remove_video_list, get_config, write_video_list, read_existing_list, \
     cut_name, season_episode_matcher, check_database_ex, strip_show_name
 from prompt_toolkit import print_formatted_text, HTML, prompt
+
+
+class InputValidator(Validator):
+    def validate(self, document):
+        text = document.text
+        if text:
+            if text[:2] == "cd" and not os.path.isdir(text[3:]):
+                raise ValidationError(message='This is not a directory!')
+            try:
+                input_parser(text)
+            except AttributeError:
+                if text != "help":
+                    raise ValidationError(message='Not a well formed command!')
 
 
 def help_window():
@@ -42,7 +54,7 @@ def input_parser(input: str) -> tuple:
     marker_set = False
     funct_and_mod = {}
     for command in input.split(";"):
-        match = re.match(r"(\d+|\d+ ?- ?\d+|\d+((, ?)\d+)*)?([a-zA-Z])(.*)?", command)
+        match = re.match(r"(\d+|\d+ ?- ?\d+|\d+((, ?)\d+)*)?([tsemdcrq])(.*)?", command)
         marker = match.group(1) if match.group(1) and not marker_set else marker
         marker_set = True
         funct = match.group(4)
@@ -102,14 +114,16 @@ def show_all_files(ex):
 def set_season(num_list: list, src_path: str, season: str):
     new_files = []
     files = read_existing_list(src_path)
-    if not season:
-        season = 1
+    try:
+        season_int = int(season)
+    except (ValueError, TypeError):
+        season_int = 1
 
     for file in files:
         # if num list is empty, all values should be considered
         if int(file[0]) in num_list or num_list == []:
             # converting to an int here to get rid of leading zeroes
-            file[3] = f"S0{int(season)}"
+            file[3] = f"S0{season_int}"
         new_files.append(tuple(file))
 
     write_video_list(new_files, src_path)
@@ -118,13 +132,15 @@ def set_season(num_list: list, src_path: str, season: str):
 def set_ep_numbers(num_list: list, src_path: str, ep: str):
     new_files = []
     files = read_existing_list(src_path)
-    if not ep:
-        ep = 1
+    try:
+        ep_int = int(ep)
+    except (TypeError, ValueError):
+        ep_int = 1
 
     i = 0
     for file in files:
         if int(file[0]) in num_list or num_list == []:
-            file[4] = f"E0{int(ep) + i}"
+            file[4] = f"E0{int(ep_int) + i}"
             i += 1
         new_files.append(tuple(file))
     write_video_list(new_files, src_path)
@@ -227,10 +243,10 @@ def main():
             ex = read_existing_list(src_path)
             show_all_files(ex)
         window_draw = True
-        action = prompt(HTML("<ansiblue>=> </ansiblue>"))
+        action = prompt(HTML("<ansiblue>=> </ansiblue>"), validator=InputValidator())
         if action.lower() == "help":
             help_window()
-            action = prompt(HTML("<ansiblue>=> </ansiblue>"))
+            action = prompt(HTML("<ansiblue>=> </ansiblue>"), validator=InputValidator())
         if action.lower() == "r":
             clear()
             continue

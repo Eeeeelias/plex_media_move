@@ -4,6 +4,7 @@ import os
 import sys
 import json
 import subprocess
+import time
 from sys import platform
 from difflib import SequenceMatcher as SM
 from prompt_toolkit.validation import Validator, ValidationError
@@ -214,7 +215,7 @@ def clear() -> int:
 
 
 # returns the audio language of the given file
-def get_language(filename) -> list:
+def get_language(filename: str) -> list:
     audio_info = subprocess.check_output(
         ["ffprobe", "-loglevel", "0", "-show_streams", "-select_streams", "a", filename]).decode()
     langs = re.findall(r"(?<=language=).*(?=\n)", audio_info)
@@ -223,7 +224,7 @@ def get_language(filename) -> list:
 
 
 # checks if database exists
-def check_database_ex(path) -> bool:
+def check_database_ex(path: str) -> bool:
     return os.path.isfile(path)
 
 
@@ -292,11 +293,11 @@ def avg_video_size(path) -> float:
     return sum(video_sizes) / len(video_sizes)
 
 
-def strip_show_name(raw):
+def strip_show_name(raw) -> str:
     return re.sub(r"((Season \d+|\d+(nd|rd|th) Season)? Episode \d+|[sS]\d+[eE]\d+|\(\d{4}\))(.*)", "", raw).strip()
 
 
-def write_video_list(videos, path):
+def write_video_list(videos, path) -> None:
     with open(f'{path}/video_list.tmp', 'w') as f:
         for video in videos:
             for info in video:
@@ -304,13 +305,13 @@ def write_video_list(videos, path):
             f.write("\n")
 
 
-def remove_video_list(path):
+def remove_video_list(path) -> None:
     file = f'{path}/video_list.tmp'
     if os.path.isfile(file):
         os.remove(file)
 
 
-def read_existing_list(src_path: str):
+def read_existing_list(src_path: str) -> list:
     files = []
     with open(f'{src_path}/video_list.tmp', 'r') as f:
         for line in f.readlines():
@@ -319,14 +320,14 @@ def read_existing_list(src_path: str):
     return files
 
 
-def season_episode_matcher(filename):
+def season_episode_matcher(filename) -> tuple:
     # when it's easy lol
     match = re.match(r"(.*)[sS](\d+)[eE](\d+)", filename)
     if match:
         return int(match.group(2)), int(match.group(3))
     # where it starts getting difficult
     match_episode = re.match(r".*Episode (\d+)", filename)
-    episode = int(match_episode.group(1)) if match_episode else None
+    episode = match_episode.group(1) if match_episode else None
     if not episode:
         return None, None
     match_season = re.match(r".*(Season (\d+)|(\d+)(nd|rd|th) Season)", filename)

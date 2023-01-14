@@ -14,7 +14,8 @@ from prompt_toolkit.history import FileHistory
 
 # importing is buggy?
 if len(sys.argv) == 1:
-    from src.mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep, FileValidator
+    from src.mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep, FileValidator, \
+        PathValidator, clear
 else:
     from mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep
 
@@ -55,20 +56,15 @@ parser.add_argument(
          " stream two be German",
 )
 
-if platform == "win32":
-    seperator = "\\"
-else:
-    seperator = "/"
-
 session = PromptSession(history=FileHistory(f"{data_path}{sep}.movcomb"))
 
 
 def interactive():
     start = """
     ############################################################################
-    #                             Combine two Videos!                          #
+    #                             Combine two videos!                          #
     #                                                                          #
-    #  Jurrasic Park (1993) - Ver1.mp4   |  Jurrasic Park (1993) - Ver1.mp4    #
+    #  Jurrasic Park (1993) - Ver1.mp4   |  Jurrasic Park (1993) - Ver2.mp4    #
     #  <ansigreen>§§§§§§§ Video Track 1 §§§§§§§§§</ansigreen>   |  <ansiyellow>§§§§§§§ Video Track 2 §§§§§§§§§</ansiyellow>    #
     #  <ansiblue>~~~~~~~ Audio Track 1 ~~~~~~~~~</ansiblue>   |  <ansicyan>~~~~~~~ Audio Track 2 ~~~~~~~~~</ansicyan>    #
     #                                                                          #
@@ -94,7 +90,7 @@ def interactive():
                               completer=PathCompleter(), validator=FileValidator()).lstrip('"').rstrip('"')
     if movie_en == 'q':
         return 0, 0, 0, 0, 0, 0
-    lan_en = session.prompt(
+    lan_en = prompt(
         HTML("<ansiblue>[a] Please also specify the language using ISO 639-2 codes (e.g. eng, de, jpn): </ansiblue>"))
     print_formatted_text(
         "\n[i] Great, now that we have the first movie let's get the second movie from which we will only take the "
@@ -103,7 +99,7 @@ def interactive():
     movie_de = (session.prompt(HTML("<ansiblue>[a] Please also give the path of this movie:</ansiblue>"),
                                completer=PathCompleter(), validator=FileValidator()).lstrip('"').rstrip('"'))
 
-    lan_de = session.prompt(
+    lan_de = prompt(
         HTML("<ansiblue>[a] Again, please specify the language using ISO 639-2 codes:</ansiblue>")
     )
     print_formatted_text("[i] Almost done, just two more questions")
@@ -113,26 +109,12 @@ def interactive():
         destination = (
             session.prompt(
                 HTML("<ansiblue>[a] Where do you want your movie to be saved ([ENTER] to put it in $PWD):</ansiblue>"),
-                completer=PathCompleter())
-                .lstrip('"')
-                .rstrip('"')
-        )
-        while not os.path.isdir(destination) or destination == "":
-            destination = (
-                session.prompt(
-                    HTML(
-                        "<ansiblue>[a] This is not a destination! Make sure you spelled everything "
-                        "correctly:</ansiblue>"),
-                    completer=PathCompleter()).lstrip('"').rstrip('"')
-            )
+                completer=PathCompleter(), validator=PathValidator()).lstrip('"').rstrip('"'))
     if destination == "":
         destination = conf['combiner']['default_out']
 
-    offset = session.prompt(
-        HTML(
-            "<ansiblue>[a] Lastly, put in the offset for the movie (e.g. 400ms). Press [ENTER] to let the script "
-            "handle this:</ansiblue>")
-    )
+    offset = prompt(HTML("<ansiblue>[a] Lastly, put in the offset for the movie (e.g. 400ms). Press [ENTER] to let the "
+                         "script handle this:</ansiblue>"))
     print_formatted_text("\n")
     return movie_en, movie_de, lan_en, lan_de, destination, offset
 
@@ -174,6 +156,7 @@ def main():
     if not check_ffmpeg():
         exit(1)
     if args.interactive or len(sys.argv) == 1:
+        clear()
         movie_en, movie_de, lan_en, lan_de, destination, offset = interactive()
         if movie_en == 0:
             return
@@ -210,14 +193,14 @@ def main():
         print("[i] No offset given, using time diff")
         offset = f"{diff}ms"
 
-    if re.search(r"[sS]\d{2}[eE]\d{2}", movie_en.split(seperator)[-1]) is None:
-        combined_name = re.sub(r"(?<=\(\d{4}\)).*", ".mkv", movie_en.split(seperator)[-1])
-    combined_name = re.sub(r".mp4", ".mkv", movie_en.split(seperator)[-1])
+    if re.search(r"[sS]\d{2}[eE]\d{2}", movie_en.split(sep)[-1]) is None:
+        combined_name = re.sub(r"(?<=\(\d{4}\)).*", ".mkv", movie_en.split(sep)[-1])
+    combined_name = re.sub(r".mp4", ".mkv", movie_en.split(sep)[-1])
 
     if args.output is not None:
-        combined_name = args.output + seperator + combined_name
+        combined_name = args.output + sep + combined_name
     if destination != "":
-        combined_name = destination + seperator + combined_name
+        combined_name = destination + sep + combined_name
 
     print(f"[i] Input 1: {movie_en}, video length: {dur_en}ms, language: {lan_en}")
     print(f"[i] Input 2: {movie_de}, video length: {dur_de}ms, language: {lan_de}")
