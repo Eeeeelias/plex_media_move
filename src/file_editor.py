@@ -1,12 +1,14 @@
 import os.path
 import re
+import time
+
 from prompt_toolkit.validation import Validator, ValidationError
 
 import media_mover
-from src import manage_db, convert_ts, change_config
+from src import manage_db, convert_ts, change_config, setup
 from src.mediainfolib import get_source_files, convert_size, convert_millis, get_duration, \
     seperator as sep, avg_video_size, clear, remove_video_list, get_config, write_video_list, read_existing_list, \
-    cut_name, season_episode_matcher, check_database_ex, strip_show_name
+    cut_name, season_episode_matcher, check_database_ex, strip_show_name, config_path
 from prompt_toolkit import print_formatted_text, HTML, prompt
 
 
@@ -54,7 +56,7 @@ def input_parser(input: str) -> tuple:
     marker_set = False
     funct_and_mod = {}
     for command in input.split(";"):
-        match = re.match(r"(\d+|\d+ ?- ?\d+|\d+((, ?)\d+)*)?([tsemdcrq])(.*)?", command)
+        match = re.match(r"(\d+|\d+ ?- ?\d+|\d+((, ?)\d+)*)?([tsemdcrxq])(.*)?", command)
         marker = match.group(1) if match.group(1) and not marker_set else marker
         marker_set = True
         funct = match.group(4)
@@ -165,6 +167,13 @@ def set_title(num_list: list, src_path: str, title: str):
     write_video_list(new_files, src_path)
 
 
+def set_extensions(config: dict, ext: str):
+    curr_ext: list = config['viewer']['filetypes'].split(' ')
+    curr_ext.remove(ext) if ext in curr_ext else curr_ext.append(ext)
+    config['viewer']['filetypes'] = " ".join(curr_ext)
+    setup.write_config_to_file(config, config_path)
+
+
 def delete_sussy(nums, src_path, modifier=None):
     try:
         curr_files = read_existing_list(src_path)
@@ -236,6 +245,7 @@ def main():
         't': set_title,
         'c': convert_ts.viewer_convert,
         'm': media_mover.viewer_rename,
+        'x': set_extensions,
     }
     get_files(vid_path, src_path)
     clear()
@@ -251,23 +261,26 @@ def main():
         if action.lower() == "help":
             help_window()
             action = prompt(HTML("<ansiblue>=> </ansiblue>"), validator=InputValidator())
-        if action.lower() == "r":
+        elif action.lower() == "r":
             clear()
             continue
-        if action.lower() == "q":
+        elif action.lower() == "q":
             clear()
             return
-        if action.lower() == "q!":
+        elif action.lower() == "q!":
             remove_video_list(src_path)
             exit(0)
-
         # ability to change dirs
-        if action.lower().split(" ")[0] == "cd":
+        elif action.lower().split(" ")[0] == "cd":
             if not os.path.isdir(action[3:]):
                 clear()
                 print_formatted_text(HTML("<ansired>    Not a directory!</ansired>"))
                 continue
             vid_path = action[3:]
+            clear()
+            continue
+        elif action.lower().startswith('x'):
+            set_extensions(conf, action[1:])
             clear()
             continue
 

@@ -72,7 +72,12 @@ def order_library(path):
     return
 
 
-def write_config_to_file(config, path):
+def write_config_to_file(config: dict, path: str):
+    """
+    Write your configuration down in a .json file.
+    :param config The configuration you want to write to a file
+    :param path The file path where the config should be written to
+    """
     json.dump(config, open(path, 'w'))
     return
 

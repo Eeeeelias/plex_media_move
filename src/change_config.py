@@ -59,6 +59,8 @@ def change_value(config, program):
     while change not in config[program].keys():
         print_formatted_text(HTML("<ansired>[w] Not a valid option!</ansired>"))
         change = prompt(HTML("<ansiblue>Option you want to change: </ansiblue>")).lstrip('"').rstrip('"')
+        if change == "q":
+            return config, False
     print(f"[i] Changing {change}")
     value = prompt(HTML("<ansiblue>New value: </ansiblue>"))
     while not ensure_bool(config[program][change], value):
