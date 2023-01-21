@@ -32,6 +32,7 @@ data_path = os.getenv(env) + seperator + folder
 if not os.path.exists(data_path):
     os.mkdir(data_path)
 config_path = data_path + f"{seperator}config.json"
+database_path = data_path + f"{seperator}media_database.db"
 
 
 class PathValidator(Validator):
@@ -258,6 +259,13 @@ def cut_name(name, cut, pos='right', mid=10) -> str:
 
 
 def convert_size(size, unit='gb', r=2) -> float:
+    """
+    Converting filesize to more understandable numbers. Takes in size as bytes and divides by 1024^3.
+    :param size: The filesize in bytes
+    :param unit: The unit to convert it to. Available are: gb, tb, mb
+    :param r: Digits of rounding
+    :return: Returns the filesize in the wanted unit rounded by r digits
+    """
     size_gb = size / (1024 ** 3)
     if unit == 'tb':
         size_tb = size_gb / 1000

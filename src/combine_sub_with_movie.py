@@ -56,7 +56,7 @@ def sub_in_movie(movie_files, out_path):
     subs_with_lang = {}
     try:
         for sub in subs:
-            lan = re.search(r"(?<=\.).*(?=\.)", sub).group()
+            lan = re.search(r"\.(\w+)\.[^.]+$", sub).group(1)
             subs_with_lang[lan] = sub
 
     except AttributeError:
@@ -79,7 +79,7 @@ def sub_in_movie(movie_files, out_path):
         metadata.extend(new_metadata)
     ffmpeg_full = inputs + maps + codecs + metadata
     ffmpeg_full.append(out)
-    print(ffmpeg_full)
+    # print(ffmpeg_full)
     subprocess.run(ffmpeg_full)
 
 
@@ -89,7 +89,8 @@ def main():
             output = get_config()['combiner']['default_out']
         except FileNotFoundError:
             print_formatted_text(HTML("<ansired> Couldn't find config, specify output!</ansired>"))
-            output = session.prompt(HTML("<ansiblue> Output path: </ansiblue>"), completer=PathCompleter()).lstrip('"').rstrip('"')
+            output = session.prompt(HTML("<ansiblue> Output path: </ansiblue>"), completer=PathCompleter()).lstrip('"')\
+                .rstrip('"')
         subs_to_combine = interactive()
         if subs_to_combine is None:
             return
