@@ -284,7 +284,7 @@ def viewer_rename(num_list, src_path, modifier):
             if file[3] != "NaN":
                 names.append(f"{file[2]} {file[3]}{file[4]}{ext}")
             else:
-                name_with_year = get_movie_year(os.path.basename(file[1]))
+                name_with_year = get_movie_year(os.path.basename(file[2])) + os.path.splitext(file[1])[1]
                 names.append(f"{name_with_year}")
     return paths, names
 

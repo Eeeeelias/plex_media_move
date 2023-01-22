@@ -1,3 +1,4 @@
+import datetime
 import os.path
 
 from src.mediainfolib import data_path, seperator as sep, database_path
@@ -45,6 +46,7 @@ def main():
     fin_html = add_values(html, (sig_ep, words))
     if not os.path.isdir(data_path + f"{sep}reports/"):
         os.mkdir(data_path + f"{sep}reports/")
-    write_html(data_path + f"{sep}/reports/report.html", fin_html)
-    os.startfile(data_path + f"{sep}/reports/report.html")
+    time = datetime.datetime.now().strftime("%Y-%m-%d")
+    write_html(data_path + f"{sep}/reports/report_{time}.html", fin_html)
+    os.startfile(data_path + f"{sep}/reports/report_{time}.html")
     return
