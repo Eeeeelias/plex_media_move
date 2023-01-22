@@ -48,7 +48,7 @@
             real! This plot shows the distribution of episodes for your shows. The x-axis describes the number of
             episodes, the y-axis the number of shows that have this many episodes.</p>
             <img class="mx-auto d-block" src="../plots/dis_ep.jpg" alt="episode distribution">
-            <p>{1}</p>
+            <p>{0}</p>
             <br>
             <h2>Movie releases</h2>
             <p>Next, let's look at some movie releases. Here you'll be able to see what year movies were released.
@@ -70,28 +70,39 @@
               </tr>
                 <tbody class="table-group-divider">
               <tr>
+                <td>{1}</td>
                 <td>{2}</td>
+              </tr>
+              <tr>
                 <td>{3}</td>
-              </tr>
-              <tr>
                 <td>{4}</td>
+              </tr>
+              <tr>
                 <td>{5}</td>
-              </tr>
-              <tr>
                 <td>{6}</td>
+              </tr>
+              <tr>
                 <td>{7}</td>
-              </tr>
-              <tr>
                 <td>{8}</td>
-                <td>{9}</td>
               </tr>
               <tr>
+                <td>{9}</td>
                 <td>{10}</td>
-                <td>{11}</td>
               </tr>
             </table>
             <p>Please note that many (but maybe not all) connection/filler words like "and", "or", "to" have been
             removed. These do not constitute to the title and are thus not relevant in this analysis.</p>
+            <br>
+            <h2>Quality scores</h2>
+            <p>The quality score is a score that tries to determine the video quality of a TV-Show based on the length
+            of the episodes, the file sizes and the amount of episodes. It can be described as the average size of each
+            episode divided by the average length of episodes. This is then normalised to a value between 0 and 1.
+            Note that while in practice this works quite well, it is not a perfect metric.</p>
+            <img class="mx-auto d-block" src="../plots/sc_an.jpg" alt="significant scores">
+            <p>In this plot you can see all the scores for your TV-Shows with the highest scores annotated. These shows
+            have a high ratio of file size to episode length, indicating higher bitrate, resolution or similar. While
+            these scores are in relation to the other existing scores, you might want to consider compressing these
+            shows in order to save storage space.</p>
             <br>
             <h2>Movies and library size</h2>
             <p>Last but not least, let's look at the relation of the size of your library to the amount of media you

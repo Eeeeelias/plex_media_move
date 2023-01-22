@@ -9,7 +9,6 @@ from src.manage_db import get_count_ids
 import matplotlib.pyplot as plt
 import pandas as pd
 from collections import Counter
-
 from src.mediainfolib import data_path, seperator as sep
 
 
@@ -182,11 +181,10 @@ def word_analysis(db: str):
     words = [x.lower() for x in words if x.lower() not in useless_words]
     counts = Counter(words)
     df = pd.DataFrame.from_dict(counts, orient='index', columns=['value'])
-    print(len(df))
     df.reset_index(inplace=True)
     df.columns = ['word', 'frequency']
-    df_filtered: pd.DataFrame = df.sort_values(by=['frequency']).loc[df['frequency'] > 5]
-    return df_filtered.tail(5).to_numpy().tolist()
+    df_filtered: pd.DataFrame = df.sort_values(by=['frequency'], ascending=False).loc[df['frequency'] > 5]
+    return df_filtered.head(5).to_numpy().tolist()
 
 
 def scores_analysis(db: str):
@@ -197,8 +195,6 @@ def scores_analysis(db: str):
     plt.scatter(df.index, df['norm_score'], alpha=0.5)
     for i, row in df.iterrows():
         if row['norm_score'] > 0.6:
-            print(row['show'])
-            print(row['norm_score'])
             plt.annotate(row['show'], (i, row['norm_score']), xytext=(5, 5), textcoords='offset points')
     plt.xlabel('TV Shows')
     plt.ylabel('Score')
