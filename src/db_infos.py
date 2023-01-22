@@ -2,7 +2,6 @@ import math
 from datetime import datetime
 
 import numpy as np
-from matplotlib.dates import date2num
 
 from src import mediainfolib, manage_db
 from src.manage_db import get_count_ids
@@ -24,6 +23,13 @@ def sigmoid(x):
 
 
 def _quality_score(episodes: int, duration: int, size: int):
+    """
+    Computes a quality score based on the filesize per episode divided by the duration of the average episode.
+    :param episodes: number of episodes
+    :param duration: duration of the entire show
+    :param size: size of the entire show
+    :return:
+    """
     try:
         size_per_episode = size / episodes
         dur_episode = duration/episodes
@@ -43,7 +49,7 @@ def media_size(db: str):
         return f" [i] Your Media library is {size_tb} TB! (so tiny hihi)"
 
 
-def best_quality(db: str, worst=False):
+def best_quality(db: str, worst=False, all_scores=False):
     db_results = manage_db.get_shows("", db)
     scores = {}
     for show in db_results:
@@ -60,6 +66,8 @@ def best_quality(db: str, worst=False):
 
     max_qual = ["N/A", -1]
     worst_qual = ["N/A", 2]
+    if all_scores:
+        return scores
     for key, val in scores.items():
         if val > max_qual[1]:
             max_qual = [key, val]
@@ -159,20 +167,31 @@ def release_movie(db: str):
           f'There are exactly {counts.most_common(1)[0][1]} of them!')
 
 
-def movie_langs(db: str):
-    pass
+def word_analysis(db: str):
+    data_shows = manage_db.custom_sql(db, 'SELECT name FROM main.shows')
+    data_movies = manage_db.custom_sql(db, 'SELECT name FROM main.movies')
+    words = " ".join([x[0] for x in data_shows]) + " ".join([x[0] for x in data_movies])
+    words = words.split(" ")
+    useless_words = ['the', 'to', 'a', 'der', 'das', 'und', 'of', 'no', 'in', 'und', 'and', '-', 'des', '&', 'die',
+                     'wo', 'ni', 'wa', 'von', 'on', 'ist', 'ein']
+    words = [x.lower() for x in words if x.lower() not in useless_words]
+    counts = Counter(words)
+    df = pd.DataFrame.from_dict(counts, orient='index', columns=['value'])
+    print(len(df))
+    df.reset_index(inplace=True)
+    df.columns = ['word', 'frequency']
+    df_filtered: pd.DataFrame = df.sort_values(by=['frequency']).loc[df['frequency'] > 5]
+    return df_filtered.tail(5).to_numpy().tolist()
 
 
-# uninteresting
-def movie_size(db: str):
-    data_movies = manage_db.custom_sql(db, "SELECT id, size FROM main.movies")
-    df = pd.DataFrame(data_movies, columns=['id', 'size'])
-    df['size'] = [mediainfolib.convert_size(x) for x in df['size']]
-    mean = df["size"].mean()
-    std = df["size"].std()
-    df.loc[np.abs(df["size"] - mean) > 3 * std, "size"] = np.nan
-    print(df['size'])
-    plt.hist(df['size'], bins=20, color='red', alpha=0.5)
-    plt.xlabel('Size of the movie')
-    plt.ylabel('Number of movies')
+def scores_analysis(db: str):
+    scores = best_quality(db, all_scores=True)
+    print(scores)
+    df = pd.DataFrame.from_dict(scores, orient='index', columns=['value'])
+    df.reset_index(inplace=True)
+    df.columns = ['show', 'norm_score']
+    plt.hist(df['norm_score'], bins=50, alpha=0.5)
+    plt.xlabel('Score')
+    plt.ylabel('#')
     plt.show()
+    print(df)
