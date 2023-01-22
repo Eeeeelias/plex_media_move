@@ -1,4 +1,5 @@
 import os
+import traceback
 
 
 def greetings():
@@ -145,3 +146,7 @@ if __name__ == '__main__':
         print("Exiting")
         remove_video_list(get_config()['mover']['orig_path'])
         exit()
+    except Exception as e:
+        print(traceback.print_exc())
+        print("If this continues to show up, please message me or open an issue on Github!")
+        main()

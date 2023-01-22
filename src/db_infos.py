@@ -1,4 +1,5 @@
 import math
+import os
 from datetime import datetime
 
 import numpy as np
@@ -8,6 +9,8 @@ from src.manage_db import get_count_ids
 import matplotlib.pyplot as plt
 import pandas as pd
 from collections import Counter
+
+from src.mediainfolib import data_path, seperator as sep
 
 
 def sigmoid(x):
@@ -133,8 +136,10 @@ def media_over_time(db: str):
     plt.xlabel('Date')
     plt.ylabel('Amount of Media in the DB')
     plt.legend()
-    plt.show()
-
+    if not os.path.isdir(data_path + f"{sep}plots"):
+        os.mkdir(data_path + f"{sep}plots")
+    plt.savefig(data_path + f"{sep}plots/me_o_t.jpg")
+    plt.clf()
     # x = date2num(datetime.strptime('2019-09-01', '%Y-%m-%d'))
     # plt.axvline(x=x, color='r', linestyle='--')
     # plt.annotate(f'September 2019', xy=(x, cumulative_sum_s.max()), xytext=(x*1.001, cumulative_sum_s.max()*1.05))
@@ -146,12 +151,13 @@ def distribution_episodes(db: str):
     plt.hist(df['n_episodes'], bins=20, color='blue', alpha=0.5)
     plt.xlabel('Number of episodes')
     plt.ylabel('Number of shows')
-    plt.show()
+    plt.savefig(data_path + f"{sep}plots/dis_ep.jpg")
+    plt.clf()
     max_episodes = manage_db.custom_sql(db, 'SELECT max(episodes), name FROM main.shows')
     counts = Counter(df['n_episodes'])
-    print(f'The show with the most episodes you have is \'{max_episodes[0][1]}\' with {max_episodes[0][0]} episodes! '
-          f'Most shows however have {counts.most_common(1)[0][0]} episodes! '
-          f'(There are {counts.most_common(1)[0][1]} of them)')
+    return f'The show with the most episodes you have is \'{max_episodes[0][1]}\' with {max_episodes[0][0]} episodes!' \
+           f' Most shows however have {counts.most_common(1)[0][0]} episodes! In fact, there are ' \
+           f'{counts.most_common(1)[0][1]} of them. '
 
 
 def release_movie(db: str):
@@ -160,8 +166,8 @@ def release_movie(db: str):
     plt.hist(df['year'], bins=20, color='green', alpha=0.5)
     plt.xlabel('Release year')
     plt.ylabel('Number of movies')
-    plt.show()
-
+    plt.savefig(data_path + f"{sep}plots/re_mo.jpg")
+    plt.clf()
     counts = Counter(df['year'])
     return counts.most_common(1)[0]
 
@@ -196,7 +202,8 @@ def scores_analysis(db: str):
             plt.annotate(row['show'], (i, row['norm_score']), xytext=(5, 5), textcoords='offset points')
     plt.xlabel('TV Shows')
     plt.ylabel('Score')
-    plt.show()
+    plt.savefig(data_path + f"{sep}plots/sc_an.jpg")
+    plt.clf()
 
 
 def media_to_filesize(db: str):
@@ -222,7 +229,8 @@ def media_to_filesize(db: str):
         plt.annotate(year[1]['size'].year, xy=(x_val, cumsum_size.tail(1)), xycoords='data', xytext=(-28, 0),
                      textcoords='offset points')
     plt.xlabel('# of Movies')
-    plt.ylabel('Filesize in GB')
+    plt.ylabel('Library size in GB')
     plt.legend()
-    plt.show()
-    print(df)
+    plt.savefig(data_path + f"{sep}plots/m_t_f.jpg")
+    plt.clf()
+

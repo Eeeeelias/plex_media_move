@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html class="h-100">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
+    <link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="s    ha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+        crossorigin="anonymous" />
+</head>
+
+<body class="h-100 bg-white text-black">
+    <header id="header" class="bg-dark text-white d-flex shadow p-3 border-bottom fs-4 position-sticky top-0"
+        style="z-index: 2000;">
+        <span class="col align-self-center">
+            <img src="../icons/pmm_logo_green.png" alt="logo" width="40">
+            PMM Report
+        </span>
+        <span class="align-self-end">
+            <i class="fas fa-dna" style="font-size:32px;"></i>
+        </span>
+    </header>
+      <div class="row h-100 m-0">
+        <div class="col-3"></div>
+        <div class="col-6 p-3 shadow">
+            <h1 style="text-align: center"> <b>PMM Report</b> </h1>
+            <p>This report will give you a hopefully insightful overview of the media you've accumulated. It will
+              help you understand the usage of your library and how the space on your hard drive is
+              being utilized. Through a range of visualizations and data analysis, you will be able to see the
+              relationships between different variables such as the types of media, the file sizes, and the timescale.
+            </p>
+            <br>
+            <h2>Library entries over time</h2>
+            <p>This graph shows you the cumulative amount of movies and TV-shows you added over time. Note that this
+            date represents the last modified time so if you updated files recently, they'll be listed as added recently.
+            </p>
+            <img class="mx-auto d-block" src="../plots/me_o_t.jpg" alt="library entries over time">
+            <p>You can clearly see how fast or slow your library increases over the years. Depending on what this plot
+            looks like for you, this might mean different things: If the lines grow linearly, your library grows in
+            a constant rate. So if you had 50 movies by the end of 2019, you'll have 100 movies by the end of 2020. If
+            the lines grow exponentially, it shows that you've started out slowly but the more media you have, the more
+            you want to add!
+            </p>
+            <br>
+            <h2>Distribution of episodes</h2>
+            <p>Have you ever wondered how some shows just have so many more episodes than others? Now you can check for
+            real! This plot shows the distribution of episodes for your shows. The x-axis describes the number of
+            episodes, the y-axis the number of shows that have this many episodes.</p>
+            <img class="mx-auto d-block" src="../plots/dis_ep.jpg" alt="episode distribution">
+            <p>{1}</p>
+            <br>
+            <h2>Movie releases</h2>
+            <p>Next, let's look at some movie releases. Here you'll be able to see what year movies were released.
+            This histogram works the same way as the last one. On the x-axis you can see the year of release and on the
+            y-axis the amount of movies that were released that year. Note that if many movies were released in 1900
+            that might indicate that you didn't specify the release year for your movies properly and the default
+            value was set.</p>
+            <img class="mx-auto d-block" src="../plots/re_mo.jpg" alt="movie release years">
+            <p>Are you a fan of old movies or do you prefer more recent movies?</p>
+            <br>
+            <h2>Word frequency</h2>
+            <p>What words tend to appear more often in the names of the media you watch? Is it love? Or maybe death?
+            This might indicate what kind of movie or show you're more interested in or more likely to click on based
+            on it's title alone.</p>
+            <table class="table table-sm">
+              <tr>
+                <th>Word</th>
+                <th>Frequency</th>
+              </tr>
+                <tbody class="table-group-divider">
+              <tr>
+                <td>{2}</td>
+                <td>{3}</td>
+              </tr>
+              <tr>
+                <td>{4}</td>
+                <td>{5}</td>
+              </tr>
+              <tr>
+                <td>{6}</td>
+                <td>{7}</td>
+              </tr>
+              <tr>
+                <td>{8}</td>
+                <td>{9}</td>
+              </tr>
+              <tr>
+                <td>{10}</td>
+                <td>{11}</td>
+              </tr>
+            </table>
+            <p>Please note that many (but maybe not all) connection/filler words like "and", "or", "to" have been
+            removed. These do not constitute to the title and are thus not relevant in this analysis.</p>
+            <br>
+            <h2>Movies and library size</h2>
+            <p>Last but not least, let's look at the relation of the size of your library to the amount of media you
+            have (currently only movies). This plot will show you the estimated growth as a dotted red line, with the
+            actual growth as the blue line. The y-axis describes the total amount of space taken up by your library and
+            the x-axis the amount of movies you have sorted by year.</p>
+            <img class="mx-auto d-block" src="../plots/m_t_f.jpg" alt="movies_to_size">
+            <p>The dotted red line shows you how your library will grow expectedly. If the blue line deviates from this
+            significantly, you can conclude that movies added at that point are different in their size. If the blue
+            line is above the red line, your movies are bigger than expected and vice versa if the blue line is below
+            the red line.</p>
+        </div>
+        <div class="col-3 p-3"></div>
+    </div>
+</body>
+
+</html>
