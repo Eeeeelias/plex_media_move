@@ -15,7 +15,7 @@ def all_stats(db: str) -> None:
     # {gs}[4]{ge} {call_function(db, di.database_size)}#
     # {gs}[5]{ge} {call_function(db, di.oldest_movie)}#
     # {gs}[6]{ge} {call_function(db, di.best_quality)}#
-    # {gs}[7]{ge} {call_function(db, di.worst_quality)}#
+    # {gs}[7]{ge} {call_function(db, di.worst_quality).replace("&", "&amp;")}#
     #                                                                          #
     ############################################################################
     """))
