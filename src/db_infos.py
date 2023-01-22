@@ -163,8 +163,7 @@ def release_movie(db: str):
     plt.show()
 
     counts = Counter(df['year'])
-    print(f'Most movies you have were released in {counts.most_common(1)[0][0]}. '
-          f'There are exactly {counts.most_common(1)[0][1]} of them!')
+    return counts.most_common(1)[0]
 
 
 def word_analysis(db: str):
@@ -186,12 +185,44 @@ def word_analysis(db: str):
 
 def scores_analysis(db: str):
     scores = best_quality(db, all_scores=True)
-    print(scores)
     df = pd.DataFrame.from_dict(scores, orient='index', columns=['value'])
     df.reset_index(inplace=True)
     df.columns = ['show', 'norm_score']
-    plt.hist(df['norm_score'], bins=50, alpha=0.5)
-    plt.xlabel('Score')
-    plt.ylabel('#')
+    plt.scatter(df.index, df['norm_score'], alpha=0.5)
+    for i, row in df.iterrows():
+        if row['norm_score'] > 0.6:
+            print(row['show'])
+            print(row['norm_score'])
+            plt.annotate(row['show'], (i, row['norm_score']), xytext=(5, 5), textcoords='offset points')
+    plt.xlabel('TV Shows')
+    plt.ylabel('Score')
+    plt.show()
+
+
+def media_to_filesize(db: str):
+    data_movies = manage_db.custom_sql(db, 'SELECT size, modified FROM main.movies')
+    df = pd.DataFrame(data_movies, columns=['size', 'date'])
+    df['date'] = df['date'].apply(lambda x: datetime.fromtimestamp(x).strftime('%Y-%m-%d'))
+    df['size'] = [mediainfolib.convert_size(x, unit='gb') for x in df['size']]
+    cumsum_size = df['size'].cumsum()
+    df = df.sort_values(by=['date'])
+    df = df.reset_index(drop=True)
+    median_size = df['size'].median()
+    plt.plot(df.index, cumsum_size, label='actual growth')
+    plt.plot(df.index, median_size * df.index, '--', color='r', label='expected growth')
+    df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
+    df.set_index('date', inplace=True)
+    yearly_first_rows = df.groupby(df.index.year).idxmin()
+    df = df.reset_index(drop=False)
+    iter_year = yearly_first_rows[-3:].iterrows() if len(yearly_first_rows) > 4 else yearly_first_rows.iterrows()
+    for year in iter_year:
+        date = year[1]['size']
+        x_val = df.index[df['date'] == date][0]
+        plt.axvline(x=x_val, color='gray', linestyle='--', linewidth=1)
+        plt.annotate(year[1]['size'].year, xy=(x_val, cumsum_size.tail(1)), xycoords='data', xytext=(-28, 0),
+                     textcoords='offset points')
+    plt.xlabel('# of Movies')
+    plt.ylabel('Filesize in GB')
+    plt.legend()
     plt.show()
     print(df)
