@@ -32,7 +32,6 @@ data_path = os.getenv(env) + seperator + folder
 if not os.path.exists(data_path):
     os.mkdir(data_path)
 config_path = data_path + f"{seperator}config.json"
-database_path = data_path + f"{seperator}media_database.db"
 
 
 class PathValidator(Validator):

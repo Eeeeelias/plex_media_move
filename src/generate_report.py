@@ -1,7 +1,7 @@
 import datetime
 import os.path
 
-from src.mediainfolib import data_path, seperator as sep, database_path
+from src.mediainfolib import data_path, seperator as sep, get_config
 from shutil import copy
 
 
@@ -42,6 +42,7 @@ def main():
     # janky way of getting the correct file path.
     copy(real_path[:-3] + "icons/pmm_logo_green.png",
          data_path + f"{sep}icons/pmm_logo_green.png")
+    database_path = get_config()['database']['db_path'] + f"{sep}media_database.db"
     sig_ep, words = make_analyses(database_path)
     html = read_html(real_path + "/template.html")
     fin_html = add_values(html, (sig_ep, words))
