@@ -8,10 +8,10 @@ from shutil import copy
 def make_analyses(db_path: str):
     import src.in_depth_report as idr
     plots = [idr.media_over_time, idr.release_movie, idr.media_to_filesize, idr.scores_analysis, idr.filetype_size,
-             idr.distribution_episodes]
-    sig_ep = None
+             idr.distribution_episodes, idr.shows_to_size]
+    sig_ep = []
     for anal in plots:
-        sig_ep = anal(db_path)
+        sig_ep.append(anal(db_path))
     words = idr.word_analysis(db_path)
     return sig_ep, words
 
@@ -24,8 +24,8 @@ def read_html(path: str) -> str:
 def add_values(html: str, values: tuple) -> str:
     sig_ep = values[0]
     words = values[1]
-    html_fin = html.format(sig_ep, words[0][0], words[0][1], words[1][0], words[1][1], words[2][0], words[2][1],
-                           words[3][0], words[3][1], words[4][0], words[4][1])
+    html_fin = html.format(sig_ep[5], sig_ep[1], words[0][0], words[0][1], words[1][0], words[1][1], words[2][0],
+                           words[2][1], words[3][0], words[3][1], words[4][0], words[4][1])
     return html_fin
 
 

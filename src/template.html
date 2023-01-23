@@ -57,7 +57,7 @@
             that might indicate that you didn't specify the release year for your movies properly and the default
             value was set.</p>
             <img class="mx-auto d-block" src="../plots/re_mo.jpg" alt="movie release years">
-            <p>Are you a fan of old movies or do you prefer more recent movies?</p>
+            <p>Are you a fan of old movies or do you prefer more recent movies? {1}</p>
             <br>
             <h2>Word frequency</h2>
             <p>What words tend to appear more often in the names of the media you watch? Is it love? Or maybe death?
@@ -70,24 +70,24 @@
               </tr>
                 <tbody class="table-group-divider">
               <tr>
-                <td>{1}</td>
                 <td>{2}</td>
-              </tr>
-              <tr>
                 <td>{3}</td>
+              </tr>
+              <tr>
                 <td>{4}</td>
-              </tr>
-              <tr>
                 <td>{5}</td>
+              </tr>
+              <tr>
                 <td>{6}</td>
-              </tr>
-              <tr>
                 <td>{7}</td>
-                <td>{8}</td>
               </tr>
               <tr>
+                <td>{8}</td>
                 <td>{9}</td>
+              </tr>
+              <tr>
                 <td>{10}</td>
+                <td>{11}</td>
               </tr>
             </table>
             <p>Please note that many (but maybe not all) connection/filler words like "and", "or", "to" have been
@@ -114,16 +114,17 @@
             these scores are in relation to the other existing scores, you might want to consider compressing these
             shows in order to save storage space.</p>
             <br>
-            <h2>Movies and library size</h2>
+            <h2>Media and library size</h2>
             <p>Last but not least, let's look at the relation of the size of your library to the amount of media you
-            have (currently only movies). This plot will show you the estimated growth as a dotted red line, with the
+            have. This plot will show you the estimated linear growth as a dotted red line, with the
             actual growth as the blue line. The y-axis describes the total amount of space taken up by your library and
-            the x-axis the amount of movies you have sorted by year.</p>
-            <img class="mx-auto d-block" src="../plots/m_t_f.jpg" alt="movies_to_size">
+            the x-axis the amount of movies or shows you have sorted by year.</p>
+            <img class="mx-auto float-start" src="../plots/m_t_f.jpg" alt="movies to size" width="464">
+            <img class="mx-auto float-end" src="../plots/s_t_f.jpg" alt="shows to size" width="464">
             <p>The dotted red line shows you how your library will grow expectedly. If the blue line deviates from this
-            significantly, you can conclude that movies added at that point are different in their size. If the blue
-            line is above the red line, your movies are bigger than expected and vice versa if the blue line is below
-            the red line.</p>
+            significantly, you can conclude that movies or shows added at that point are different in their size. If
+              the blue line is above the red line, your movies are bigger than expected and vice versa if the blue line
+              is below the red line. Note that the linear regression for the shows uses the runtime as a cofactor.</p>
         </div>
         <div class="col-3 p-3"></div>
     </div>

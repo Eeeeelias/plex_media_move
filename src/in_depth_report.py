@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from collections import Counter
 
@@ -20,6 +21,11 @@ def media_over_time(db: str):
     df2['date'] = df2['modified'].apply(lambda x: datetime.fromtimestamp(x).strftime('%Y-%m-%d'))
     merged_df = pd.concat([df[['id_s', 'date']], df2[['id_m', 'date']]], axis=0)
     merged_df['date'] = pd.to_datetime(merged_df['date'])
+    first_entry = merged_df['date'].min()
+    last_entry = merged_df['date'].max()
+    days_apart = (last_entry - first_entry).days
+    # this should work, 7% seems to be a good ratio
+    label_offset = int(0.07 * days_apart)
     merged_df = merged_df.groupby('date').count().reset_index()
     cumulative_sum_m = merged_df['id_m'].cumsum()
     cumulative_sum_s = merged_df['id_s'].cumsum()
@@ -27,12 +33,12 @@ def media_over_time(db: str):
     last_idx = len(cumulative_sum_s) - 1
     plt.plot(merged_df['date'], cumulative_sum_s, label='Shows')
     plt.annotate(f'{cumulative_sum_s[last_idx]:.0f}', xy=(merged_df['date'][last_idx], cumulative_sum_s[last_idx]),
-                 xytext=(merged_df['date'][last_idx] - pd.DateOffset(days=180), cumulative_sum_s[last_idx]))
+                 xytext=(merged_df['date'][last_idx] - pd.DateOffset(days=label_offset), cumulative_sum_s[last_idx]))
 
     last_idx = len(cumulative_sum_m) - 1
     plt.plot(merged_df['date'], cumulative_sum_m, label='Movies')
     plt.annotate(f'{cumulative_sum_m[last_idx]:.0f}', xy=(merged_df['date'][last_idx], cumulative_sum_m[last_idx]),
-                 xytext=(merged_df['date'][last_idx] - pd.DateOffset(days=180), cumulative_sum_m[last_idx]))
+                 xytext=(merged_df['date'][last_idx] - pd.DateOffset(days=label_offset), cumulative_sum_m[last_idx]))
     plt.xlabel('Date')
     plt.ylabel('Amount of Media in the DB')
     plt.legend()
@@ -40,9 +46,6 @@ def media_over_time(db: str):
         os.mkdir(data_path + f"{sep}plots")
     plt.savefig(data_path + f"{sep}plots/me_o_t.jpg")
     plt.clf()
-    # x = date2num(datetime.strptime('2019-09-01', '%Y-%m-%d'))
-    # plt.axvline(x=x, color='r', linestyle='--')
-    # plt.annotate(f'September 2019', xy=(x, cumulative_sum_s.max()), xytext=(x*1.001, cumulative_sum_s.max()*1.05))
 
 
 def distribution_episodes(db: str):
@@ -69,7 +72,20 @@ def release_movie(db: str):
     plt.savefig(data_path + f"{sep}plots/re_mo.jpg")
     plt.clf()
     counts = Counter(df['year'])
-    return counts.most_common(1)[0]
+    total_movies = len(df)
+    curr_year = datetime.now().year
+    decade_movies = 0
+    for year, freq in counts.items():
+        if curr_year - 10 >= year:
+            decade_movies += 1
+    if decade_movies / total_movies > 0.5:
+        return f"It seems that you're more into movies made in the last ten years. A whole " \
+               f"{round((decade_movies / total_movies) * 100, 0)}% of movies you have were released in the last ten " \
+               f"years!"
+    else:
+        return f"It seems that you can also enjoy older movies. Only " \
+               f"{round((decade_movies / total_movies) * 100, 0)}% of the movies you have were released in the last " \
+               f"ten years!"
 
 
 def word_analysis(db: str):
@@ -78,7 +94,7 @@ def word_analysis(db: str):
     words = " ".join([x[0] for x in data_shows]) + " ".join([x[0] for x in data_movies])
     words = words.split(" ")
     useless_words = ['the', 'to', 'a', 'der', 'das', 'und', 'of', 'no', 'in', 'und', 'and', '-', 'des', '&', 'die',
-                     'wo', 'ni', 'wa', 'von', 'on', 'ist', 'ein']
+                     'wo', 'ni', 'wa', 'von', 'on', 'ist', 'ein', 'im']
     words = [x.lower() for x in words if x.lower() not in useless_words]
     counts = Counter(words)
     df = pd.DataFrame.from_dict(counts, orient='index', columns=['value'])
@@ -112,23 +128,62 @@ def media_to_filesize(db: str):
     df = df.sort_values(by=['date'])
     df = df.reset_index(drop=True)
     median_size = df['size'].median()
+    # linear regression here
+    coef = np.polyfit(df.index, cumsum_size, 1)
+    best_fit = np.poly1d(coef)
+    predicted = best_fit(df.index)
     plt.plot(df.index, cumsum_size, label='actual growth')
-    plt.plot(df.index, median_size * df.index, '--', color='r', label='estimated growth')
+    plt.plot(df.index, predicted, '--', color='r', label='linear growth')
     df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
     df.set_index('date', inplace=True)
     yearly_first_rows = df.groupby(df.index.year).idxmin()
     df = df.reset_index(drop=False)
     iter_year = yearly_first_rows[-3:].iterrows() if len(yearly_first_rows) > 4 else yearly_first_rows.iterrows()
+    txt_coord = 4
     for year in iter_year:
         date = year[1]['size']
         x_val = df.index[df['date'] == date][0]
         plt.axvline(x=x_val, color='gray', linestyle='--', linewidth=1)
-        plt.annotate(year[1]['size'].year, xy=(x_val, cumsum_size.tail(1)), xycoords='data', xytext=(-28, 0),
+        plt.annotate(year[1]['size'].year, xy=(x_val, cumsum_size.tail(1)), xycoords='data', xytext=(txt_coord, 0),
                      textcoords='offset points')
+        txt_coord = -28 if txt_coord == 4 else 4
     plt.xlabel('# of Movies')
     plt.ylabel('Library size in GB')
     plt.legend()
     plt.savefig(data_path + f"{sep}plots/m_t_f.jpg")
+    plt.clf()
+
+
+def shows_to_size(db: str):
+    data_shows = manage_db.custom_sql(db, 'SELECT size, runtime, modified FROM shows')
+    df = pd.DataFrame(data_shows, columns=['size', 'runtime', 'date'])
+    df['date'] = df['date'].apply(lambda x: datetime.fromtimestamp(x).strftime('%Y-%m-%d'))
+    df['size'] = [mediainfolib.convert_size(x, unit='gb') for x in df['size']]
+    cumsum_size = df['size'].cumsum()
+    df = df.sort_values(by=['date']).reset_index(drop=True)
+    # linear regression here
+    coef = np.polyfit(df.index, cumsum_size, deg=1, w=df['runtime'])
+    best_fit = np.poly1d(coef)
+    predicted = best_fit(df.index)
+    plt.plot(df.index, cumsum_size, label='actual growth')
+    plt.plot(df.index, predicted, '--', color='r', label='linear growth')
+    df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
+    df.set_index('date', inplace=True)
+    yearly_first_rows = df.groupby(df.index.year).idxmin()
+    df = df.reset_index(drop=False)
+    iter_year = yearly_first_rows[-3:].iterrows() if len(yearly_first_rows) > 4 else yearly_first_rows.iterrows()
+    txt_coord = -28
+    for year in iter_year:
+        curr_date = year[1]['size']
+        x_val = df.index[df['date'] == curr_date][0]
+        plt.axvline(x=x_val, color='gray', linestyle='--', linewidth=1)
+        plt.annotate(year[1]['size'].year, xy=(x_val, cumsum_size.tail(1)), xycoords='data', xytext=(txt_coord, 0),
+                     textcoords='offset points')
+        txt_coord = 4 if txt_coord == -28 else -28
+    plt.xlabel('# of TV Shows')
+    plt.ylabel('Library size in GB')
+    plt.legend()
+    plt.savefig(data_path + f"{sep}plots/s_t_f.jpg")
     plt.clf()
 
 
