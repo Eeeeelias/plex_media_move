@@ -10,8 +10,8 @@ from src import manage_db, mediainfolib
 
 
 def media_over_time(db: str):
-    data_shows = manage_db.custom_sql(db, "SELECT id, modified FROM main.shows")
-    data_movies = manage_db.custom_sql(db, "SELECT id, modified FROM main.movies")
+    data_shows = manage_db.custom_sql(db, "SELECT id, modified FROM shows")
+    data_movies = manage_db.custom_sql(db, "SELECT id, modified FROM movies")
     df = pd.DataFrame(data_shows, columns=['id_s', 'modified'])
     df2 = pd.DataFrame(data_movies, columns=['id_m', 'modified'])
     df['id_s'] = 's' + df['id_s'].astype(str)
@@ -46,14 +46,14 @@ def media_over_time(db: str):
 
 
 def distribution_episodes(db: str):
-    data_shows = manage_db.custom_sql(db, 'SELECT id, episodes FROM main.shows')
+    data_shows = manage_db.custom_sql(db, 'SELECT id, episodes FROM shows')
     df = pd.DataFrame(data_shows, columns=['id', 'n_episodes'])
     plt.hist(df['n_episodes'], bins=20, color='blue', alpha=0.5)
     plt.xlabel('Number of episodes')
     plt.ylabel('Number of shows')
     plt.savefig(data_path + f"{sep}plots/dis_ep.jpg")
     plt.clf()
-    max_episodes = manage_db.custom_sql(db, 'SELECT max(episodes), name FROM main.shows')
+    max_episodes = manage_db.custom_sql(db, 'SELECT max(episodes), name FROM shows')
     counts = Counter(df['n_episodes'])
     return f'The show with the most episodes you have is \'{max_episodes[0][1]}\' with {max_episodes[0][0]} episodes!' \
            f' Most shows however have {counts.most_common(1)[0][0]} episodes! In fact, there are ' \
@@ -61,7 +61,7 @@ def distribution_episodes(db: str):
 
 
 def release_movie(db: str):
-    data_movies = manage_db.custom_sql(db, "SELECT id, year FROM main.movies")
+    data_movies = manage_db.custom_sql(db, "SELECT id, year FROM movies")
     df = pd.DataFrame(data_movies, columns=['id', 'year'])
     plt.hist(df['year'], bins=20, color='green', alpha=0.5)
     plt.xlabel('Release year')
@@ -73,8 +73,8 @@ def release_movie(db: str):
 
 
 def word_analysis(db: str):
-    data_shows = manage_db.custom_sql(db, 'SELECT name FROM main.shows')
-    data_movies = manage_db.custom_sql(db, 'SELECT name FROM main.movies')
+    data_shows = manage_db.custom_sql(db, 'SELECT name FROM shows')
+    data_movies = manage_db.custom_sql(db, 'SELECT name FROM movies')
     words = " ".join([x[0] for x in data_shows]) + " ".join([x[0] for x in data_movies])
     words = words.split(" ")
     useless_words = ['the', 'to', 'a', 'der', 'das', 'und', 'of', 'no', 'in', 'und', 'and', '-', 'des', '&', 'die',
@@ -104,7 +104,7 @@ def scores_analysis(db: str):
 
 
 def media_to_filesize(db: str):
-    data_movies = manage_db.custom_sql(db, 'SELECT size, modified FROM main.movies')
+    data_movies = manage_db.custom_sql(db, 'SELECT size, modified FROM movies')
     df = pd.DataFrame(data_movies, columns=['size', 'date'])
     df['date'] = df['date'].apply(lambda x: datetime.fromtimestamp(x).strftime('%Y-%m-%d'))
     df['size'] = [mediainfolib.convert_size(x, unit='gb') for x in df['size']]
@@ -133,7 +133,7 @@ def media_to_filesize(db: str):
 
 
 def filetype_size(db: str):
-    data_movies = manage_db.custom_sql(db, 'SELECT type, size FROM main.movies')
+    data_movies = manage_db.custom_sql(db, 'SELECT type, size FROM movies')
     df = pd.DataFrame(data_movies, columns=['type', 'size'])
     df['size'] = [mediainfolib.convert_size(x, unit='gb') for x in df['size']]
     df['type'] = pd.Categorical(df['type'])
