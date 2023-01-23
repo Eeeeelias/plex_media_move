@@ -7,7 +7,8 @@ from shutil import copy
 
 
 def make_analyses(db_path: str):
-    plots = [di.media_over_time, di.release_movie, di.media_to_filesize, di.scores_analysis, di.distribution_episodes]
+    plots = [di.media_over_time, di.release_movie, di.media_to_filesize, di.scores_analysis, di.filetype_size,
+             di.distribution_episodes]
     sig_ep = None
     for anal in plots:
         sig_ep = anal(db_path)

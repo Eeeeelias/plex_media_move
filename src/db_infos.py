@@ -212,7 +212,7 @@ def media_to_filesize(db: str):
     df = df.reset_index(drop=True)
     median_size = df['size'].median()
     plt.plot(df.index, cumsum_size, label='actual growth')
-    plt.plot(df.index, median_size * df.index, '--', color='r', label='expected growth')
+    plt.plot(df.index, median_size * df.index, '--', color='r', label='estimated growth')
     df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
     df.set_index('date', inplace=True)
     yearly_first_rows = df.groupby(df.index.year).idxmin()
@@ -230,3 +230,16 @@ def media_to_filesize(db: str):
     plt.savefig(data_path + f"{sep}plots/m_t_f.jpg")
     plt.clf()
 
+
+def filetype_size(db: str):
+    data_movies = manage_db.custom_sql(db, 'SELECT type, size FROM main.movies')
+    df = pd.DataFrame(data_movies, columns=['type', 'size'])
+    df['size'] = [mediainfolib.convert_size(x, unit='gb') for x in df['size']]
+    df['type'] = pd.Categorical(df['type'])
+    df.boxplot(column='size', by='type', grid=False, widths=0.7)
+    plt.title('')
+    plt.suptitle('')
+    plt.xlabel('Movie filetype')
+    plt.ylabel('Filesize in GB')
+    plt.savefig(data_path + f"{sep}plots/ft_s.jpg")
+    plt.clf()

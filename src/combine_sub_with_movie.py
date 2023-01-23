@@ -47,6 +47,20 @@ def interactive():
     return [relevant_files]
 
 
+def match_sub_with_vid(files: list):
+    videos = [x for x in files[0] if x[-4:] == '.mp4' or x[-4:] == '.mkv']
+    subs = [x for x in files[0] if x[-4:] == '.ass' or x[-4:] == '.srt']
+    if len(videos) == 1:
+        return files
+    matches = []
+    for video in videos:
+        name = os.path.splitext(os.path.basename(video))[0]
+        tmp = [video]
+        tmp.extend([x for x in subs if name in x])
+        matches.append(tmp)
+    return matches
+
+
 def sub_in_movie(movie_files, out_path):
     ext = set(os.path.splitext(x)[1] for x in movie_files)
     sub_type = ".srt" if {".srt"}.issubset(ext) else ".ass"
@@ -91,16 +105,17 @@ def main():
             print_formatted_text(HTML("<ansired> Couldn't find config, specify output!</ansired>"))
             output = session.prompt(HTML("<ansiblue> Output path: </ansiblue>"), completer=PathCompleter()).lstrip('"')\
                 .rstrip('"')
-        subs_to_combine = interactive()
-        if subs_to_combine is None:
+        files = interactive()
+        if files is None:
             return
     else:
         if sys.argv[1] == "-h":
             print("argument 1: path containing .srt or .ass files\nargument 2: output path")
             exit(0)
-        subs_to_combine = fetch_files(sys.argv[1])
+        files = fetch_files(sys.argv[1])
         output = sys.argv[2]
 
+    subs_to_combine = match_sub_with_vid(files)
     for movie in subs_to_combine:
         sub_in_movie(movie, output)
     return
