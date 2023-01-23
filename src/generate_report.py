@@ -2,17 +2,17 @@ import datetime
 import os.path
 
 from src.mediainfolib import data_path, seperator as sep, database_path
-import src.db_infos as di
 from shutil import copy
 
 
 def make_analyses(db_path: str):
-    plots = [di.media_over_time, di.release_movie, di.media_to_filesize, di.scores_analysis, di.filetype_size,
-             di.distribution_episodes]
+    import src.in_depth_report as idr
+    plots = [idr.media_over_time, idr.release_movie, idr.media_to_filesize, idr.scores_analysis, idr.filetype_size,
+             idr.distribution_episodes]
     sig_ep = None
     for anal in plots:
         sig_ep = anal(db_path)
-    words = di.word_analysis(db_path)
+    words = idr.word_analysis(db_path)
     return sig_ep, words
 
 
