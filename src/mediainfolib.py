@@ -37,14 +37,14 @@ config_path = data_path + f"{seperator}config.json"
 class PathValidator(Validator):
     def validate(self, document):
         text = document.text
-        if text and text != 'q' and not os.path.isdir(text):
+        if text and text != 'q' and not os.path.isdir(text.lstrip('"').rstrip('"')):
             raise ValidationError(message='This is not a directory!')
 
 
 class FileValidator(Validator):
     def validate(self, document):
         text = document.text
-        if text and text != 'q' and not os.path.isfile(text):
+        if text and text != 'q' and not os.path.isfile(text.lstrip('"').rstrip('"')):
             raise ValidationError(message='This is not a file!')
 
 
@@ -267,10 +267,10 @@ def convert_size(size, unit='gb', r=2) -> float:
     """
     size_gb = size / (1024 ** 3)
     if unit == 'tb':
-        size_tb = size_gb / 1000
+        size_tb = size_gb / 1024
         return round(size_tb, r)
     if unit == 'mb':
-        size_mb = size_gb * 1000
+        size_mb = size_gb * 1024
         return round(size_mb, r)
     return round(size_gb, r)
 

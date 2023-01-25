@@ -6,9 +6,9 @@ from prompt_toolkit.validation import Validator, ValidationError
 
 import media_mover
 from src import manage_db, convert_ts, change_config, setup
-from src.mediainfolib import get_source_files, convert_size, convert_millis, get_duration, \
+from src.mediainfolib import get_source_files, convert_size, convert_millis, \
     seperator as sep, avg_video_size, clear, remove_video_list, get_config, write_video_list, read_existing_list, \
-    cut_name, season_episode_matcher, check_database_ex, strip_show_name, config_path
+    cut_name, season_episode_matcher, check_database_ex, strip_show_name, config_path, get_duration_cv2, convert_seconds
 from prompt_toolkit import print_formatted_text, HTML, prompt
 
 
@@ -110,7 +110,7 @@ def show_all_files(ex):
         print_formatted_text(
             HTML(f"    # <ansigreen>{f'[{file[0]}]'.ljust(6)}</ansigreen>{filename}"
                  f"{cut_name(file[2], name_string).ljust(name_string + 3)}{file[3].ljust(6)}{file[4].ljust(7)}"
-                 f"{size}{convert_millis(int(file[7])).replace('&', '&amp;').ljust(7)} #"))
+                 f"{size}{convert_seconds(int(file[7])).replace('&', '&amp;').ljust(7)} #"))
     display_string = f"{border_bar}\n\t"
     # clear()
     print(empty_row)
@@ -214,7 +214,7 @@ def get_files(src_path, list_path):
                 continue
             file_name = os.path.splitext(os.path.basename(video))[0]
             media_name = strip_show_name(file_name)
-            duration_vid = get_duration(video)
+            duration_vid = get_duration_cv2(video)
             size_vid = os.path.getsize(video)
             season, episode = season_episode_matcher(os.path.basename(video))
             ep_str = f"E0{episode}" if episode else f"NaN"
