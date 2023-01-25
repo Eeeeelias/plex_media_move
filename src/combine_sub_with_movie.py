@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from sys import exit
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.completion import PathCompleter
@@ -78,7 +79,7 @@ def sub_in_movie(movie_files, out_path):
         return
     movie = [x for x in movie_files if sub_type not in x][0]
     out = out_path + f"{sep}{os.path.splitext(os.path.basename(movie))[0]}.mkv"
-    print("Movie: {}".format(os.path.split(movie)[1]))
+    print("Video: {}".format(os.path.split(movie)[1]))
     inputs = ["ffmpeg", "-loglevel", "warning", "-i", movie]
     maps = ["-map", "0"]
     codecs = ["-c:v", "copy", "-c:a", "copy", "-c:s", sub_type[1:]]
@@ -95,6 +96,13 @@ def sub_in_movie(movie_files, out_path):
     ffmpeg_full.append(out)
     # print(ffmpeg_full)
     subprocess.run(ffmpeg_full)
+
+
+def combine_subs(files: list, output: str):
+    subs_to_combine = match_sub_with_vid(files)
+    for movie in subs_to_combine:
+        sub_in_movie(movie, output)
+        time.sleep(10)
 
 
 def main():
@@ -115,9 +123,7 @@ def main():
         files = fetch_files(sys.argv[1])
         output = sys.argv[2]
 
-    subs_to_combine = match_sub_with_vid(files)
-    for movie in subs_to_combine:
-        sub_in_movie(movie, output)
+    combine_subs(files, output)
     return
 
 

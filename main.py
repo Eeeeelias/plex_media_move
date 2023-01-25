@@ -1,6 +1,8 @@
 import os
 import traceback
 
+from src import tor_wf
+
 
 def greetings():
     gs = "<ansigreen>"
@@ -105,6 +107,7 @@ def get_options():
         "c": change_config.main,
         "6": file_editor.main,
         "fw": file_editor.main,
+        "tor": tor_wf.main,
         "log": log_watch.main,
         "close": exit_rm,
         "q": exit_rm,

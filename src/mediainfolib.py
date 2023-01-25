@@ -232,6 +232,9 @@ def check_database_ex(path: str) -> bool:
 def convert_country(alpha: str) -> str:
     alpha = alpha.split(";")
     langs = []
+    # country codes are either 2 or 3 chars long
+    if len(alpha[0]) > 3:
+        return pycountry.languages.search_fuzzy(alpha[0])
     if alpha[0] != "und":
         try:
             for al in alpha:
