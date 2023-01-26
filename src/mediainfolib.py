@@ -113,6 +113,17 @@ def get_source_files(video_folder=None) -> tuple:
     return source_files, n_files, n_paths
 
 
+# return all videos of common file types
+def get_video_files(path: str, subpath=None):
+    full_path = path + f"{seperator}" + subpath if subpath else path
+    video_files = []
+    video_files.extend(glob.glob(full_path + "/*.mp4"))
+    video_files.extend(glob.glob(full_path + "/*.mkv"))
+    video_files.extend(glob.glob(full_path + "/*.ts"))
+    video_files.extend(glob.glob(full_path + "/*.webm"))
+    return video_files
+
+
 def current_files_info(c: int, files: list, max_len=36) -> list:
     display_list = []
     for i in range(c+1):
