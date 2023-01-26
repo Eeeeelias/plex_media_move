@@ -41,7 +41,7 @@ def check_codec(vid: str):
 def convert_h265(videos: str, out_path):
     vids = [videos]
     if os.path.isdir(videos):
-        vids = [x for x in glob.glob(videos + '/*.mkv') + glob.glob(videos + '/*.mp4') if os.path.isfile(x)]
+        vids = [x for x in get_video_files(videos) if os.path.isfile(x)]
 
     # checking for GPU
     try:

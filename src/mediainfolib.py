@@ -315,7 +315,12 @@ def avg_video_size(path) -> float:
 
 
 def strip_show_name(raw) -> str:
-    return re.sub(r"((Season \d+|\d+(nd|rd|th) Season)? Episode \d+|[sS]\d+[eE]\d+|\(\d{4}\))(.*)", "", raw).strip()
+    name = re.sub(r"((Season \d+|\d+(nd|rd|th) Season)? Episode \d+|[sS]\d+[eE]\d+|\(\d{4}\))(.*)", "", raw).strip()
+    name_dots = re.sub(r"\.", " ", name)
+    # if names are written like Show.Name.S01E01.mp4
+    if " " in name_dots and "  " not in name_dots:
+        return name_dots.strip()
+    return name
 
 
 def write_video_list(videos, path) -> None:
