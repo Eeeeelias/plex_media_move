@@ -1,5 +1,5 @@
 ## Introduction
-PMM or Plex Media Move is a little command line tool that helps you organise, sort, rename, move your media files so your favourite Media Server (not just Plex!) has an easy time picking everything up. PMM also offers some basic video editing possibilities as well as converting different files. It's designed to require very little effort and work do most things automatically. 
+PMM or Plex Media Move is a little command line tool that helps you organise, sort, rename, move your media files so your favourite Media Server (not just Plex!) has an easy time picking everything up. PMM also offers some basic video editing possibilities as well as converting different files. It's designed to require very little personal effort and does most things automatically. 
 
 ## Prerequisites
 In order for PMM to work, you need the following programs/packages:
