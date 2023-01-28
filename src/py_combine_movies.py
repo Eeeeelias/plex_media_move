@@ -128,7 +128,7 @@ def get_prev(path):
     print_formatted_text(
         f'Using:\nMovie1: {vals["mv_en"]}\nMovie2: {vals["mv_de"]}\nLanguage1: {vals["ln_en"]}\nLanguage2: {vals["ln_de"]}\nDestination: {vals["dst"]}'
     )
-    vals["off"] = session.prompt(HTML("<ansiblue>[a] Okay great, now please specify a new offset: </ansiblue>"))
+    vals["off"] = prompt(HTML("<ansiblue>[a] Okay great, now please specify a new offset: </ansiblue>"))
     return (
         vals["mv_en"],
         vals["mv_de"],
