@@ -1,8 +1,6 @@
 import os
 import traceback
 
-from src import tor_wf
-
 
 def greetings():
     gs = "<ansigreen>"
@@ -89,7 +87,7 @@ def exit_rm():
 
 
 def get_options():
-    from src import ffmpeg_edits, convert_ts, search_db, rename, change_config, file_editor, log_watch
+    from src import ffmpeg_edits, convert_ts, search_db, rename, change_config, file_editor, log_watch, tor_wf
     import media_mover
     # define a dictionary mapping tool names to functions
     tools = {

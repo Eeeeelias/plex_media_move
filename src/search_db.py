@@ -89,9 +89,9 @@ def main():
     conf = mediainfolib.get_config()
     db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
 
-    if db_path is None or not os.path.isfile(db_path):
-        print_formatted_text(HTML("<ansired>[w] No database found!</ansired>"))
-        return
+    #if db_path is None or not os.path.isfile(db_path):
+    #    print_formatted_text(HTML("<ansired>[w] No database found!</ansired>"))
+    #    return
 
     # print("Looking at: {}".format(db_path))
     while 1:

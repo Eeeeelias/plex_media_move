@@ -5,19 +5,27 @@ import shutil
 import subprocess
 import time
 
+import prompt_toolkit
+from prompt_toolkit import HTML
+from prompt_toolkit.completion import PathCompleter
+
 from src.combine_sub_with_movie import combine_subs
-from src.mediainfolib import get_config, seperator as sep, get_video_files
+from src.mediainfolib import get_config, seperator as sep, get_video_files, PathValidator
 
 # feel free to add to that lol
 countries = {'English': 'eng', 'German': 'deu', 'French': 'fra', 'Japanese': 'jpn', 'Korean': 'kor'}
 
 
+def greetings():
+    return prompt_toolkit.prompt(HTML("<ansiblue>=> </ansiblue>"), completer=PathCompleter(), validator=PathValidator())\
+        .lstrip('"').lstrip('"')
+
+
 def set_sub_names(in_path: str):
     n_subs = 0
     dest = in_path + "\\"
-    for j in glob.glob(in_path + f"{sep}Subs{sep}*.srt", recursive=True):
-        print(j)
-        # print("Curr sub:", j)
+    for j in glob.glob(in_path + f"{sep}Subs{sep}**{sep}*.srt", recursive=True):
+        # check to make sure only the bigger file gets taken
         country = re.match(r"\d+_(.*).srt", os.path.basename(j)).group(1)
         alpha = countries.get(country)
         parent_names = j.split(f"{sep}")
@@ -32,13 +40,17 @@ def set_sub_names(in_path: str):
 
 
 def check_codec(vid: str):
-    codec = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name",
-                            "-of", "default=noprint_wrappers=1:nokey=1", vid], stdout=subprocess.PIPE,
-                           stderr=subprocess.STDOUT)
-    return codec.stdout.decode('utf-8')
+    try:
+        codec = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name",
+                                "-of", "default=noprint_wrappers=1:nokey=1", vid], stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT)
+        return codec.stdout.decode('utf-8')
+    except IndexError:
+        return None
 
 
 def convert_h265(videos: str, out_path):
+    print(f"Converting {videos} videos")
     vids = [videos]
     if os.path.isdir(videos):
         vids = [x for x in get_video_files(videos) if os.path.isfile(x)]
@@ -58,7 +70,7 @@ def convert_h265(videos: str, out_path):
 
 def main():
     out_path = get_config()['combiner']['default_out']
-    in_path = "D:\\Downloads\\Vids\\Shuumatsu"
+    in_path = greetings()
 
     vid_list = get_video_files(in_path)
     num_vids = len(vid_list)
@@ -79,8 +91,9 @@ def main():
         print("Something might've gone wrong, not deleting files")
     else:
         print('Deleting old files')
-        os.remove(tmp_path)
+        shutil.rmtree(tmp_path)
     time.sleep(10)
+    
 
 
 if __name__ == '__main__':
