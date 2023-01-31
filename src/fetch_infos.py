@@ -83,7 +83,7 @@ def get_movie_infos(plex_path: AnyStr, nr=1) -> List[tuple]:
         except AttributeError:
             print(
                 f"[w] Movie {filename} not properly named! Make sure its in 'Movie name (Year) - Version.ext' format.")
-            exit(1)
+            year = 1900
         try:
             version = re.search(r"(?<=\(\d{4}\) - ).*(?=(.mp4)|(.mkv))", filename).group()
         except AttributeError:

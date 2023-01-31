@@ -42,7 +42,7 @@ def add_to_db(conn, table, media) -> tuple:
     return get_max_id(proper_table, curse)
 
 
-def create_database(plex_path, db_path, info_shows: list[tuple], info_movies: list[tuple]) -> None:
+def create_database(plex_path: str, db_path: str, info_shows: list[tuple], info_movies: list[tuple]) -> None:
     if not os.path.exists(db_path):
         open(db_path, 'a').close()
     sql_create_shows = """ CREATE TABLE IF NOT EXISTS shows (

@@ -134,6 +134,7 @@ def main():
                     setup.redo_db()
                     continue
                 setup.redo_db(reindex=False)
+                return
             elif inp in ["7", "stats"]:
                 show_stats.all_stats(db_path)
                 continue
