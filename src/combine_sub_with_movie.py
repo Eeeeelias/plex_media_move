@@ -57,7 +57,8 @@ def match_sub_with_vid(files: list):
     for video in videos:
         name = os.path.splitext(os.path.basename(video))[0]
         tmp = [video]
-        tmp.extend([x for x in subs if name in x])
+        # the regex removes the language and file ending
+        tmp.extend([x for x in subs if name == re.sub(r"(\.[\w]{2,3}\.(srt|ass)$)", "", os.path.basename(x))])
         matches.append(tmp)
     return matches
 

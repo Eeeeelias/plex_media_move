@@ -1,6 +1,8 @@
 import os
 import re
 import random
+import sqlite3
+
 from src import mediainfolib, setup, manage_db, show_stats, generate_report
 from src.mediainfolib import seperator, clear, cut_name
 from prompt_toolkit import prompt, HTML, print_formatted_text
@@ -88,11 +90,6 @@ def search_other(db_path):
 def main():
     conf = mediainfolib.get_config()
     db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
-
-    #if db_path is None or not os.path.isfile(db_path):
-    #    print_formatted_text(HTML("<ansired>[w] No database found!</ansired>"))
-    #    return
-
     # print("Looking at: {}".format(db_path))
     while 1:
         try:
@@ -161,6 +158,8 @@ def main():
         except KeyboardInterrupt:
             print("\nFinishing")
             exit(0)
+        except sqlite3.OperationalError:
+            print_formatted_text(HTML("<ansired>Database error. Make sure your database exists!</ansired>"))
 
 
 if __name__ == '__main__':
