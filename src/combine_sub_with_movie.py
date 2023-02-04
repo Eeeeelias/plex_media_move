@@ -80,13 +80,13 @@ def sub_in_movie(movie_files, out_path):
         return
     movie = [x for x in movie_files if sub_type not in x][0]
     out = out_path + f"{sep}{os.path.splitext(os.path.basename(movie))[0]}.mkv"
-    print("Video: {}".format(os.path.split(movie)[1]))
+    print_formatted_text(HTML("<ansimagenta>Video</ansimagenta>: {}".format(os.path.split(movie)[1])))
     inputs = ["ffmpeg", "-loglevel", "warning", "-i", movie]
     maps = ["-map", "0"]
     codecs = ["-c:v", "copy", "-c:a", "copy", "-c:s", sub_type[1:]]
     metadata = []
     for i, (key, value) in enumerate(subs_with_lang.items()):
-        print("{} Subs: {}".format(convert_country(key), os.path.split(value)[1]))
+        print_formatted_text(HTML("<ansiyellow>{} Subs</ansiyellow>: {}".format(convert_country(key), os.path.split(value)[1])))
         sub = ["-f", sub_type[1:], "-i", value]
         new_map = ["-map", f"{i + 1}:s"]
         new_metadata = [f"-metadata:s:s:{i}", f"language={key}"]

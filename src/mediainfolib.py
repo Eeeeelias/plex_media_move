@@ -298,10 +298,17 @@ def split_shows(seq, size):
 
 
 def fuzzy_matching(input_dir, u_show) -> str:
+    try:
+        threshold = get_config()['mover']['fuzzy_match']
+    except KeyError:
+        print("No threshold found in config! Setting default")
+        from src.change_config import add_to_config
+        add_to_config({'mover': {'fuzzy_match': "0.8"}}, append=True)
+        threshold = 0.8
     matched_show = None
     for show in os.listdir(input_dir):
         ratio = SM(None, show, u_show).ratio()
-        if 1 > ratio > 0.8:
+        if 1 > ratio > float(threshold):
             print(
                 "[i] \'{}\' and \'{}\' might be the same show. ({:.0f}% similarity)".format(show, u_show, ratio * 100))
             matched_show = show

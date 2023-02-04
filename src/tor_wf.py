@@ -6,7 +6,7 @@ import subprocess
 import time
 
 import prompt_toolkit
-from prompt_toolkit import HTML
+from prompt_toolkit import HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
 
 from src.combine_sub_with_movie import combine_subs
@@ -50,7 +50,7 @@ def check_codec(vid: str):
 
 
 def convert_h265(videos: str, out_path):
-    print(f"Converting {videos} videos")
+    print(f"Converting {len(videos)} videos")
     vids = [videos]
     if os.path.isdir(videos):
         vids = [x for x in get_video_files(videos) if os.path.isfile(x)]
@@ -63,6 +63,7 @@ def convert_h265(videos: str, out_path):
         hw_encoding = 'h264'
 
     for vid in vids:
+        print_formatted_text(HTML(f"<ansiyellow>Converting</ansiyellow>: {os.path.basename(vid)}"))
         new_path = out_path + f"{sep}" + os.path.basename(vid)
         subprocess.run(["ffmpeg", "-loglevel", "warning", "-i", vid, "-map", "0", "-c:v", hw_encoding, "-c:a", "copy",
                         "-pix_fmt", "yuv420p", "-c:s", "copy", new_path])
@@ -93,7 +94,6 @@ def main():
         print('Deleting old files')
         shutil.rmtree(tmp_path)
     time.sleep(10)
-    
 
 
 if __name__ == '__main__':

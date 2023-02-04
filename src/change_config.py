@@ -72,10 +72,25 @@ def change_value(config, program):
     return config, True
 
 
+# this is stupid, use add_to_config()
 def default_configs(config: dict):
     config['mover'].pop('filetypes')
     config.update({'viewer': {'default_view': config['mover']['orig_path'], 'filetypes': '.mkv .mp4 .ts'}})
     setup.write_config_to_file(config, config_path)
+
+
+def add_to_config(options: dict, append=False):
+    from src.mediainfolib import get_config
+    curr_conf = get_config()
+    for opt, vals in options.items():
+        if not append:
+            curr_conf.update({opt: vals})
+        else:
+            curr_val = curr_conf.get(opt)
+            curr_val.update(vals)
+            curr_conf.update({opt: curr_val})
+    setup.write_config_to_file(curr_conf, config_path)
+    return True
 
 
 def main():
