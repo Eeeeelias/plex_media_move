@@ -50,11 +50,11 @@ def check_codec(vid: str):
 
 
 def convert_h265(videos: str, out_path):
-    print(f"Converting {len(videos)} videos")
     vids = [videos]
     if os.path.isdir(videos):
         vids = [x for x in get_video_files(videos) if os.path.isfile(x)]
 
+    print(f"Converting {len(vids)} videos")
     # checking for GPU
     try:
         subprocess.check_output('nvidia-smi')
@@ -76,13 +76,15 @@ def main():
     vid_list = get_video_files(in_path)
     num_vids = len(vid_list)
     num_existing = len(get_video_files(out_path))
-    tmp_path = in_path + "\\converted"
+    tmp_path = in_path
     n_subs = set_sub_names(in_path)
     # do something with subs so it's not useless to extract subs
     codec = check_codec(vid_list[0])
-    if not os.path.isdir(tmp_path):
-        os.mkdir(tmp_path)
-    combine_subs([[x for x in glob.glob(in_path + "/*") if os.path.isfile(x)]], tmp_path)
+    if n_subs > 0:
+        tmp_path += "\\converted"
+        if not os.path.isdir(tmp_path):
+            os.mkdir(tmp_path)
+        combine_subs([[x for x in glob.glob(in_path + "/*") if os.path.isfile(x)]], tmp_path)
     if codec == 'h264':
         shutil.copy(tmp_path, out_path)
     else:
@@ -93,7 +95,6 @@ def main():
     else:
         print('Deleting old files')
         shutil.rmtree(tmp_path)
-    time.sleep(10)
 
 
 if __name__ == '__main__':

@@ -137,17 +137,17 @@ def main():
 
 if __name__ == '__main__':
     from src.mediainfolib import get_config, clear, get_source_files, current_files_info, remove_video_list
-    try:
-        import time
-        from prompt_toolkit import HTML, print_formatted_text, prompt
-        from sys import exit
-        check_for_setup()
-        main()
-    except KeyboardInterrupt:
-        print("Exiting")
-        remove_video_list(get_config()['mover']['orig_path'])
-        exit()
-    except Exception as e:
-        print(traceback.print_exc())
-        print("If this continues to show up, please message me or open an issue on Github!")
-        main()
+    while 1:
+        try:
+            import time
+            from prompt_toolkit import HTML, print_formatted_text, prompt
+            from sys import exit
+            check_for_setup()
+            main()
+        except KeyboardInterrupt:
+            print("Exiting")
+            remove_video_list(get_config()['mover']['orig_path'])
+            exit()
+        except Exception as e:
+            print(traceback.print_exc())
+            print("If this continues to show up, please message me or open an issue on Github!")
