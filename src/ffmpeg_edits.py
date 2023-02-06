@@ -84,7 +84,7 @@ def concat_videos():
         return
     new_file = concat_video_name(input_file)
     print("[i] New file will be: {}".format(new_file))
-    subprocess.run(["ffmpeg", "-f", "concat", "-safe", "0", "-i", input_file, "-c", "copy", new_file])
+    subprocess.run(["ffmpeg", "-f", "concat", "-safe", "0", "-i", input_file, "-map", "0", "-c", "copy", new_file])
 
 
 def cut_video():
@@ -100,9 +100,9 @@ def cut_video():
     if hw_encoding() == "h264_nvenc":
         codec = codec + "_nvenc"
     if end == "":
-        subprocess.run(["ffmpeg", "-i", input_file, "-map", "0", "-ss", start, "-c:v", codec, "-c:a", "copy", new_file])
+        subprocess.run(["ffmpeg", "-i", input_file, "-map", "0", "-ss", start, "-c:v", codec, "-crf", "4", "-c:a", "copy", new_file])
         return
-    subprocess.run(["ffmpeg", "-i", input_file, "-map", "0", "-ss", start, "-to", end, "-c:v", codec, "-c:a", "copy", new_file])
+    subprocess.run(["ffmpeg", "-i", input_file, "-map", "0", "-ss", start, "-to", end, "-c:v", codec, "-crf", "4", "-c:a", "copy", new_file])
 
 
 def main():
