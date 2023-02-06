@@ -95,10 +95,14 @@ def cut_video():
     end = cut_positions(start=False)
     new_file = cut_video_name(input_file)
     print("[i] New file will be: {}".format(new_file))
+    from src.tor_wf import check_codec, hw_encoding
+    codec = check_codec(input_file)
+    if hw_encoding() == "h264_nvenc":
+        codec = codec + "_nvenc"
     if end == "":
-        subprocess.run(["ffmpeg", "-i", input_file, "-ss", start, new_file])
+        subprocess.run(["ffmpeg", "-i", input_file, "-map", "0", "-ss", start, "-c:v", codec, "-c:a", "copy", new_file])
         return
-    subprocess.run(["ffmpeg", "-i", input_file, "-ss", start, "-to", end, new_file])
+    subprocess.run(["ffmpeg", "-i", input_file, "-map", "0", "-ss", start, "-to", end, "-c:v", codec, "-c:a", "copy", new_file])
 
 
 def main():

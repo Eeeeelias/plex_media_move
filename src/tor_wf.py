@@ -44,9 +44,18 @@ def check_codec(vid: str):
         codec = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name",
                                 "-of", "default=noprint_wrappers=1:nokey=1", vid], stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT)
-        return codec.stdout.decode('utf-8')
+        return codec.stdout.decode('utf-8').strip()
     except IndexError:
         return None
+
+
+def hw_encoding():
+    try:
+        subprocess.check_output('nvidia-smi')
+        hw_encode = 'h264_nvenc'
+    except Exception:
+        hw_encode = 'h264'
+    return hw_encode
 
 
 def convert_h265(videos: str, out_path):
@@ -56,17 +65,28 @@ def convert_h265(videos: str, out_path):
 
     print(f"Converting {len(vids)} videos")
     # checking for GPU
-    try:
-        subprocess.check_output('nvidia-smi')
-        hw_encoding = 'h264_nvenc'
-    except Exception:
-        hw_encoding = 'h264'
-
+    hw_encode = hw_encoding()
     for vid in vids:
         print_formatted_text(HTML(f"<ansiyellow>Converting</ansiyellow>: {os.path.basename(vid)}"))
         new_path = out_path + f"{sep}" + os.path.basename(vid)
-        subprocess.run(["ffmpeg", "-loglevel", "warning", "-i", vid, "-map", "0", "-c:v", hw_encoding, "-c:a", "copy",
+        subprocess.run(["ffmpeg", "-loglevel", "warning", "-i", vid, "-map", "0", "-c:v", hw_encode, "-c:a", "copy",
                         "-pix_fmt", "yuv420p", "-c:s", "copy", new_path])
+
+
+def hdr_to_sdr(video: str, out_path):
+    """
+    Converts an (ideally) 4K HDR video to 1080p SDR in H264 encoding
+    :param video: String to the input video
+    :param out_path: path where the converted video should be saved
+    :return: None
+    """
+    out = out_path + sep + re.sub("HDR", "SDR", os.path.basename(video))
+    res = "1920:1080"
+    codec = hw_encoding()
+    ffmpeg = ['ffmpeg', '-hwaccel', 'cuda', '-i', video, "-map", "0", '-vf',
+              f'zscale=t=linear,tonemap=hable,zscale=p=709:t=709:m=709,scale={res}', "-c:v", codec,
+              "-pix_fmt", "yuv420p", "-c:a", "copy", "-c:s", "copy", out]
+    subprocess.run(ffmpeg)
 
 
 def main():
