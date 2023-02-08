@@ -19,7 +19,7 @@ countries = {'English': 'eng', 'German': 'deu', 'French': 'fra', 'Japanese': 'jp
 
 def input_parser(input: str, conf: dict):
     in_vals = re.match(r"(\w*) (.*)", input)
-    conf.update({in_vals.group(1): in_vals.group(2)})
+    conf.update({in_vals.group(1): in_vals.group(2).strip("\"")})
     return conf
 
 
@@ -28,7 +28,7 @@ def greetings(conv_conf: dict):
              "    #                                                                          #    \n"
     values = "    # Your current config:                                                     #    \n"
     for i, j in conv_conf.items():
-        values = values + f"    # <ansigreen>{i.ljust(12)}</ansigreen> {cut_name(j, 59).ljust(59)} #    \n"
+        values = values + f"    # <ansigreen>{i.ljust(12)}</ansigreen> {cut_name(str(j), 59).ljust(59)} #    \n"
     print_formatted_text(HTML(header + values + header[::-1][1:]))
 
 
@@ -50,24 +50,33 @@ def set_sub_names(in_path: str):
     return n_subs
 
 
-def check_codec(vid: str):
+def check_codec(vid: str, type='v'):
     try:
         codec = subprocess.run(
-            ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name",
+            ["ffprobe", "-v", "error", "-select_streams", f"{type}:0", "-show_entries", "stream=codec_name",
              "-of", "default=noprint_wrappers=1:nokey=1", vid], stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
-        return codec.stdout.decode('utf-8').strip()
+        return list(set(codec.stdout.decode('utf-8').strip().split("\r\n")))[0]
     except IndexError:
         return None
+
+
+def ffprobe_info(vid: str):
+    result = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "stream=codec_name,width,height,pix_fmt,bit_rate",
+         "-of", "default=noprint_wrappers=1:nokey=1", vid], stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT)
+    result = result.stdout.decode('utf-8').strip().split("\r\n")
+    # result should be [codec_name, width, height, pix_fmt, bit_rate, codec_name, bit_rate, ...]
+    return result[:6]
 
 
 def hw_encoding():
     try:
         subprocess.check_output('nvidia-smi')
-        hw_encode = 'h264_nvenc'
+        return True
     except Exception:
-        hw_encode = 'h264'
-    return hw_encode
+        return False
 
 
 def convert_h265(videos: str, out_path: str):
@@ -77,7 +86,7 @@ def convert_h265(videos: str, out_path: str):
 
     print(f"Converting {len(vids)} videos")
     # checking for GPU
-    hw_encode = hw_encoding()
+    hw_encode = "h264_nvenc" if hw_encoding() else "h264"
     for vid in vids:
         print_formatted_text(HTML(f"<ansiyellow>Converting</ansiyellow>: {os.path.basename(vid)}"))
         new_path = out_path + f"{sep}" + os.path.basename(vid)
@@ -94,7 +103,7 @@ def hdr_to_sdr(video: str, out_path: str):
     """
     out = out_path + sep + re.sub("HDR", "SDR", os.path.basename(video))
     res = "1920:1080"
-    codec = hw_encoding()
+    codec = "h264_nvenc" if hw_encoding() else "h264"
     ffmpeg = ['ffmpeg', '-hwaccel', 'cuda', '-i', video, "-map", "0", '-vf',
               f'zscale=t=linear,tonemap=hable,zscale=p=709:t=709:m=709,scale={res}', "-c:v", codec,
               "-pix_fmt", "yuv420p", "-c:a", "copy", "-c:s", "copy", out]
@@ -102,18 +111,46 @@ def hdr_to_sdr(video: str, out_path: str):
 
 
 # resolution, codec, streams, filetype
-def init_conversion(config: dict):
-    video = config['mover']['orig_path']
+def init_conversion(config: dict, vid=None):
+    video = config['mover']['orig_path'] if vid is None else vid
     out_path = config['combiner']['default_out']
     try:
-        codec = check_codec(video) if os.path.isfile(video) else check_codec(get_video_files(video)[0])
-    except IndexError:
-        codec = 'original'
-    conversion_config = {'input': video, 'output': out_path, 'resolution': 'original', 'codec': codec,
-                         'filetype': '.mkv', 'vstreams': 'all', 'astreams': 'all', 'sstreams': 'all',
-                         'hw_encode': hw_encoding()}
+        infos = ffprobe_info(video) if os.path.isfile(video) else ffprobe_info(get_video_files(video)[0])
+        conversion_config = {'input': video, 'output': out_path, 'resolution': f'{infos[1]}:{infos[2]} (original)',
+                         'vcodec': infos[0] + " (original)", 'acodec': infos[5] + " (original)",
+                         'bitrate': infos[4] + " (original)", 'filetype': '.mkv', 'vstreams': 'all',
+                         'astreams': 'all', 'sstreams': 'all', 'hw_encode': hw_encoding()}
+    except IndexError as e:
+        print(e)
+        raise ValueError("ffprobe could not be invoked properly! Check your file!")
     # add possibility to save config
     return conversion_config
+
+
+def convert_general(config: dict, in_file: str):
+    ffmpeg_command = ['ffmpeg', '-i', config.get('input')]
+    # mapping streams
+    for i in ['v', 'a', 's']:
+        if config.get(f'{i}streams') == 'all':
+            ffmpeg_command.extend(['-map', f'0:{i}?'])
+
+    # setting the right codecs
+    for i in ['v', 'a']:
+        codec = config.get(f'{i}codec') if 'original' not in config.get(f'{i}codec') else 'copy'
+        ffmpeg_command.extend([f'-c:{i}', codec])
+        if i == 'v' and "(original)" not in config.get('bitrate'):
+            ffmpeg_command.extend(['-b:v', config.get('bitrate')])
+    ffmpeg_command.extend(['-c:s', 'copy'])
+
+    # setting output name
+    name = os.path.splitext(os.path.basename(in_file))[0]
+    ffmpeg_command.append(config.get('output') + sep + name + config.get('filetype'))
+    try:
+        print(ffmpeg_command)
+        subprocess.run(ffmpeg_command)
+    except Exception as e:
+        print(e)
+        return
 
 
 def main():
@@ -122,14 +159,25 @@ def main():
     conversion_conf = init_conversion(config)
     greetings(conversion_conf)
     confirm = prompt_toolkit.prompt(HTML("<ansiblue>=> </ansiblue>"))
+    curr_input = conversion_conf['input']
     while confirm != 'ok':
         clear()
         if confirm == 'q':
             return
         conversion_conf = input_parser(confirm, conversion_conf)
+        if conversion_conf['input'] != curr_input:
+            curr_input = conversion_conf['input']
+            conversion_conf = init_conversion(config, conversion_conf['input'])
         greetings(conversion_conf)
         confirm = prompt_toolkit.prompt(HTML("<ansiblue>=> </ansiblue>"))
+    convert_general(conversion_conf, conversion_conf.get('input'))
+    return
 
+
+if __name__ == '__main__':
+    main()
+
+    """
     in_path = conversion_conf.get('input')
     vid_list = get_video_files(in_path)
     num_vids = len(vid_list)
@@ -152,8 +200,4 @@ def main():
         print("Something might've gone wrong, not deleting files")
     else:
         print('Deleting old files')
-        shutil.rmtree(tmp_path)
-
-
-if __name__ == '__main__':
-    main()
+        shutil.rmtree(tmp_path) """
