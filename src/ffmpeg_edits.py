@@ -100,9 +100,10 @@ def cut_video():
     if hw_encoding() == "h264_nvenc":
         codec = codec + "_nvenc"
     if end == "":
-        subprocess.run(["ffmpeg", "-i", input_file, "-map", "0", "-ss", start, "-c:v", codec, "-crf", "4", "-c:a", "copy", new_file])
+        subprocess.run(["ffmpeg", "-i", input_file, "-map", "0", "-ss", start, "-c:v", codec, "-c:a", "copy", new_file])
         return
-    subprocess.run(["ffmpeg", "-i", input_file, "-map", "0", "-ss", start, "-to", end, "-c:v", codec, "-crf", "4", "-c:a", "copy", new_file])
+    subprocess.run(["ffmpeg", "-i", input_file, "-map", "0", "-ss", start, "-to", end, "-c:v", codec, "-crf", "4",
+                    "-c:a", "copy", new_file])
 
 
 def main():

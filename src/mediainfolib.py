@@ -48,6 +48,16 @@ class FileValidator(Validator):
             raise ValidationError(message='This is not a file!')
 
 
+def write_config_to_file(config: dict, path: str):
+    """
+    Write your configuration down in a .json file.
+    :param config The configuration you want to write to a file
+    :param path The file path where the config should be written to
+    """
+    json.dump(config, open(path, 'w'))
+    return
+
+
 def get_config() -> dict:
     """
     Returns the config as a dict or None if no config exists
@@ -260,7 +270,7 @@ def convert_country(alpha: str) -> str:
 
 
 # for cutting names to appropriate size with dots to indicate shortening
-def cut_name(name, cut, pos='right', mid=10) -> str:
+def cut_name(name: str, cut: int, pos='right', mid=10) -> str:
     if len(name) < cut:
         return name
     if pos == 'right':

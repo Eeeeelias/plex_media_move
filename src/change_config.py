@@ -1,4 +1,4 @@
-from src.mediainfolib import get_config, config_path, clear
+from src.mediainfolib import get_config, config_path, clear, write_config_to_file
 from prompt_toolkit import prompt, print_formatted_text, HTML
 from src import setup
 
@@ -76,7 +76,7 @@ def change_value(config, program):
 def default_configs(config: dict):
     config['mover'].pop('filetypes')
     config.update({'viewer': {'default_view': config['mover']['orig_path'], 'filetypes': '.mkv .mp4 .ts'}})
-    setup.write_config_to_file(config, config_path)
+    write_config_to_file(config, config_path)
 
 
 def add_to_config(options: dict, append=False):
@@ -89,7 +89,7 @@ def add_to_config(options: dict, append=False):
             curr_val = curr_conf.get(opt)
             curr_val.update(vals)
             curr_conf.update({opt: curr_val})
-    setup.write_config_to_file(curr_conf, config_path)
+    write_config_to_file(curr_conf, config_path)
     return True
 
 
@@ -111,7 +111,7 @@ def main():
         elif choice in ["q", "quit", "exit"]:
             clear()
             return
-        setup.write_config_to_file(new_config, config_path)
+        write_config_to_file(new_config, config_path)
         clear()
         if changed:
             print("[i] Changed config!")

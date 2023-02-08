@@ -5,7 +5,7 @@ import time
 from sys import exit
 import src.organize_shows
 from src import mediainfolib, fetch_infos, manage_db
-from src.mediainfolib import data_path, seperator
+from src.mediainfolib import data_path, seperator, write_config_to_file
 from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
 
@@ -69,16 +69,6 @@ def order_library(path):
     order = prompt(HTML("<ansiblue>Do you want to order your library? [y/N] </ansiblue>")).lower()
     if order == "y":
         src.organize_shows.main(path + f"{seperator}TV Shows")
-    return
-
-
-def write_config_to_file(config: dict, path: str):
-    """
-    Write your configuration down in a .json file.
-    :param config The configuration you want to write to a file
-    :param path The file path where the config should be written to
-    """
-    json.dump(config, open(path, 'w'))
     return
 
 

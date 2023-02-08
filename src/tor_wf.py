@@ -9,16 +9,27 @@ import prompt_toolkit
 from prompt_toolkit import HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
 
+import src.mediainfolib
 from src.combine_sub_with_movie import combine_subs
-from src.mediainfolib import get_config, seperator as sep, get_video_files, PathValidator
+from src.mediainfolib import get_config, seperator as sep, get_video_files, write_config_to_file, clear, cut_name
 
 # feel free to add to that lol
 countries = {'English': 'eng', 'German': 'deu', 'French': 'fra', 'Japanese': 'jpn', 'Korean': 'kor'}
 
 
-def greetings():
-    return prompt_toolkit.prompt(HTML("<ansiblue>=> </ansiblue>"), completer=PathCompleter(), validator=PathValidator())\
-        .lstrip('"').lstrip('"')
+def input_parser(input: str, conf: dict):
+    in_vals = re.match(r"(\w*) (.*)", input)
+    conf.update({in_vals.group(1): in_vals.group(2)})
+    return conf
+
+
+def greetings(conv_conf: dict):
+    header = "    ############################################################################    \n" + \
+             "    #                                                                          #    \n"
+    values = "    # Your current config:                                                     #    \n"
+    for i, j in conv_conf.items():
+        values = values + f"    # <ansigreen>{i.ljust(12)}</ansigreen> {cut_name(j, 59).ljust(59)} #    \n"
+    print_formatted_text(HTML(header + values + header[::-1][1:]))
 
 
 def set_sub_names(in_path: str):
@@ -41,9 +52,10 @@ def set_sub_names(in_path: str):
 
 def check_codec(vid: str):
     try:
-        codec = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name",
-                                "-of", "default=noprint_wrappers=1:nokey=1", vid], stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT)
+        codec = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name",
+             "-of", "default=noprint_wrappers=1:nokey=1", vid], stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT)
         return codec.stdout.decode('utf-8').strip()
     except IndexError:
         return None
@@ -58,7 +70,7 @@ def hw_encoding():
     return hw_encode
 
 
-def convert_h265(videos: str, out_path):
+def convert_h265(videos: str, out_path: str):
     vids = [videos]
     if os.path.isdir(videos):
         vids = [x for x in get_video_files(videos) if os.path.isfile(x)]
@@ -73,7 +85,7 @@ def convert_h265(videos: str, out_path):
                         "-pix_fmt", "yuv420p", "-c:s", "copy", new_path])
 
 
-def hdr_to_sdr(video: str, out_path):
+def hdr_to_sdr(video: str, out_path: str):
     """
     Converts an (ideally) 4K HDR video to 1080p SDR in H264 encoding
     :param video: String to the input video
@@ -89,10 +101,36 @@ def hdr_to_sdr(video: str, out_path):
     subprocess.run(ffmpeg)
 
 
-def main():
-    out_path = get_config()['combiner']['default_out']
-    in_path = greetings()
+# resolution, codec, streams, filetype
+def init_conversion(config: dict):
+    video = config['mover']['orig_path']
+    out_path = config['combiner']['default_out']
+    try:
+        codec = check_codec(video) if os.path.isfile(video) else check_codec(get_video_files(video)[0])
+    except IndexError:
+        codec = 'original'
+    conversion_config = {'input': video, 'output': out_path, 'resolution': 'original', 'codec': codec,
+                         'filetype': '.mkv', 'vstreams': 'all', 'astreams': 'all', 'sstreams': 'all',
+                         'hw_encode': hw_encoding()}
+    # add possibility to save config
+    return conversion_config
 
+
+def main():
+    config = get_config()
+    out_path = config['combiner']['default_out']
+    conversion_conf = init_conversion(config)
+    greetings(conversion_conf)
+    confirm = prompt_toolkit.prompt(HTML("<ansiblue>=> </ansiblue>"))
+    while confirm != 'ok':
+        clear()
+        if confirm == 'q':
+            return
+        conversion_conf = input_parser(confirm, conversion_conf)
+        greetings(conversion_conf)
+        confirm = prompt_toolkit.prompt(HTML("<ansiblue>=> </ansiblue>"))
+
+    in_path = conversion_conf.get('input')
     vid_list = get_video_files(in_path)
     num_vids = len(vid_list)
     num_existing = len(get_video_files(out_path))
