@@ -28,6 +28,8 @@ def greetings(conv_conf: dict):
              "    #                                                                          #    \n"
     values = "    # Your current config:                                                     #    \n"
     for i, j in conv_conf.items():
+        if i == 'input' and os.path.isdir(j):
+            j += f" ({len(get_video_files(j))} video(s) found)"
         values = values + f"    # <ansigreen>{i.ljust(12)}</ansigreen> {cut_name(str(j), 59).ljust(59)} #    \n"
     print_formatted_text(HTML(header + values + header[::-1][1:]))
 
@@ -114,30 +116,35 @@ def hdr_to_sdr(video: str, out_path: str):
 def init_conversion(config: dict, vid=None):
     video = config['mover']['orig_path'] if vid is None else vid
     out_path = config['combiner']['default_out']
-    try:
-        infos = ffprobe_info(video) if os.path.isfile(video) else ffprobe_info(get_video_files(video)[0])
-        conversion_config = {'input': video, 'output': out_path, 'resolution': f'{infos[1]}:{infos[2]} (original)',
+    infos = ffprobe_info(video) if os.path.isfile(video) else ffprobe_info(get_video_files(video)[0])
+    if len(infos) < 6:
+        print_formatted_text(HTML("<ansired>ffprobe could not be invoked properly!</ansired>"))
+        infos = ['Error', 'Error', 'Error', 'Error', 'Error', 'Error']
+    conversion_config = {'input': video, 'output': out_path, 'resolution': f'{infos[1]}:{infos[2]} (original)',
                          'vcodec': infos[0] + " (original)", 'acodec': infos[5] + " (original)",
                          'bitrate': infos[4] + " (original)", 'filetype': '.mkv', 'vstreams': 'all',
                          'astreams': 'all', 'sstreams': 'all', 'hw_encode': hw_encoding()}
-    except IndexError as e:
-        print(e)
-        raise ValueError("ffprobe could not be invoked properly! Check your file!")
     # add possibility to save config
     return conversion_config
 
 
 def convert_general(config: dict, in_file: str):
-    ffmpeg_command = ['ffmpeg', '-i', config.get('input')]
+    ffmpeg_command = ['ffmpeg', '-i', in_file]
     # mapping streams
     for i in ['v', 'a', 's']:
         if config.get(f'{i}streams') == 'all':
             ffmpeg_command.extend(['-map', f'0:{i}?'])
+            continue
+        for j in config.get(f'{i}streams').split(','):
+            ffmpeg_command.extend(['-map', f'0:{i}:{j}'])
 
     # setting the right codecs
     for i in ['v', 'a']:
         codec = config.get(f'{i}codec') if 'original' not in config.get(f'{i}codec') else 'copy'
+        codec += "_nvenc" if config.get('hw_encode') and i == 'v' else ""
         ffmpeg_command.extend([f'-c:{i}', codec])
+        if codec.startswith('h264'):
+            ffmpeg_command.extend(['-pix_fmt', 'yuv420p'])
         if i == 'v' and "(original)" not in config.get('bitrate'):
             ffmpeg_command.extend(['-b:v', config.get('bitrate')])
     ffmpeg_command.extend(['-c:s', 'copy'])
@@ -170,7 +177,11 @@ def main():
             conversion_conf = init_conversion(config, conversion_conf['input'])
         greetings(conversion_conf)
         confirm = prompt_toolkit.prompt(HTML("<ansiblue>=> </ansiblue>"))
-    convert_general(conversion_conf, conversion_conf.get('input'))
+    if os.path.isfile(conversion_conf.get('input')):
+        convert_general(conversion_conf, conversion_conf.get('input'))
+        return
+    for path in get_video_files(conversion_conf.get('input')):
+        convert_general(conversion_conf, path)
     return
 
 
