@@ -129,7 +129,7 @@ def init_conversion(config: dict, vid=None):
 
 
 def convert_general(config: dict, in_file: str):
-    ffmpeg_command = ['ffmpeg', '-i', in_file]
+    ffmpeg_command = ['ffmpeg', '-loglevel', 'warning', '-i', in_file]
     # mapping streams
     for i in ['v', 'a', 's']:
         if config.get(f'{i}streams') == 'all':
@@ -181,6 +181,7 @@ def main():
         convert_general(conversion_conf, conversion_conf.get('input'))
         return
     for path in get_video_files(conversion_conf.get('input')):
+        print('Converting', path)
         convert_general(conversion_conf, path)
     return
 
