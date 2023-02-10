@@ -7,7 +7,6 @@ import time
 
 import prompt_toolkit
 from prompt_toolkit import HTML, print_formatted_text
-from prompt_toolkit.completion import PathCompleter
 
 import src.mediainfolib
 from src.combine_sub_with_movie import combine_subs
@@ -18,20 +17,44 @@ countries = {'English': 'eng', 'German': 'deu', 'French': 'fra', 'Japanese': 'jp
 
 
 def input_parser(input: str, conf: dict):
-    in_vals = re.match(r"(\w*) (.*)", input)
-    conf.update({in_vals.group(1): in_vals.group(2).strip("\"")})
+    try:
+        in_vals = re.match(r"(\w*) (.*)", input)
+        conf.update({in_vals.group(1): in_vals.group(2).strip("\"")})
+    except AttributeError:
+        print_formatted_text(HTML("<ansired>Not a proper command!</ansired>"))
+        return conf
     return conf
 
 
 def greetings(conv_conf: dict):
-    header = "    ############################################################################    \n" + \
-             "    #                                                                          #    \n"
-    values = "    # Your current config:                                                     #    \n"
-    for i, j in conv_conf.items():
-        if i == 'input' and os.path.isdir(j):
-            j += f" ({len(get_video_files(j))} video(s) found)"
-        values = values + f"    # <ansigreen>{i.ljust(12)}</ansigreen> {cut_name(str(j), 59).ljust(59)} #    \n"
-    print_formatted_text(HTML(header + values + header[::-1][1:]))
+    size = os.get_terminal_size().columns - 8
+    half = int(size / 2) - 3
+    gs = "<ansigreen>"
+    ge = "</ansigreen>"
+    max_space = max([len(x) for x in conv_conf.keys()]) + 1
+    half_adj = half - max_space
+    file_num = len(get_video_files(conv_conf.get('input')))
+    header = f"    {'#'*size}\n" + f"    #{' '*(size-2)}#"
+    footer = f"    #{' '*(size-2)}#    \n" + f"    {'#'*size}"
+    info_str = f"""
+    # {'Your current config:'.ljust(size-4)} #
+    # {gs}input{ge} {f'({file_num} video(s) found)'.ljust(half-6)} # {gs}{'output'.ljust(half-1)}{ge} #
+    #     {cut_name(conv_conf.get('input'), half-4).ljust(half-4)} #     {cut_name(conv_conf.get('output'), half-5).ljust(half-5)} #
+    # {gs}{'resolution'.ljust(max_space)}{ge}{cut_name(conv_conf.get('resolution'), half_adj).ljust(half_adj)} # {gs}{
+    'filetype'.ljust(max_space)}{ge}{cut_name(conv_conf.get('filetype'), half_adj-1).ljust(half_adj-1)} #
+    # {gs}{'vcodec'.ljust(max_space)}{ge}{cut_name(conv_conf.get('vcodec'), half_adj).ljust(half_adj)} # {gs}{
+    'vstreams'.ljust(max_space)}{ge}{cut_name(conv_conf.get('vstreams'), half_adj-1).ljust(half_adj-1)} #
+    # {gs}{'acodec'.ljust(max_space)}{ge}{cut_name(conv_conf.get('acodec'), half_adj).ljust(half_adj)} # {gs}{
+    'astreams'.ljust(max_space)}{ge}{cut_name(conv_conf.get('astreams'), half_adj-1).ljust(half_adj-1)} #
+    # {gs}{'bitrate'.ljust(max_space)}{ge}{cut_name(conv_conf.get('bitrate'), half_adj).ljust(half_adj)} # {gs}{
+    'sstreams'.ljust(max_space)}{ge}{cut_name(conv_conf.get('sstreams'), half_adj-1).ljust(half_adj-1)} #
+    # {gs}{'dyn. range'.ljust(max_space)}{ge}{cut_name(conv_conf.get('dyn. range'), half_adj).ljust(half_adj)} # {
+    gs}{'hw_encode'.ljust(max_space)}{ge}{cut_name(str(conv_conf.get('hw_encode')), half_adj-1).ljust(half_adj-1)} #\n"""
+    # for i, j in conv_conf.items():
+    #    if i == 'input' and os.path.isdir(j):
+    #        j += f" ({len(get_video_files(j))} video(s) found)"
+    #    values = values + f"    # <ansigreen>{i.ljust(12)}</ansigreen> {cut_name(str(j), 59).ljust(59)} #    \n"
+    print_formatted_text(HTML(header + info_str + footer))
 
 
 def set_sub_names(in_path: str):
@@ -65,12 +88,16 @@ def check_codec(vid: str, type='v'):
 
 def ffprobe_info(vid: str):
     result = subprocess.run(
-        ["ffprobe", "-v", "error", "-show_entries", "stream=codec_name,width,height,pix_fmt,bit_rate",
+        ["ffprobe", "-v", "error", "-show_entries", "stream=codec_name,width,height,pix_fmt,bit_rate,color_transfer",
          "-of", "default=noprint_wrappers=1:nokey=1", vid], stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
     result = result.stdout.decode('utf-8').strip().split("\r\n")
-    # result should be [codec_name, width, height, pix_fmt, bit_rate, codec_name, bit_rate, ...]
-    return result[:6]
+    try:
+        result[4] = 'SDR' if result[4] != 'smpte2084' else 'HDR'
+    except IndexError:
+        result = []
+    # result should be [codec_name, width, height, pix_fmt, color_transfer, bit_rate, codec_name, bit_rate, ...]
+    return result[:8]
 
 
 def hw_encoding():
@@ -116,14 +143,19 @@ def hdr_to_sdr(video: str, out_path: str):
 def init_conversion(config: dict, vid=None):
     video = config['mover']['orig_path'] if vid is None else vid
     out_path = config['combiner']['default_out']
-    infos = ffprobe_info(video) if os.path.isfile(video) else ffprobe_info(get_video_files(video)[0])
-    if len(infos) < 6:
+    if os.path.isfile(video):
+        infos = ffprobe_info(video)
+    else:
+        all_files = get_video_files(video)
+        infos = ffprobe_info(all_files[0]) if len(all_files) > 0 else []
+    if len(infos) < 7:
         print_formatted_text(HTML("<ansired>ffprobe could not be invoked properly!</ansired>"))
-        infos = ['Error', 'Error', 'Error', 'Error', 'Error', 'Error']
+        infos = ['Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error']
     conversion_config = {'input': video, 'output': out_path, 'resolution': f'{infos[1]}:{infos[2]} (original)',
-                         'vcodec': infos[0] + " (original)", 'acodec': infos[5] + " (original)",
-                         'bitrate': infos[4] + " (original)", 'filetype': '.mkv', 'vstreams': 'all',
-                         'astreams': 'all', 'sstreams': 'all', 'hw_encode': hw_encoding()}
+                         'vcodec': infos[0] + " (original)", 'acodec': infos[6] + " (original)",
+                         'bitrate': infos[5] + " (original)", "dyn. range": infos[4] + " (original)",
+                         'filetype': '.mkv', 'vstreams': 'all', 'astreams': 'all', 'sstreams': 'all',
+                         'hw_encode': hw_encoding()}
     # add possibility to save config
     return conversion_config
 
