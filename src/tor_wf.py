@@ -3,7 +3,8 @@ import os
 import re
 import shutil
 import subprocess
-import time
+from ffmpeg_progress_yield import FfmpegProgress
+from tqdm import tqdm
 
 import prompt_toolkit
 from prompt_toolkit import HTML, print_formatted_text
@@ -21,7 +22,7 @@ def input_parser(input: str, conf: dict):
         in_vals = re.match(r"(\w*) (.*)", input)
         conf.update({in_vals.group(1): in_vals.group(2).strip("\"")})
     except AttributeError:
-        print_formatted_text(HTML("<ansired>Not a proper command!</ansired>"))
+        print_formatted_text(HTML("<ansired>    Not a proper command!</ansired>"))
         return conf
     return conf
 
@@ -35,7 +36,7 @@ def greetings(conv_conf: dict):
     half_adj = half - max_space
     file_num = len(get_video_files(conv_conf.get('input')))
     header = f"    {'#'*size}\n" + f"    #{' '*(size-2)}#"
-    footer = f"    #{' '*(size-2)}#    \n" + f"    {'#'*size}"
+    footer = f"    # <ansicyan>If you're not sure what a certain option does, leave it as is</ansicyan>{' '* (size - 65)} #    \n" + f"    {'#'*size} "
     info_str = f"""
     # {'Your current config:'.ljust(size-4)} #
     # {gs}input{ge} {f'({file_num} video(s) found)'.ljust(half-6)} # {gs}{'output'.ljust(half-1)}{ge} #
@@ -48,8 +49,9 @@ def greetings(conv_conf: dict):
     'astreams'.ljust(max_space)}{ge}{cut_name(conv_conf.get('astreams'), half_adj-1).ljust(half_adj-1)} #
     # {gs}{'bitrate'.ljust(max_space)}{ge}{cut_name(conv_conf.get('bitrate'), half_adj).ljust(half_adj)} # {gs}{
     'sstreams'.ljust(max_space)}{ge}{cut_name(conv_conf.get('sstreams'), half_adj-1).ljust(half_adj-1)} #
-    # {gs}{'dyn. range'.ljust(max_space)}{ge}{cut_name(conv_conf.get('dyn. range'), half_adj).ljust(half_adj)} # {
-    gs}{'hw_encode'.ljust(max_space)}{ge}{cut_name(str(conv_conf.get('hw_encode')), half_adj-1).ljust(half_adj-1)} #\n"""
+    # {gs}{'dyn_range'.ljust(max_space)}{ge}{cut_name(conv_conf.get('dyn_range'), half_adj).ljust(half_adj)} # {
+    gs}{'hw_encode'.ljust(max_space)}{ge}{cut_name(str(conv_conf.get('hw_encode')), half_adj-1).ljust(half_adj-1)} #
+    # {' '* (size-4)} #\n"""
     # for i, j in conv_conf.items():
     #    if i == 'input' and os.path.isdir(j):
     #        j += f" ({len(get_video_files(j))} video(s) found)"
@@ -149,11 +151,11 @@ def init_conversion(config: dict, vid=None):
         all_files = get_video_files(video)
         infos = ffprobe_info(all_files[0]) if len(all_files) > 0 else []
     if len(infos) < 7:
-        print_formatted_text(HTML("<ansired>ffprobe could not be invoked properly!</ansired>"))
+        print_formatted_text(HTML("<ansired>    ffprobe could not be invoked properly!</ansired>"))
         infos = ['Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error']
     conversion_config = {'input': video, 'output': out_path, 'resolution': f'{infos[1]}:{infos[2]} (original)',
                          'vcodec': infos[0] + " (original)", 'acodec': infos[6] + " (original)",
-                         'bitrate': infos[5] + " (original)", "dyn. range": infos[4] + " (original)",
+                         'bitrate': infos[5] + " (original)", "dyn_range": infos[4] + " (original)",
                          'filetype': '.mkv', 'vstreams': 'all', 'astreams': 'all', 'sstreams': 'all',
                          'hw_encode': hw_encoding()}
     # add possibility to save config
@@ -161,7 +163,7 @@ def init_conversion(config: dict, vid=None):
 
 
 def convert_general(config: dict, in_file: str):
-    ffmpeg_command = ['ffmpeg', '-loglevel', 'warning', '-i', in_file]
+    ffmpeg_command = ['ffmpeg', '-y', '-i', in_file]
     # mapping streams
     for i in ['v', 'a', 's']:
         if config.get(f'{i}streams') == 'all':
@@ -170,23 +172,31 @@ def convert_general(config: dict, in_file: str):
         for j in config.get(f'{i}streams').split(','):
             ffmpeg_command.extend(['-map', f'0:{i}:{j}'])
 
-    # setting the right codecs
+    # setting the right codecs and video filters
     for i in ['v', 'a']:
         codec = config.get(f'{i}codec') if 'original' not in config.get(f'{i}codec') else 'copy'
-        codec += "_nvenc" if config.get('hw_encode') and i == 'v' else ""
+        codec += "_nvenc" if config.get('hw_encode') and i == 'v' and codec != 'copy' else ""
         ffmpeg_command.extend([f'-c:{i}', codec])
         if codec.startswith('h264'):
             ffmpeg_command.extend(['-pix_fmt', 'yuv420p'])
         if i == 'v' and "(original)" not in config.get('bitrate'):
             ffmpeg_command.extend(['-b:v', config.get('bitrate')])
+        if i == 'v' and "(original)" not in config.get('dyn_range'):
+            ffmpeg_command.extend(['-vf', f'zscale=t=linear,tonemap=hable,zscale=p=709:t=709:m=709,scale={config.get("resolution")}'])
     ffmpeg_command.extend(['-c:s', 'copy'])
 
     # setting output name
     name = os.path.splitext(os.path.basename(in_file))[0]
-    ffmpeg_command.append(config.get('output') + sep + name + config.get('filetype'))
+    out_name = config.get('output') + sep + name + config.get('filetype')
+    if os.path.isfile(out_name):
+        out_name = config.get('output') + sep + "conv_" + name + config.get('filetype')
+    ffmpeg_command.append(out_name)
     try:
-        print(ffmpeg_command)
-        subprocess.run(ffmpeg_command)
+        # print(ffmpeg_command)
+        ff = FfmpegProgress(ffmpeg_command)
+        with tqdm(total=100, position=1, desc=name) as pbar:
+            for progress in ff.run_command_with_progress():
+                pbar.update(progress - pbar.n)
     except Exception as e:
         print(e)
         return
