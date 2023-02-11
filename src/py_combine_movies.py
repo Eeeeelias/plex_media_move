@@ -209,32 +209,9 @@ def main():
 
     time.sleep(3)
     print("[i] Combining movies. This might take a while...")
-    subprocess.run(
-        [
-            "ffmpeg",
-            "-loglevel",
-            "warning",
-            "-i",
-            movie_en,
-            "-itsoffset",
-            offset,
-            "-i",
-            movie_de,
-            "-map",
-            "0:0",
-            "-map",
-            "0:a",
-            "-map",
-            "1:a",
-            "-metadata:s:a:0",
-            f"language={lan_en}",
-            "-metadata:s:a:1",
-            f"language={lan_de}",
-            "-c",
-            "copy",
-            combined_name,
-        ]
-    )
+    subprocess.run(["ffmpeg", "-loglevel", "warning", "-i", movie_en, "-itsoffset", offset, "-i", movie_de, "-map", "0:0", "-map",
+            "0:a", "-map", "1:a", "-metadata:s:a:0", f"language={lan_en}", "-metadata:s:a:1", f"language={lan_de}",
+            "-c", "copy", combined_name])
     if args.input1 is None:
         print("[i] Success? Check for sync issues. Now starting the movie...")
         time.sleep(1.5)

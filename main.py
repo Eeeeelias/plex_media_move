@@ -62,7 +62,7 @@ def greetings_big():
     # [3] {gs}shifting{ge}    - shift all episode numbers of a show by a given         # {display_files[8]} #
     #                   amount                                                 # {display_files[9]} #
     #                                                                          # {display_files[10]} #
-    # [4] {gs}converter{ge}   - convert folders of weird formats (like .ts) into .mp4  # {display_files[11]} #
+    # [4] {gs}converter{ge}   - convert video files using ffmpeg                       # {display_files[11]} #
     #                                                                          # {display_files[12]} #
     # [5] {gs}db search{ge}   - search through your local media database               # {display_files[13]} #
     #                                                                          # {display_files[14]} #
@@ -89,7 +89,7 @@ def exit_rm():
 
 
 def get_options():
-    from src import ffmpeg_edits, convert_ts, search_db, rename, change_config, file_editor, log_watch, tor_wf
+    from src import ffmpeg_edits, search_db, rename, change_config, file_editor, log_watch, ffmpeg_convert
     import media_mover
     # define a dictionary mapping tool names to functions
     tools = {
@@ -100,14 +100,13 @@ def get_options():
         "ve": ffmpeg_edits.main,
         "3": rename.main,
         "sf": rename.main,
-        "4": convert_ts.main,
-        "cv": convert_ts.main,
+        "4": ffmpeg_convert.main,
+        "cv": ffmpeg_convert.main,
         "5": search_db.main,
         "db": search_db.main,
         "c": change_config.main,
         "6": file_editor.main,
         "fw": file_editor.main,
-        "tor": tor_wf.main,
         "log": log_watch.main,
         "close": exit_rm,
         "q": exit_rm,

@@ -7,7 +7,8 @@ from ffmpeg_progress_yield import FfmpegProgress
 from tqdm import tqdm
 
 import prompt_toolkit
-from prompt_toolkit import HTML, print_formatted_text
+from prompt_toolkit.history import FileHistory
+from prompt_toolkit import HTML, print_formatted_text, PromptSession
 from prompt_toolkit.validation import Validator, ValidationError
 
 from src.mediainfolib import get_config, seperator as sep, get_video_files, write_config_to_file, clear, cut_name, \
@@ -30,6 +31,7 @@ class InputValidator(Validator):
 
 
 # make session
+session = PromptSession(history=FileHistory(f"{data_path}{sep}.conv"))
 
 
 def input_parser(input: str, conf: dict):
@@ -127,37 +129,6 @@ def hw_encoding():
         return False
 
 
-def convert_h265(videos: str, out_path: str):
-    vids = [videos]
-    if os.path.isdir(videos):
-        vids = [x for x in get_video_files(videos) if os.path.isfile(x)]
-
-    print(f"Converting {len(vids)} videos")
-    # checking for GPU
-    hw_encode = "h264_nvenc" if hw_encoding() else "h264"
-    for vid in vids:
-        print_formatted_text(HTML(f"<ansiyellow>Converting</ansiyellow>: {os.path.basename(vid)}"))
-        new_path = out_path + f"{sep}" + os.path.basename(vid)
-        subprocess.run(["ffmpeg", "-loglevel", "warning", "-i", vid, "-map", "0", "-c:v", hw_encode, "-c:a", "copy",
-                        "-pix_fmt", "yuv420p", "-c:s", "copy", new_path])
-
-
-def hdr_to_sdr(video: str, out_path: str):
-    """
-    Converts an (ideally) 4K HDR video to 1080p SDR in H264 encoding
-    :param video: String to the input video
-    :param out_path: path where the converted video should be saved
-    :return: None
-    """
-    out = out_path + sep + re.sub("HDR", "SDR", os.path.basename(video))
-    res = "1920:1080"
-    codec = "h264_nvenc" if hw_encoding() else "h264"
-    ffmpeg = ['ffmpeg', '-hwaccel', 'cuda', '-i', video, "-map", "0", '-vf',
-              f'zscale=t=linear,tonemap=hable,zscale=p=709:t=709:m=709,scale={res}', "-c:v", codec,
-              "-pix_fmt", "yuv420p", "-c:a", "copy", "-c:s", "copy", out]
-    subprocess.run(ffmpeg)
-
-
 # resolution, codec, streams, filetype
 def init_conversion(config: dict, vid=None):
     video = config['mover']['orig_path'] if vid is None else vid
@@ -184,7 +155,9 @@ def convert_general(config: dict, in_file: str):
     # mapping streams
     for i in ['v', 'a', 's']:
         if config.get(f'{i}streams') == 'all':
-            ffmpeg_command.extend(['-map', f'0:{i}?'])
+            ffmpeg_command.extend(['-map', f'0:{i}'])
+            if i == 'v':
+                ffmpeg_command.extend(['-map', f'-v', '-map', 'V'])
             continue
         for j in config.get(f'{i}streams').split(','):
             ffmpeg_command.extend(['-map', f'0:{i}:{j}'])
@@ -198,8 +171,15 @@ def convert_general(config: dict, in_file: str):
             ffmpeg_command.extend(['-pix_fmt', 'yuv420p'])
         if i == 'v' and "(original)" not in config.get('bitrate'):
             ffmpeg_command.extend(['-b:v', config.get('bitrate')])
-        if i == 'v' and "(original)" not in config.get('dyn_range'):
-            ffmpeg_command.extend(['-vf', f'zscale=t=linear,tonemap=hable,zscale=p=709:t=709:m=709,scale={config.get("resolution")}'])
+        # set video filters
+        if i == 'v' and "(original)" not in config.get('dyn_range') or "(original)" not in config.get('resolution'):
+            ffmpeg_command.append('-vf')
+            vfilter = []
+            if "(original)" not in config.get('resolution'):
+                vfilter.append(f'scale={config.get("resolution").split(" ")[0]}')
+            if "(original)" not in config.get('dyn_range'):
+                vfilter.append('zscale=t=linear,tonemap=hable,zscale=p=709:t=709:m=709')
+            ffmpeg_command.append(",".join(vfilter))
     ffmpeg_command.extend(['-c:s', 'copy'])
 
     # setting output name
@@ -226,7 +206,7 @@ def main():
     else:
         conversion_conf = init_conversion(config)
     greetings(conversion_conf)
-    confirm = prompt_toolkit.prompt(HTML("<ansiblue>=> </ansiblue>"), validator=InputValidator())
+    confirm = session.prompt(HTML("<ansiblue>=> </ansiblue>"), validator=InputValidator())
     curr_input = conversion_conf['input']
     while confirm != 'ok':
         clear()
@@ -247,7 +227,7 @@ def main():
             curr_input = conversion_conf['input']
             conversion_conf = init_conversion(config, conversion_conf['input'])
         greetings(conversion_conf)
-        confirm = prompt_toolkit.prompt(HTML("<ansiblue>=> </ansiblue>"), validator=InputValidator())
+        confirm = session.prompt(HTML("<ansiblue>=> </ansiblue>"), validator=InputValidator())
     if os.path.isfile(conversion_conf.get('input')):
         convert_general(conversion_conf, conversion_conf.get('input'))
         return

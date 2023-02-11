@@ -95,7 +95,7 @@ def cut_video():
     end = cut_positions(start=False)
     new_file = cut_video_name(input_file)
     print("[i] New file will be: {}".format(new_file))
-    from src.tor_wf import check_codec, hw_encoding
+    from src.ffmpeg_convert import check_codec, hw_encoding
     codec = check_codec(input_file)
     if hw_encoding():
         codec = codec + "_nvenc"
