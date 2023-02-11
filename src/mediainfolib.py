@@ -122,6 +122,7 @@ def get_source_files(video_folder=None) -> tuple:
 def get_video_files(path: str, subpath=None):
     full_path = path + f"{seperator}" + subpath if subpath else path
     video_files = []
+    full_path = full_path.replace('[', '[[]') # character escaping
     video_files.extend(glob.glob(full_path + "/*.mp4"))
     video_files.extend(glob.glob(full_path + "/*.mkv"))
     video_files.extend(glob.glob(full_path + "/*.ts"))

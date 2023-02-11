@@ -75,7 +75,7 @@ def greetings(conv_conf: dict):
     #    if i == 'input' and os.path.isdir(j):
     #        j += f" ({len(get_video_files(j))} video(s) found)"
     #    values = values + f"    # <ansigreen>{i.ljust(12)}</ansigreen> {cut_name(str(j), 59).ljust(59)} #    \n"
-    print_formatted_text(HTML(header + info_str + footer))
+    print_formatted_text(HTML(header + info_str.replace('&', '&amp;') + footer))
 
 
 def set_sub_names(in_path: str):
