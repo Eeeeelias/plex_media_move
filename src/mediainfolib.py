@@ -58,14 +58,14 @@ def write_config_to_file(config: dict, path: str):
     return
 
 
-def get_config() -> dict:
+def get_config(conf_path=config_path) -> dict:
     """
     Returns the config as a dict or None if no config exists
     :return: dict
     """
     defaults = None
-    if os.path.exists(config_path):
-        defaults = json.load(open(config_path, 'r'))
+    if os.path.exists(conf_path):
+        defaults = json.load(open(conf_path, 'r'))
     return defaults
 
 

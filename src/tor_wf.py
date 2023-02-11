@@ -8,16 +8,30 @@ from tqdm import tqdm
 
 import prompt_toolkit
 from prompt_toolkit import HTML, print_formatted_text
+from prompt_toolkit.validation import Validator, ValidationError
 
-import src.mediainfolib
-from src.combine_sub_with_movie import combine_subs
-from src.mediainfolib import get_config, seperator as sep, get_video_files, write_config_to_file, clear, cut_name
+from src.mediainfolib import get_config, seperator as sep, get_video_files, write_config_to_file, clear, cut_name, \
+    data_path
 
 # feel free to add to that lol
 countries = {'English': 'eng', 'German': 'deu', 'French': 'fra', 'Japanese': 'jpn', 'Korean': 'kor'}
 
 
+class InputValidator(Validator):
+    def validate(self, document):
+        text = document.text
+        if text and\
+                text != 'q' and \
+                text != 'ok' and \
+                text != 's' and \
+                text != 'd' and \
+                not re.match(r'(\w*) (.*)', text):
+            raise ValidationError(message='Not a proper command!')
+
+
 def input_parser(input: str, conf: dict):
+    if input == 's' or input == 'd':
+        return conf
     try:
         in_vals = re.match(r"(\w*) (.*)", input)
         conf.update({in_vals.group(1): in_vals.group(2).strip("\"")})
@@ -204,54 +218,41 @@ def convert_general(config: dict, in_file: str):
 
 def main():
     config = get_config()
-    out_path = config['combiner']['default_out']
-    conversion_conf = init_conversion(config)
+    if os.path.isfile(data_path + f"{sep}conversion.conf"):
+        conversion_conf = get_config(data_path + f"{sep}conversion.conf")
+    else:
+        conversion_conf = init_conversion(config)
     greetings(conversion_conf)
-    confirm = prompt_toolkit.prompt(HTML("<ansiblue>=> </ansiblue>"))
+    confirm = prompt_toolkit.prompt(HTML("<ansiblue>=> </ansiblue>"), validator=InputValidator())
     curr_input = conversion_conf['input']
     while confirm != 'ok':
         clear()
         if confirm == 'q':
             return
+        if confirm == 's':
+            write_config_to_file(conversion_conf, data_path + f"{sep}conversion.conf")
+            print_formatted_text(HTML("<ansigreen>    Saved config!</ansigreen>"))
+        if confirm == 'd':
+            try:
+                os.remove(data_path + f"{sep}conversion.conf")
+                print_formatted_text(HTML("<ansired>    Deleted config!</ansired>"))
+            except FileNotFoundError:
+                continue
+
         conversion_conf = input_parser(confirm, conversion_conf)
         if conversion_conf['input'] != curr_input:
             curr_input = conversion_conf['input']
             conversion_conf = init_conversion(config, conversion_conf['input'])
         greetings(conversion_conf)
-        confirm = prompt_toolkit.prompt(HTML("<ansiblue>=> </ansiblue>"))
+        confirm = prompt_toolkit.prompt(HTML("<ansiblue>=> </ansiblue>"), validator=InputValidator())
     if os.path.isfile(conversion_conf.get('input')):
         convert_general(conversion_conf, conversion_conf.get('input'))
         return
     for path in get_video_files(conversion_conf.get('input')):
-        print('Converting', path)
+        # print('Converting', path)
         convert_general(conversion_conf, path)
     return
 
 
 if __name__ == '__main__':
     main()
-
-    """
-    in_path = conversion_conf.get('input')
-    vid_list = get_video_files(in_path)
-    num_vids = len(vid_list)
-    num_existing = len(get_video_files(out_path))
-    tmp_path = in_path
-    n_subs = set_sub_names(in_path)
-    # do something with subs so it's not useless to extract subs
-    codec = check_codec(vid_list[0])
-    if n_subs > 0:
-        tmp_path += "\\converted"
-        if not os.path.isdir(tmp_path):
-            os.mkdir(tmp_path)
-        combine_subs([[x for x in glob.glob(in_path + "/*") if os.path.isfile(x)]], tmp_path)
-    if codec == 'h264':
-        shutil.copy(tmp_path, out_path)
-    else:
-        convert_h265(tmp_path, out_path)
-
-    if num_vids != len(get_video_files(out_path)) - num_existing:
-        print("Something might've gone wrong, not deleting files")
-    else:
-        print('Deleting old files')
-        shutil.rmtree(tmp_path) """
