@@ -8,15 +8,10 @@ import time
 from sys import platform
 from difflib import SequenceMatcher as SM
 from prompt_toolkit.validation import Validator, ValidationError
-
-
-try:
-    import pycountry
-    from prompt_toolkit import prompt, HTML, print_formatted_text
-    from prompt_toolkit.completion import PathCompleter
-    import cv2
-except ModuleNotFoundError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pycountry", "prompt_toolkit", "opencv-python"])
+import pycountry
+from prompt_toolkit import prompt, HTML, print_formatted_text
+from prompt_toolkit.completion import PathCompleter
+import cv2
 
 global seperator
 if platform == "win32":

@@ -29,6 +29,9 @@ class InputValidator(Validator):
             raise ValidationError(message='Not a proper command!')
 
 
+# make session
+
+
 def input_parser(input: str, conf: dict):
     if input == 's' or input == 'd':
         return conf

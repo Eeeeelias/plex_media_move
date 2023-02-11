@@ -1,4 +1,6 @@
 import os
+import subprocess
+import sys
 import traceback
 
 
@@ -136,18 +138,25 @@ def main():
 
 
 if __name__ == '__main__':
-    from src.mediainfolib import get_config, clear, get_source_files, current_files_info, remove_video_list
-    while 1:
-        try:
-            import time
-            from prompt_toolkit import HTML, print_formatted_text, prompt
-            from sys import exit
-            check_for_setup()
-            main()
-        except KeyboardInterrupt:
-            print("Exiting")
-            remove_video_list(get_config()['mover']['orig_path'])
-            exit()
-        except Exception as e:
-            print(traceback.print_exc())
-            print("If this continues to show up, please message me or open an issue on Github!")
+    try:
+        from src.mediainfolib import get_config, clear, get_source_files, current_files_info, remove_video_list
+        while 1:
+            try:
+                import time
+                from prompt_toolkit import HTML, print_formatted_text, prompt
+                from sys import exit
+                check_for_setup()
+                main()
+            except KeyboardInterrupt:
+                print("Exiting")
+                remove_video_list(get_config()['mover']['orig_path'])
+                exit()
+            except Exception as e:
+                print(traceback.print_exc())
+                print("If this continues to show up, please message me or open an issue on Github!")
+    except ModuleNotFoundError:
+        requirements_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "requirements.txt")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "-r", requirements_file])
+        print("Restarting!")
+        subprocess.check_call([sys.executable, __file__])
+        sys.exit()
