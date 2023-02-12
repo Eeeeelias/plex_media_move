@@ -155,7 +155,7 @@ def convert_general(config: dict, in_file: str):
     # mapping streams
     for i in ['v', 'a', 's']:
         if config.get(f'{i}streams') == 'all':
-            ffmpeg_command.extend(['-map', f'0:{i}'])
+            ffmpeg_command.extend(['-map', f'0:{i}?'])
             if i == 'v':
                 ffmpeg_command.extend(['-map', f'-v', '-map', 'V'])
             continue
