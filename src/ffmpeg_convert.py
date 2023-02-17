@@ -1,21 +1,15 @@
-import glob
 import os
 import re
-import shutil
 import subprocess
 from ffmpeg_progress_yield import FfmpegProgress
 from tqdm import tqdm
 
-import prompt_toolkit
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit import HTML, print_formatted_text, PromptSession
 from prompt_toolkit.validation import Validator, ValidationError
 
 from src.mediainfolib import get_config, seperator as sep, get_video_files, write_config_to_file, clear, cut_name, \
     data_path
-
-# feel free to add to that lol
-countries = {'English': 'eng', 'German': 'deu', 'French': 'fra', 'Japanese': 'jpn', 'Korean': 'kor'}
 
 
 class InputValidator(Validator):
@@ -76,24 +70,6 @@ def greetings(conv_conf: dict):
     #        j += f" ({len(get_video_files(j))} video(s) found)"
     #    values = values + f"    # <ansigreen>{i.ljust(12)}</ansigreen> {cut_name(str(j), 59).ljust(59)} #    \n"
     print_formatted_text(HTML(header + info_str.replace('&', '&amp;') + footer))
-
-
-def set_sub_names(in_path: str):
-    n_subs = 0
-    dest = in_path + "\\"
-    for j in glob.glob(in_path + f"{sep}Subs{sep}**{sep}*.srt", recursive=True):
-        # check to make sure only the bigger file gets taken
-        country = re.match(r"\d+_(.*).srt", os.path.basename(j)).group(1)
-        alpha = countries.get(country)
-        parent_names = j.split(f"{sep}")
-        name = parent_names[-2] if parent_names[-2] != 'Subs' else parent_names[-3]
-        name = name + f".{alpha}.srt"
-        final_dest = dest + name
-        # print("Copying to:", final_dest)
-        shutil.copy(j, final_dest)
-        n_subs += 1
-    print(f"Extracted & renamed {n_subs} subtitle(s)")
-    return n_subs
 
 
 def check_codec(vid: str, type='v'):
@@ -191,7 +167,7 @@ def convert_general(config: dict, in_file: str):
     try:
         # print(ffmpeg_command)
         ff = FfmpegProgress(ffmpeg_command)
-        with tqdm(total=100, position=1, desc=name) as pbar:
+        with tqdm(total=100, position=1, desc=cut_name(name, 80)) as pbar:
             for progress in ff.run_command_with_progress():
                 pbar.update(progress - pbar.n)
     except Exception as e:

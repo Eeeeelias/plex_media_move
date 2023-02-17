@@ -7,7 +7,7 @@ from prompt_toolkit import prompt, HTML, print_formatted_text
 from prompt_toolkit.completion import PathCompleter
 
 from src import mediainfolib
-from src.mediainfolib import sorted_alphanumeric, PathValidator
+from src.mediainfolib import sorted_alphanumeric, PathValidator, seperator as sep
 
 
 def overview():
@@ -67,9 +67,9 @@ def rename_other_weird_format(rename_path):
 
 def loop_shift(path, num_shift):
     offset = float('-inf')
-    for file in sorted_alphanumeric(glob.glob(path + "/*.mp4")):
+    for file in sorted_alphanumeric([x for x in glob.glob(path + f"{sep}*") if os.path.isfile(x)]):
         num_shift, offset = shift_numbers(file, start=num_shift, off=offset)
-    for file in glob.glob(path + "/*.mp4"):
+    for file in [x for x in glob.glob(path + f"{sep}*") if os.path.isfile(x)]:
         name = re.sub(r"_shift", "", os.path.basename(file))
         os.rename(file, Path(os.path.dirname(file), name))
     print("[i] Everything done!")

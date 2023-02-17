@@ -1,6 +1,7 @@
 import glob
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -13,6 +14,32 @@ from src.mediainfolib import seperator as sep, get_config, convert_country, data
 session = PromptSession(history=FileHistory(f"{data_path}{sep}.subcomb"))
 
 
+# feel free to add to that lol
+countries = {'English': 'eng', 'German': 'deu', 'French': 'fra', 'Japanese': 'jpn', 'Korean': 'kor'}
+
+
+def set_sub_names(in_path: str):
+    n_subs = 0
+    dest = in_path + "\\"
+    for j in glob.glob(in_path + f"{sep}Subs{sep}**{sep}*.srt", recursive=True):
+        # ignore files that are too small (absolute value)
+        if os.path.getsize(j) < 4000:
+            continue
+        country = re.match(r"\d+_(.*).srt", os.path.basename(j)).group(1)
+        alpha = countries.get(country)
+        parent_names = j.split(f"{sep}")
+        name = parent_names[-2] if parent_names[-2] != 'Subs' else parent_names[-3]
+        name = name + f".{alpha}.srt"
+        final_dest = dest + name
+        # print("Copying to:", final_dest)
+        if os.path.isfile(final_dest) and os.path.getsize(final_dest) < os.path.getsize(j):
+            continue
+        shutil.copy(j, final_dest)
+        n_subs += 1
+    print(f"Extracted & renamed {n_subs} subtitle(s)")
+    return n_subs
+
+
 def fetch_files(movie_path):
     # only relevant for batches, but not super relevant most of the time
     # folders = [os.path.join(movie_path, x) for x in os.listdir(movie_path) if
@@ -20,6 +47,8 @@ def fetch_files(movie_path):
     rel_folder = []
     # for folder in movie_path:
     folder = movie_path
+    if os.path.isdir(movie_path + f"{sep}Subs"):
+        set_sub_names(movie_path)
     if glob.glob(folder + "/*.srt") or glob.glob(folder + "/*.ass") and not glob.glob(folder + "/.tmp"):
         rel_folder.append([x for x in glob.glob(folder + "/*") if os.path.isfile(x)])
     return rel_folder
@@ -81,7 +110,7 @@ def sub_in_movie(movie_files, out_path):
     movie = [x for x in movie_files if sub_type not in x][0]
     out = out_path + f"{sep}{os.path.splitext(os.path.basename(movie))[0]}.mkv"
     print_formatted_text(HTML("<ansimagenta>Video</ansimagenta>: {}".format(os.path.split(movie)[1])))
-    inputs = ["ffmpeg", "-loglevel", "warning", "-i", movie]
+    inputs = ["ffmpeg", "-loglevel", "error", "-i", movie]
     maps = ["-map", "0"]
     codecs = ["-c:v", "copy", "-c:a", "copy", "-c:s", sub_type[1:]]
     metadata = []
