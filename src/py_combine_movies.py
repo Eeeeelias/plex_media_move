@@ -15,7 +15,7 @@ from prompt_toolkit.history import FileHistory
 # importing is buggy?
 if len(sys.argv) == 1:
     from src.mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep, FileValidator, \
-        PathValidator, clear
+        PathValidator, clear, get_video_files
 else:
     from mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep
 
@@ -87,7 +87,7 @@ def interactive():
             return 0, 0, 0, 0, 0, 0
 
     movie_en = session.prompt(HTML("<ansiblue>[a] Firstly, give the path of the first movie:</ansiblue>"),
-                              completer=PathCompleter(), validator=FileValidator()).lstrip('"').rstrip('"')
+                              completer=PathCompleter()).lstrip('"').rstrip('"')
     if movie_en == 'q':
         return 0, 0, 0, 0, 0, 0
     lan_en = prompt(
@@ -97,7 +97,7 @@ def interactive():
         "audio.")
 
     movie_de = (session.prompt(HTML("<ansiblue>[a] Please also give the path of this movie:</ansiblue>"),
-                               completer=PathCompleter(), validator=FileValidator()).lstrip('"').rstrip('"'))
+                               completer=PathCompleter()).lstrip('"').rstrip('"'))
 
     lan_de = prompt(
         HTML("<ansiblue>[a] Again, please specify the language using ISO 639-2 codes:</ansiblue>")
@@ -150,9 +150,30 @@ def delete_movies(movie_en, movie_de):
     return
 
 
+def match_videos(movie_en, movie_de) -> dict:
+    if not os.path.isdir(movie_de) and not os.path.isdir(movie_en):
+        return {movie_en: movie_de}
+    matches = dict()
+    movie_de_files = get_video_files(movie_de)
+    for i in get_video_files(movie_en):
+        base_name = os.path.splitext(os.path.basename(i))[0]
+        match = [x for x in movie_de_files if base_name in x][0]
+        matches[i] = match
+    return matches
+
+
+def run_ffmpeg_combine(movie_en, movie_de, lan_en, lan_de, offset, combined_name):
+    ffmpeg = ["ffmpeg", "-loglevel", "warning", "-i", movie_en, "-itsoffset", str(offset), "-i", movie_de, "-map",
+              "0:0", "-map", "0:a", "-map", "1:a", "-metadata:s:a:0", f"language={lan_en}", "-metadata:s:a:1",
+              f"language={lan_de}",
+              "-c", "copy", combined_name]
+    subprocess.run(ffmpeg)
+
+
 def main():
     args = parser.parse_args()
     destination = ""
+    combined_name = ""
     if not check_ffmpeg():
         exit(1)
     if args.interactive or len(sys.argv) == 1:
@@ -186,38 +207,39 @@ def main():
             exit(1)
             return
 
-    dur_en = get_duration(movie_en)
-    dur_de = get_duration(movie_de)
-    diff = dur_en - dur_de
-    if offset == "":
-        print("[i] No offset given, using time diff")
-        offset = f"{diff}ms"
+    for i, j in match_videos(movie_en, movie_de).items():
+        dur_en = get_duration(i)
+        dur_de = get_duration(j)
+        diff = dur_en - dur_de
+        if offset == "":
+            print("[i] No offset given, using time diff")
+            offset = f"{diff}ms"
 
-    if re.search(r"[sS]\d{2}[eE]\d{2}", movie_en.split(sep)[-1]) is None:
-        combined_name = re.sub(r"(?<=\(\d{4}\)).*", ".mkv", movie_en.split(sep)[-1])
-    combined_name = re.sub(r".mp4", ".mkv", movie_en.split(sep)[-1])
+        if re.search(r"[sS]\d{2}[eE]\d{2}", i.split(sep)[-1]) is None:
+            combined_name = re.sub(r"(?<=\(\d{4}\)).*", ".mkv", i.split(sep)[-1])
+        combined_name = re.sub(r".mp4", ".mkv", i.split(sep)[-1])
 
-    if args.output is not None:
-        combined_name = args.output + sep + combined_name
-    if destination != "":
-        combined_name = destination + sep + combined_name
+        if args.output is not None:
+            combined_name = args.output + sep + combined_name
+        if destination != "":
+            combined_name = destination + sep + combined_name
 
-    print(f"[i] Input 1: {movie_en}, video length: {dur_en}ms, language: {lan_en}")
-    print(f"[i] Input 2: {movie_de}, video length: {dur_de}ms, language: {lan_de}")
-    print(f"[i] File will be written to: {combined_name}")
-    print(f"[i] Time difference: {diff}ms, offsetting by: {offset}")
+        print(f"[i] Input 1: {i}, video length: {dur_en}ms, language: {lan_en}")
+        print(f"[i] Input 2: {j}, video length: {dur_de}ms, language: {lan_de}")
+        print(f"[i] File will be written to: {combined_name}")
+        print(f"[i] Time difference: {diff}ms, offsetting by: {offset}")
 
-    time.sleep(3)
-    print("[i] Combining movies. This might take a while...")
-    subprocess.run(["ffmpeg", "-loglevel", "warning", "-i", movie_en, "-itsoffset", offset, "-i", movie_de, "-map", "0:0", "-map",
-            "0:a", "-map", "1:a", "-metadata:s:a:0", f"language={lan_en}", "-metadata:s:a:1", f"language={lan_de}",
-            "-c", "copy", combined_name])
+        time.sleep(3)
+        print("[i] Combining videos. This might take a while...")
+        run_ffmpeg_combine(i, j, lan_en, lan_de, diff, combined_name)
+
     if args.input1 is None:
         print("[i] Success? Check for sync issues. Now starting the movie...")
         time.sleep(1.5)
         try:
-            os.startfile(combined_name)
-            delete_movies(movie_en, movie_de)
+            if not os.path.isdir(movie_en):
+                os.startfile(combined_name)
+                delete_movies(movie_en, movie_de)
         except FileNotFoundError:
             print_formatted_text(
                 HTML("<ansired>[w] Something went wrong when combining the files. File could not be found.</ansired>"))
