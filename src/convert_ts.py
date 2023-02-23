@@ -32,7 +32,7 @@ def ffmpeg_convert(path, filetype=".ts"):
     new_name = re.sub(f"\.{filetype[1:]}$", ".mp4", os.path.basename(path))
     new_path = pathlib.Path(dirname, new_name)
     print(f"[i] Converting to: {new_path}")
-    subprocess.run(["ffmpeg", "-loglevel", "warning", "-i", path, "-c", "copy", new_path])
+    subprocess.run(["ffmpeg", "-loglevel", "error", "-i", path, "-c", "copy", new_path])
     print("[i] Removing original file")
     time.sleep(0.5)
     try:

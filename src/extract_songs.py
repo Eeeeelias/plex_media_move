@@ -116,7 +116,7 @@ def exec_ffmpeg(input_media, song):
     if not os.path.exists(output_path):
         os.mkdir(output_path)
     output_name = f"{output_path}{sep}{filename}.mp3"
-    ffmpeg = ["ffmpeg", "-loglevel", "warning", "-i", input_media, "-map_metadata", "-1", "-ss", start, "-to", end,
+    ffmpeg = ["ffmpeg", "-loglevel", "error", "-i", input_media, "-map_metadata", "-1", "-ss", start, "-to", end,
               "-metadata", f"album={album}", "-metadata", f"title={name}", "-metadata", f"TPE2={artist}", "-c", "copy",
               output_name]
     subprocess.run(ffmpeg)

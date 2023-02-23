@@ -163,7 +163,7 @@ def match_videos(movie_en, movie_de) -> dict:
 
 
 def run_ffmpeg_combine(movie_en, movie_de, lan_en, lan_de, offset, combined_name):
-    ffmpeg = ["ffmpeg", "-loglevel", "warning", "-i", movie_en, "-itsoffset", str(offset), "-i", movie_de, "-map",
+    ffmpeg = ["ffmpeg", "-loglevel", "error", "-i", movie_en, "-itsoffset", str(offset), "-i", movie_de, "-map",
               "0:0", "-map", "0:a", "-map", "1:a", "-metadata:s:a:0", f"language={lan_en}", "-metadata:s:a:1",
               f"language={lan_de}",
               "-c", "copy", combined_name]

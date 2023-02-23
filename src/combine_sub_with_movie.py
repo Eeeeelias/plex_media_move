@@ -12,13 +12,14 @@ from prompt_toolkit import print_formatted_text, PromptSession, HTML
 from src.mediainfolib import seperator as sep, get_config, convert_country, data_path
 
 session = PromptSession(history=FileHistory(f"{data_path}{sep}.subcomb"))
-
+removable_subs = []
 
 # feel free to add to that lol
 countries = {'English': 'eng', 'German': 'deu', 'French': 'fra', 'Japanese': 'jpn', 'Korean': 'kor'}
 
 
 def set_sub_names(in_path: str):
+    global removable_subs
     n_subs = 0
     dest = in_path + "\\"
     for j in glob.glob(in_path + f"{sep}Subs{sep}**{sep}*.srt", recursive=True):
@@ -35,6 +36,7 @@ def set_sub_names(in_path: str):
         if os.path.isfile(final_dest) and os.path.getsize(final_dest) < os.path.getsize(j):
             continue
         shutil.copy(j, final_dest)
+        removable_subs.append(final_dest)
         n_subs += 1
     print(f"Extracted & renamed {n_subs} subtitle(s)")
     return n_subs
@@ -154,6 +156,10 @@ def main():
         output = sys.argv[2]
 
     combine_subs(files, output)
+    global removable_subs
+    if len(removable_subs) > 0:
+        for i in removable_subs:
+            os.remove(i)
     return
 
 
