@@ -215,7 +215,7 @@ def main():
         dur_en = get_duration(i)
         dur_de = get_duration(j)
         diff = dur_en - dur_de
-        if offset[-1] == 'v':
+        if offset != "" and offset[-1] == 'v':
             v = True
             offset = offset[:-1]
         if len(offset) < 2:
