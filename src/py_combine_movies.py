@@ -109,7 +109,7 @@ def interactive():
         destination = (
             session.prompt(
                 HTML("<ansiblue>[a] Where do you want your movie to be saved ([ENTER] to put it in $PWD):</ansiblue>"),
-                completer=PathCompleter(), validator=PathValidator()).lstrip('"').rstrip('"'))
+                completer=PathCompleter()).lstrip('"').rstrip('"'))
     if destination == "":
         destination = conf['combiner']['default_out']
 
@@ -238,7 +238,7 @@ def main():
 
         time.sleep(3)
         print("[i] Combining videos. This might take a while...")
-        run_ffmpeg_combine(i, j, lan_en, lan_de, diff, combined_name, verbose=v)
+        run_ffmpeg_combine(i, j, lan_en, lan_de, offset, combined_name, verbose=v)
 
     if args.input1 is None:
         print("[i] Success? Check for sync issues. Now starting the movie...")
