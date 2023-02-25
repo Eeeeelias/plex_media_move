@@ -64,12 +64,13 @@ def cut_video_name(input):
 
 
 def cut_positions(start=True):
-    if not start:
-        print("[i] [ENTER] to go to the very end")
+    print("[i] [ENTER] to go to the very end/start")
     position = prompt(HTML("<ansiblue>{} position in hh:mm:ss format: </ansiblue>".format(
         "Starting" if start else "Ending")))
     if not start and position == "":
         return ""
+    if start and position == "":
+        return "00:00:00"
     while re.search(r"\d{2}:\d{2}:\d{2}", position) is None:
         print_formatted_text(HTML("<ansired>[w] Not the proper format!</ansired>"))
         position = prompt(HTML("<ansiblue>{} position in hh:mm:ss format: </ansiblue>".format(
