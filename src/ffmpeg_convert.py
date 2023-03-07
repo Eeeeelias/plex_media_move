@@ -31,6 +31,11 @@ def input_parser(input: str, conf: dict):
         return conf
     try:
         in_vals = re.match(r"(\w*) (.*)", input)
+        if in_vals.group(2).startswith('disposition'):
+            curr = conf.get(in_vals.group(1))
+            new = curr + f" (disposition:{in_vals.group(2)[-1]})"
+            conf.update({in_vals.group(1): new})
+            return conf
         conf.update({in_vals.group(1): in_vals.group(2).strip("\"")})
     except AttributeError:
         print_formatted_text(HTML("<ansired>    Not a proper command!</ansired>"))
@@ -95,6 +100,23 @@ def ffprobe_info(vid: str):
     return result[:8]
 
 
+def get_stream_num(vid: str) -> list:
+    cmd = ['ffprobe', "-v", "error", "-show_entries", "stream=codec_type", "-of", "default=nw=1:nk=1", vid]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    result = result.stdout.decode('utf-8').strip().split("\r\n")
+    v = []
+    a = []
+    s = []
+    for i in result:
+        if i == 'video':
+            v.append(str(len(v)))
+        if i == 'audio':
+            a.append(str(len(a)))
+        if i == 'subtitle':
+            s.append(str(len(s)))
+    return [",".join(v), ",".join(a), ",".join(s)]
+
+
 def hw_encoding():
     try:
         subprocess.check_output('nvidia-smi')
@@ -107,21 +129,24 @@ def hw_encoding():
 def init_conversion(config: dict, vid=None):
     video = config['mover']['orig_path'] if vid is None else vid
     out_path = config['combiner']['default_out']
+
     if out_path is None:
         out_path = video
     if os.path.isfile(video):
         infos = ffprobe_info(video)
+        streams = get_stream_num(video)
     else:
         all_files = get_video_files(video)
         infos = ffprobe_info(all_files[0]) if len(all_files) > 0 else []
+        streams = get_stream_num(all_files[0]) if len(all_files) > 0 else ['all', 'all', 'all']
     if len(infos) < 7:
         print_formatted_text(HTML("<ansired>    ffprobe could not be invoked properly!</ansired>"))
         infos = ['Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error']
     conversion_config = {'input': video, 'output': out_path, 'resolution': f'{infos[1]}:{infos[2]} (original)',
                          'vcodec': infos[0] + " (original)", 'acodec': infos[6] + " (original)",
                          'bitrate': infos[5] + " (original)", "dyn_range": infos[4] + " (original)",
-                         'filetype': '.mkv', 'vstreams': 'all', 'astreams': 'all', 'sstreams': 'all',
-                         'hw_encode': hw_encoding()}
+                         'filetype': '.mkv', 'vstreams': streams[0] + " (all)", 'astreams': streams[1] + " (all)",
+                         'sstreams': streams[2] + " (all)", 'hw_encode': hw_encoding()}
     # add possibility to save config
     return conversion_config
 
@@ -130,7 +155,7 @@ def convert_general(config: dict, in_file: str):
     ffmpeg_command = ['ffmpeg', '-y', '-i', in_file]
     # mapping streams
     for i in ['v', 'a', 's']:
-        if config.get(f'{i}streams') == 'all':
+        if '(all)' in config.get(f'{i}streams'):
             ffmpeg_command.extend(['-map', f'0:{i}?'])
             if i == 'v':
                 ffmpeg_command.extend(['-map', f'-v', '-map', 'V'])
@@ -158,6 +183,14 @@ def convert_general(config: dict, in_file: str):
             ffmpeg_command.append(",".join(vfilter))
     ffmpeg_command.extend(['-c:s', 'copy'])
 
+    # set disposition and metadata here
+    for i in ['v', 'a', 's']:
+        if 'disposition' in config.get(f'{i}streams'):
+            disp = config.get(f"{i}streams")[-2]
+            not_disp = config.get(f"{i}streams").split(" ")[0].split(",")
+            for j in [x for x in not_disp if x != disp]:
+                ffmpeg_command.extend([f"-disposition:{i}:{j}", "0"])
+            ffmpeg_command.extend([f"-disposition:{i}:{disp}", "default"])
     # setting output name
     name = os.path.splitext(os.path.basename(in_file))[0]
     out_name = config.get('output') + sep + name + config.get('filetype')
