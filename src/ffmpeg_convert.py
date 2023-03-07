@@ -14,13 +14,11 @@ from src.mediainfolib import get_config, seperator as sep, get_video_files, writ
 
 class InputValidator(Validator):
     def validate(self, document):
+        acc = ['q', 'ok', 's', 'd', 'oke', 'okay']
         text = document.text
-        if text and\
-                text != 'q' and \
-                text != 'ok' and \
-                text != 's' and \
-                text != 'd' and \
-                not re.match(r'(\w*) (.*)', text):
+        if not text:
+            raise ValidationError(message='Not a proper command!')
+        if text not in acc and not re.match(r'(\w*) (.*)', text):
             raise ValidationError(message='Not a proper command!')
 
 
@@ -109,6 +107,8 @@ def hw_encoding():
 def init_conversion(config: dict, vid=None):
     video = config['mover']['orig_path'] if vid is None else vid
     out_path = config['combiner']['default_out']
+    if out_path is None:
+        out_path = video
     if os.path.isfile(video):
         infos = ffprobe_info(video)
     else:

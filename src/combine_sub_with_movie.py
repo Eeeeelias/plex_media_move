@@ -28,6 +28,8 @@ def set_sub_names(in_path: str):
             continue
         country = re.match(r"\d+_(.*).srt", os.path.basename(j)).group(1)
         alpha = countries.get(country)
+        if alpha is None:
+            continue
         parent_names = j.split(f"{sep}")
         name = parent_names[-2] if parent_names[-2] != 'Subs' else parent_names[-3]
         name = name + f".{alpha}.srt"
@@ -160,6 +162,7 @@ def main():
     if len(removable_subs) > 0:
         for i in removable_subs:
             os.remove(i)
+    removable_subs = []
     return
 
 
