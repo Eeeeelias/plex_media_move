@@ -31,11 +31,14 @@ def input_parser(input: str, conf: dict):
         return conf
     try:
         in_vals = re.match(r"(\w*) (.*)", input)
-        if in_vals.group(2).startswith('disposition'):
-            curr = conf.get(in_vals.group(1))
-            new = curr + f" (disposition:{in_vals.group(2)[-1]})"
-            conf.update({in_vals.group(1): new})
-            return conf
+        others = ['disposition', 'cover']
+        for special in others:
+            if in_vals.group(2).startswith(special):
+                curr = conf.get(in_vals.group(1))
+                new = curr + f" ({special}:{in_vals.group(2)[-1]})"
+                conf.update({in_vals.group(1): new})
+                return conf
+
         conf.update({in_vals.group(1): in_vals.group(2).strip("\"")})
     except AttributeError:
         print_formatted_text(HTML("<ansired>    Not a proper command!</ansired>"))
@@ -148,16 +151,22 @@ def init_conversion(config: dict, vid=None):
                          'filetype': '.mkv', 'vstreams': streams[0] + " (all)", 'astreams': streams[1] + " (all)",
                          'sstreams': streams[2] + " (all)", 'hw_encode': hw_encoding()}
     # add possibility to save config
-    return conversion_config
+    return conversion_config, infos
 
 
-def convert_general(config: dict, in_file: str):
-    ffmpeg_command = ['ffmpeg', '-y', '-i', in_file]
+def convert_general(config: dict, in_file: str, original_infos):
+    # set decoding options
+    ffmpeg_command = ['ffmpeg', '-y', '-threads', '0']
+    if config.get('hw_encode'):
+        codec = original_infos[0]
+        ffmpeg_command.extend(['-c:v', codec + "_cuvid"])
+    ffmpeg_command.extend(['-i', in_file])
+
     # mapping streams
     for i in ['v', 'a', 's']:
         if '(all)' in config.get(f'{i}streams'):
             ffmpeg_command.extend(['-map', f'0:{i}?'])
-            if i == 'v':
+            if i == 'v' and 'cover:1' not in config.get(f'{i}streams'):
                 ffmpeg_command.extend(['-map', f'-v', '-map', 'V'])
             continue
         for j in config.get(f'{i}streams').split(','):
@@ -170,10 +179,10 @@ def convert_general(config: dict, in_file: str):
         ffmpeg_command.extend([f'-c:{i}', codec])
         if codec.startswith('h264'):
             ffmpeg_command.extend(['-pix_fmt', 'yuv420p'])
-        if i == 'v' and "(original)" not in config.get('bitrate'):
+        if i == 'v' and "original" not in config.get('bitrate'):
             ffmpeg_command.extend(['-b:v', config.get('bitrate')])
         # set video filters
-        if i == 'v' and "(original)" not in config.get('dyn_range') or "(original)" not in config.get('resolution'):
+        if i == 'v' and "original" not in config.get('dyn_range') or "original" not in config.get('resolution'):
             ffmpeg_command.append('-vf')
             vfilter = []
             if "(original)" not in config.get('resolution'):
@@ -198,7 +207,7 @@ def convert_general(config: dict, in_file: str):
         out_name = config.get('output') + sep + "conv_" + name + config.get('filetype')
     ffmpeg_command.append(out_name)
     try:
-        # print(ffmpeg_command)
+        #print(" ".join(ffmpeg_command))
         ff = FfmpegProgress(ffmpeg_command)
         with tqdm(total=100, position=1, desc=cut_name(name, 80)) as pbar:
             for progress in ff.run_command_with_progress():
@@ -212,8 +221,9 @@ def main():
     config = get_config()
     if os.path.isfile(data_path + f"{sep}conversion.conf"):
         conversion_conf = get_config(data_path + f"{sep}conversion.conf")
+        _, orig_conf = init_conversion(config, conversion_conf.get('input'))
     else:
-        conversion_conf = init_conversion(config)
+        conversion_conf, orig_conf = init_conversion(config)
     greetings(conversion_conf)
     confirm = session.prompt(HTML("<ansiblue>=> </ansiblue>"), validator=InputValidator())
     curr_input = conversion_conf['input']
@@ -234,15 +244,15 @@ def main():
         conversion_conf = input_parser(confirm, conversion_conf)
         if conversion_conf['input'] != curr_input:
             curr_input = conversion_conf['input']
-            conversion_conf = init_conversion(config, conversion_conf['input'])
+            conversion_conf, _ = init_conversion(config, conversion_conf['input'])
         greetings(conversion_conf)
         confirm = session.prompt(HTML("<ansiblue>=> </ansiblue>"), validator=InputValidator())
     if os.path.isfile(conversion_conf.get('input')):
-        convert_general(conversion_conf, conversion_conf.get('input'))
+        convert_general(conversion_conf, conversion_conf.get('input'), orig_conf)
         return
     for path in get_video_files(conversion_conf.get('input')):
         # print('Converting', path)
-        convert_general(conversion_conf, path)
+        convert_general(conversion_conf, path, orig_conf)
     return
 
 
