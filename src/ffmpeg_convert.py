@@ -157,8 +157,8 @@ def init_conversion(config: dict, vid=None):
 def convert_general(config: dict, in_file: str, original_infos):
     # set decoding options
     ffmpeg_command = ['ffmpeg', '-y', '-threads', '0']
-    if config.get('hw_encode'):
-        codec = original_infos[0]
+    codec = original_infos[0]
+    if config.get('hw_encode') and codec != 'Error':
         ffmpeg_command.extend(['-c:v', codec + "_cuvid"])
     ffmpeg_command.extend(['-i', in_file])
 
@@ -244,7 +244,7 @@ def main():
         conversion_conf = input_parser(confirm, conversion_conf)
         if conversion_conf['input'] != curr_input:
             curr_input = conversion_conf['input']
-            conversion_conf, _ = init_conversion(config, conversion_conf['input'])
+            conversion_conf, orig_conf = init_conversion(config, conversion_conf['input'])
         greetings(conversion_conf)
         confirm = session.prompt(HTML("<ansiblue>=> </ansiblue>"), validator=InputValidator())
     if os.path.isfile(conversion_conf.get('input')):
