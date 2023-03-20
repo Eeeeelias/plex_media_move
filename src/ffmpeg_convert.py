@@ -173,7 +173,10 @@ def convert_general(config: dict, in_file: str, original_infos):
             ffmpeg_command.extend(['-map', f'0:{i}:{j}'])
 
     # setting the right codecs and video filters
-    for i in ['v', 'a']:
+    for i in ['v', 'a', 's']:
+        if config.get(f'{i}codec') is None:
+            ffmpeg_command.extend([f'-c:{i}', 'copy'])
+            continue
         codec = config.get(f'{i}codec') if 'original' not in config.get(f'{i}codec') else 'copy'
         codec += "_nvenc" if config.get('hw_encode') and i == 'v' and codec != 'copy' else ""
         ffmpeg_command.extend([f'-c:{i}', codec])
@@ -190,7 +193,6 @@ def convert_general(config: dict, in_file: str, original_infos):
             if "(original)" not in config.get('dyn_range'):
                 vfilter.append('zscale=t=linear,tonemap=hable,zscale=p=709:t=709:m=709')
             ffmpeg_command.append(",".join(vfilter))
-    ffmpeg_command.extend(['-c:s', 'copy'])
 
     # set disposition and metadata here
     for i in ['v', 'a', 's']:
