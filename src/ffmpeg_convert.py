@@ -9,7 +9,7 @@ from prompt_toolkit import HTML, print_formatted_text, PromptSession
 from prompt_toolkit.validation import Validator, ValidationError
 
 from src.mediainfolib import get_config, seperator as sep, get_video_files, write_config_to_file, clear, cut_name, \
-    data_path
+    data_path, logger
 
 
 class InputValidator(Validator):
@@ -209,9 +209,9 @@ def convert_general(config: dict, in_file: str, original_infos):
         out_name = config.get('output') + sep + "conv_" + name + config.get('filetype')
     ffmpeg_command.append(out_name)
     try:
-        #print(" ".join(ffmpeg_command))
+        logger.debug(f"[converter] Converting file with command: " + " ".join(ffmpeg_command))
         ff = FfmpegProgress(ffmpeg_command)
-        with tqdm(total=100, position=1, desc=cut_name(name, 80)) as pbar:
+        with tqdm(total=100, position=1, desc=cut_name(name, 60, pos='mid')) as pbar:
             for progress in ff.run_command_with_progress():
                 pbar.update(progress - pbar.n)
     except Exception as e:

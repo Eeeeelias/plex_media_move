@@ -89,7 +89,7 @@ def exit_rm():
 
 
 def get_options():
-    from src import ffmpeg_edits, search_db, rename, change_config, file_editor, log_watch, ffmpeg_convert
+    from src import ffmpeg_edits, search_db, shifter, change_config, file_editor, log_watch, ffmpeg_convert
     import media_mover
     # define a dictionary mapping tool names to functions
     tools = {
@@ -98,8 +98,8 @@ def get_options():
         "2": ffmpeg_edits.main,
         "combine": ffmpeg_edits.main,
         "ve": ffmpeg_edits.main,
-        "3": rename.main,
-        "sf": rename.main,
+        "3": shifter.main,
+        "sf": shifter.main,
         "4": ffmpeg_convert.main,
         "cv": ffmpeg_convert.main,
         "5": search_db.main,

@@ -1,4 +1,5 @@
 import glob
+import logging
 import re
 import os
 import sys
@@ -10,9 +11,9 @@ from difflib import SequenceMatcher as SM
 from prompt_toolkit.validation import Validator, ValidationError
 import pycountry
 from prompt_toolkit import prompt, HTML, print_formatted_text
-from prompt_toolkit.completion import PathCompleter
 import cv2
 
+# set path structure
 global seperator
 if platform == "win32":
     seperator = "\\"
@@ -23,10 +24,27 @@ else:
     env = "HOME"
     folder = ".pmm"
 
+# set paths of db and config etc.
 data_path = os.getenv(env) + seperator + folder
 if not os.path.exists(data_path):
     os.mkdir(data_path)
 config_path = data_path + f"{seperator}config.json"
+
+# set logger
+logger = logging.getLogger('mover')
+logging.basicConfig(level=logging.DEBUG)
+
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+logger.addHandler(console_handler)
+
+log_file = f"{data_path}/mover.log"
+file_handler = logging.FileHandler(log_file)
+file_handler.setLevel(logging.DEBUG)
+logger.addHandler(file_handler)
+
+# overwrite stderr handler (from SO)
+logging.getLogger().handlers = []
 
 
 class PathValidator(Validator):

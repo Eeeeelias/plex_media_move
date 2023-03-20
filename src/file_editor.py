@@ -9,7 +9,7 @@ from src import manage_db, convert_ts
 from src.mediainfolib import get_source_files, convert_size, \
     seperator as sep, avg_video_size, clear, remove_video_list, get_config, write_video_list, read_existing_list, \
     cut_name, season_episode_matcher, check_database_ex, strip_show_name, config_path, get_duration_cv2, \
-    convert_seconds, write_config_to_file
+    convert_seconds, write_config_to_file, logger
 from prompt_toolkit import print_formatted_text, HTML, prompt
 
 
@@ -178,15 +178,21 @@ def set_extensions(config: dict, ext: str):
 def delete_sussy(nums, src_path, modifier=None):
     try:
         curr_files = read_existing_list(src_path)
+        num_deleted = 0
+        deleted_names = []
         if len(nums) != 0:
             for num in nums:
+                num_deleted += 1
                 os.remove(curr_files[num][1])
+                deleted_names.append(curr_files[num][1])
             return
 
         for file in curr_files:
             if file[5] == "S":
+                num_deleted += 1
                 os.remove(file[1])
-
+                deleted_names.append(file[1])
+        logger.debug(f"[viewer] Deleted {num_deleted} file(s) ({';'.join(deleted_names)})")
     except FileNotFoundError:
         return
 

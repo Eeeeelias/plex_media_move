@@ -1,7 +1,7 @@
 import datetime
 import os.path
 
-from src.mediainfolib import data_path, seperator as sep, get_config
+from src.mediainfolib import data_path, seperator as sep, get_config, logger
 from shutil import copy
 
 
@@ -51,4 +51,5 @@ def main():
     time = datetime.datetime.now().strftime("%Y-%m-%d")
     write_html(data_path + f"{sep}/reports/report_{time}.html", fin_html)
     os.startfile(data_path + f"{sep}/reports/report_{time}.html")
+    logger.debug(f"[report] Generated report ({time})")
     return

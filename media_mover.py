@@ -9,27 +9,8 @@ import logging
 from sys import platform
 from src import manage_db, mediainfolib
 from src.mediainfolib import check_database_ex, sorted_alphanumeric, fuzzy_matching, avg_video_size, read_existing_list, \
-    data_path
+    logger
 from prompt_toolkit import prompt, HTML, print_formatted_text
-
-# This script renames, organizes and moves your downloaded media files
-# If you find bugs/issues or have feature requests send me a message
-# It is designed for Plex shows and Audials as a recording software
-# Your downloaded folder structure should look like this:
-# --/downloaded
-# ----/Audials
-# ------/Audials TV Shows
-# ------/Audials Movies
-# ----someFile Episode 2.mp4
-# ----someOtherFile Season 3 Episode 1.mkv
-#
-# Note that only .mp4 and .mkv files are being considered.
-#
-# Your destination folder should obviously follow the folder structure recommended by Plex.
-# To read about that go here:
-# https://support.plex.tv/articles/naming-and-organizing-your-tv-show-files/
-# https://support.plex.tv/articles/naming-and-organizing-your-movie-media-files/
-
 
 # when I did this I did not know that pathlib existed. Now I do.
 # windows/linux diffs
@@ -53,16 +34,6 @@ strings_to_match = {
     "OVA ": "E00",
     "Episode ": "E0",
 }
-
-logger = logging.getLogger('mover')
-
-log_file = f"{data_path}/mover.log"
-file_handler = logging.FileHandler(log_file)
-logger.addHandler(file_handler)
-console_handler = logging.StreamHandler()
-logger.addHandler(console_handler)
-
-logger.setLevel(logging.DEBUG)
 
 
 def make_parser():
@@ -310,9 +281,9 @@ def get_show_name_season(show_dir, video_title):
 def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
     moved_videos = set()
     if len(video_paths) > 0:
-        logger.debug(f"\n[i] {time.strftime('%Y-%m-%d %H:%M:%S')} - received {len(video_paths)} files to move")
+        logger.debug(f"\n[mover] {time.strftime('%Y-%m-%d %H:%M:%S')} - received {len(video_paths)} files to move")
     for video_path, video_title in zip(video_paths, video_titles_new):
-        logger.info("[i] Original title: {}".format(os.path.basename(video_path)))
+        logger.info("[mover] Original title: {}".format(os.path.basename(video_path)))
         # Taking care of movies here
         if re.search("[sS][0-9]+[eE][0-9]+", video_title) is None:
             movie_title = re.sub(r"(?<=\(\d{4}\)).*", "", video_title)
@@ -321,14 +292,14 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
             # as other versions of that movie might get added
             if re.search(r"(?<=\(\d{4}\)) -.*(?=(.mp4)|(.mkv))", video_title) is not None:
                 if overwrite:
-                    logger.info("[i] Overwriting existing version of movie")
+                    logger.info("[mover] Overwriting existing version of movie")
                     new_path = plex_path + "/Movies/" + video_title
                     shutil.move(video_path, new_path)
                     moved_videos.add(new_path)
                     continue
                 if not os.path.exists(plex_path + "/Movies/" + movie_title):
                     os.makedirs(plex_path + "/Movies/" + movie_title)
-                    logger.info("[i] Made new folder: {}".format(movie_title))
+                    logger.info("[mover] Made new folder: {}".format(movie_title))
                 new_path = plex_path + "/Movies/" + movie_title + "/" + video_title
                 duplicate_num = file_ex_check(new_path, overwrite)
                 if duplicate_num != 0:
@@ -356,13 +327,13 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
                         plex_path + "/Movies/{}".format(video_title), movie_paths[1]
                     )
                     moved_videos.add(movie_paths[1])
-                    logger.info("[i] Moved (Movie): {}".format(movie_paths[1].split("/")[-1]))
+                    logger.info("[mover] Moved (Movie): {}".format(movie_paths[1].split("/")[-1]))
                     shutil.move(video_path, movie_paths[0])
                     moved_videos.add(movie_paths[0])
                 else:
                     shutil.move(video_path, new_path)
                     moved_videos.add(new_path)
-            logger.info("[i] Moved (Movie): {}".format(new_path.split("/")[-1]))
+            logger.info("[mover] Moved (Movie): {}".format(new_path.split("/")[-1]))
             continue
 
         # check for show name similarity here and change if needed?
@@ -374,12 +345,12 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
 
         # make folder for show if it doesn't exist
         if not os.path.exists(plex_path + "/TV Shows/" + show_name):
-            logger.info("[i] New Show, making new folder ({})".format(show_name))
+            logger.info("[mover] New Show, making new folder ({})".format(show_name))
             os.makedirs(plex_path + "/TV Shows/" + show_name)
 
         # make folder for season if it doesn't exist
         if not os.path.exists(show_path):
-            logger.info("[i] New Season, making new folder ({}, Season {})".format(show_name, season))
+            logger.info("[mover] New Season, making new folder ({}, Season {})".format(show_name, season))
             os.makedirs(show_path)
         # if file exists (file_ex_check returns false) add 2 to the file
         duplicate_num = file_ex_check(show_path + video_title, overwrite)
@@ -389,7 +360,7 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
             time.sleep(2)
         shutil.move(video_path, show_path + video_title)
         moved_videos.add(show_path_without_season)
-        logger.info("[i] Moved (TV-Show): {}".format(video_title))
+        logger.info("[mover] Moved (TV-Show): {}".format(video_title))
     return moved_videos
 
 

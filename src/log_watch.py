@@ -1,3 +1,4 @@
+import math
 import re
 import os
 from typing import List
@@ -7,56 +8,50 @@ from prompt_toolkit import HTML, print_formatted_text, prompt
 
 def read_log():
     log_file = data_path + f"{sep}mover.log"
-    changed_files = []
+    entries = []
     with open(log_file, 'r') as f:
-        orig = None
-        new = None
-        time = None
-        media_type = None
         for line in f.readlines():
-            matches = re.match(r"\[i] Original title: (.*)|\[i] Moved \((.*)\): (.*)|\[i] (\d{4}-\d+-\d+ \d+:\d+:\d+)",
-                               line)
-            if not matches:
+            matches = re.match(r"\[(.*?)] (.*)", line)
+            try:
+                entries.append([matches.group(1), matches.group(2)])
+            except AttributeError:
                 continue
-            if matches.group(4):
-                time = matches.group(4)
-            if matches.group(1):
-                orig = matches.group(1)
-            if matches.group(2):
-                media_type = matches.group(2)
-            if matches.group(3):
-                new = matches.group(3)
-            if orig and new and media_type and time:
-                changed_files.append([orig, new, media_type, time])
-                orig, new, media_type = None, None, None
-    return changed_files
+    return entries
 
 
-def print_logs(media: List, length = 20):
+def print_logs(media: List, length=20, filter=None):
     term_size = os.get_terminal_size().columns - 6
-    type_size = 7
-    time_size = 19
-    old_size = int((term_size - type_size - time_size) / 2) - 6
-    new_size = int((term_size - type_size - time_size) / 2) - 7
-    top = "    " +'#' * term_size
-    header = f"    # <ansigreen>{'Original Name'.ljust(old_size)}</ansigreen> | " \
-             f"<ansigreen>{'New Name'.ljust(new_size)}</ansigreen> | <ansigreen>{'Type'.ljust(type_size)}" \
-             f"</ansigreen> | <ansigreen>{'Time'.ljust(time_size)}</ansigreen> #"
+    top = "    " + '#' * term_size
     print(top)
-    print_formatted_text(HTML(header))
+    if filter and filter != "":
+        media = [x for x in media if x[0] == filter]
     for i in media[len(media) - length:]:
-        print_formatted_text(HTML(f"    # {cut_name(i[0], old_size, pos='mid').ljust(old_size)} | "
-                                  f"{cut_name(i[1], new_size, pos='mid').ljust(new_size)} | "
-                                  f"{i[2].ljust(type_size)} | {i[3]} #"))
+        max_size = term_size-(len(i[0]) + 7)
+        # handling input that's too long
+        if len(i[1]) > max_size:
+            num_cuts = math.ceil(len(i[1]) / max_size)
+            curr = 0
+            cuts = []
+            for j in range(num_cuts):
+                cuts.append(i[1][j + curr:j + max_size + curr])
+                curr += max_size - 1
+            print_formatted_text(HTML(f"    # <ansigreen>[{i[0]}]</ansigreen> {cuts[0].ljust(max_size)} #"))
+            for j in cuts[1:]:
+                print_formatted_text(HTML(f"    # {j.ljust(max_size + (len(i[0] ) + 3))} #"))
+            continue
+        print_formatted_text(HTML(f"    # <ansigreen>[{i[0]}]</ansigreen> {i[1].ljust(max_size)} #"))
     print(top)
 
 
 def main():
     curr_length = 20
     logs = read_log()
+    filter = None
     while True:
-        print_logs(logs, curr_length)
+        print_logs(logs, curr_length, filter)
         inp = prompt(HTML("<ansiblue>=> </ansiblue>"))
+        if inp.lower().startswith("f"):
+            filter = inp.lower()[2:]
         if inp.lower() == "m":
             curr_length += 20
         if inp.lower() == "a":

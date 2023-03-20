@@ -15,7 +15,7 @@ from prompt_toolkit.history import FileHistory
 # importing is buggy?
 if len(sys.argv) == 1:
     from src.mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep, FileValidator, \
-        PathValidator, clear, get_video_files
+        PathValidator, clear, get_video_files, logger
 else:
     from mediainfolib import check_ffmpeg, get_config, get_duration, data_path, seperator as sep
 
@@ -238,6 +238,7 @@ def main():
 
         time.sleep(3)
         print("[i] Combining videos. This might take a while...")
+        logger.debug(f"[combiner] Combining: {i} with {j} using an offset of {offset}ms")
         run_ffmpeg_combine(i, j, lan_en, lan_de, offset, combined_name, verbose=v)
 
     if args.input1 is None:
