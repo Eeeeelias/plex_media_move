@@ -170,6 +170,8 @@ def convert_general(config: dict, in_file: str, original_infos):
                 ffmpeg_command.extend(['-map', f'-v', '-map', 'V'])
             continue
         for j in config.get(f'{i}streams').split(','):
+            if j == "":
+                continue
             ffmpeg_command.extend(['-map', f'0:{i}:{j}'])
 
     # setting the right codecs and video filters

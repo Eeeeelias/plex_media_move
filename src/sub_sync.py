@@ -79,7 +79,6 @@ def main():
     if inputs[0] == 0:
         return
     if inputs[1] != "":
-        print("inp:", inputs[1])
         offset = inputs[1]
     for i in inputs[0]:
         inp = i[1]
