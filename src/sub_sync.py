@@ -20,7 +20,7 @@ def greetings():
 
 
 def check_ffs():
-    if not shutil.which('asdf'):
+    if not shutil.which('ffsubsync'):
         raise RuntimeError
 
 
