@@ -5,7 +5,7 @@ import subprocess
 from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit import prompt, HTML, print_formatted_text
 
-from src import combine_sub_with_movie, extract_songs, py_combine_movies
+from src import combine_sub_with_movie, extract_songs, py_combine_movies, sub_sync
 from src.mediainfolib import clear, seperator as sep, FileValidator
 
 
@@ -21,7 +21,8 @@ def give_options():
     # [2] {gs}concat{ge}     - concatenate two videos into one video the sum of both   #
     # [3] {gs}cut{ge}        - cut video from x to y to get the relevant parts         #
     # [4] {gs}sub comb.{ge}  - combine srt subtitle files with a movie/show            #
-    # [5] {gs}ext. songs{ge} - extract the songs from a long YT video. (beta)          #
+    # [5] {gs}sub sync.{ge}  - synchronize subs with media or other subtitles          #
+    # [6] {gs}ext. songs{ge} - extract the songs from a long YT video. (beta)          #
     #                                                                          #
     ############################################################################
 """))
@@ -118,7 +119,9 @@ def main():
         cut_video()
     elif choice in ["4", "sub", "sub comb"]:
         combine_sub_with_movie.main()
-    elif choice in ["5", "ext", "ext. songs"]:
+    elif choice in ["5", "ffs", "sub sync"]:
+        sub_sync.main()
+    elif choice in ["6", "ext", "ext. songs"]:
         extract_songs.main()
     elif choice in ["q", "quit", "exit"]:
         clear()
