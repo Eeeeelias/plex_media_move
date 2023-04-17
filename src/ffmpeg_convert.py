@@ -38,8 +38,11 @@ def input_parser(input: str, conf: dict):
                 new = curr + f" ({special}:{in_vals.group(2)[-1]})"
                 conf.update({in_vals.group(1): new})
                 return conf
-
-        conf.update({in_vals.group(1): in_vals.group(2).strip("\"")})
+        if in_vals.group(2).strip("\"") == "False":
+            new_val = False
+        else:
+            new_val = in_vals.group(2).strip("\"")
+        conf.update({in_vals.group(1): new_val})
     except AttributeError:
         print_formatted_text(HTML("<ansired>    Not a proper command!</ansired>"))
         return conf
@@ -158,7 +161,7 @@ def convert_general(config: dict, in_file: str, original_infos):
     # set decoding options
     ffmpeg_command = ['ffmpeg', '-y', '-threads', '0']
     codec = original_infos[0]
-    if config.get('hw_encode') and codec != 'Error':
+    if bool(config.get('hw_encode')) and codec != 'Error':
         ffmpeg_command.extend(['-c:v', codec + "_cuvid"])
     ffmpeg_command.extend(['-i', in_file])
 

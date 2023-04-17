@@ -9,7 +9,7 @@ from sys import exit
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit import print_formatted_text, PromptSession, HTML
-from src.mediainfolib import seperator as sep, get_config, convert_country, data_path
+from src.mediainfolib import seperator as sep, get_config, convert_country, data_path, logger
 
 session = PromptSession(history=FileHistory(f"{data_path}{sep}.subcomb"))
 removable_subs = []
@@ -129,6 +129,7 @@ def sub_in_movie(movie_files, out_path):
     ffmpeg_full = inputs + maps + codecs + metadata
     ffmpeg_full.append(out)
     # print(ffmpeg_full)
+    logger.debug("[subcombine] Combining subtitles: " + " ".join(ffmpeg_full))
     subprocess.run(ffmpeg_full)
 
 

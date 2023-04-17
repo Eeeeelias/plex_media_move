@@ -209,6 +209,8 @@ def get_duration_cv2(filename) -> int:
         duration = round(frames / fps)
     except ZeroDivisionError:
         duration = 0
+    if duration < 0:
+        duration = 0
     return duration
 
 
