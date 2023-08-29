@@ -62,7 +62,7 @@ def songs_with_time(raw_infos, album, album_artist):
         # format: tt:tt Song name - Author
         try:
             match_groups = re.search(r"(\d+:[\d:]*\d+) (.*) [-–] (.*)", line)
-            artist = match_groups.group(3) if album_artist == "Unknown" else album_artist
+            artist = match_groups.group(3) # if album_artist == "Unknown" else album_artist
             name = match_groups.group(2)
             start_track = match_groups.group(1)
         except AttributeError:

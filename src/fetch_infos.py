@@ -3,12 +3,13 @@ import csv
 import datetime
 import glob
 import os
+import random
 import re
 from itertools import dropwhile
 from typing import AnyStr, List
 from sys import exit
 from src.mediainfolib import get_duration_cv2, check_ffmpeg, get_language, seperator, \
-    convert_seconds, get_duration
+    convert_seconds, get_duration, get_config, config_path, season_episode_matcher
 
 sep = seperator
 
@@ -39,6 +40,43 @@ def get_show_infos(plex_path: str, nr=1) -> list[tuple]:
             info_shows.append(tuple(_info_shows[i]))
             id += 1
     return info_shows
+
+
+def get_episode_infos(plex_path: str) -> list[list]:
+    _info_episodes = []
+    used_ids = []
+    if os.path.basename(plex_path) != "TV Shows":
+        _info_episodes, new_ids = search_episodes(plex_path, used_ids=used_ids)
+    else:
+        shows_to_check = [plex_path + sep + i for i in os.listdir(plex_path)]
+        for show in shows_to_check:
+            episodes, new_ids = search_episodes(show, used_ids=used_ids)
+            _info_episodes.extend(episodes)
+    used_ids.extend(new_ids)
+    return _info_episodes
+
+
+def search_episodes(show: str, used_ids) -> tuple[list[list], list]:
+    from src.manage_db import custom_sql
+    show_name = os.path.basename(show)
+    print("[i] Show: {}".format(show_name))
+    episodes = []
+    db = get_config(config_path)['database']['db_path'] + "\\media_database.db"
+    # used_ids = []
+
+    for episode in glob.glob(show + f"{sep}**{sep}*.mp4") + glob.glob(show + f"{sep}**{sep}*.mkv"):
+        parts = list(dropwhile(lambda x: x != "TV Shows", episode.split(sep)))[1:]
+        # parts gives [show, season, episode]
+        id = str(random.randint(10000000, 99999999))
+        while int(id) in used_ids:
+            id = str(random.randint(10000000, 99999999))
+        used_ids.append(int(id))
+        season, ep_num = season_episode_matcher(parts[2])
+        size = os.path.getsize(episode)
+        last_modified = os.path.getmtime(episode)
+        runtime = get_duration_cv2(episode)
+        episodes.append([id, parts[0], season, ep_num, size, last_modified, runtime])
+    return episodes, used_ids
 
 
 def search_show(show):
@@ -196,10 +234,14 @@ def reindex_movies(db_path: str, plex_path: str) -> List[tuple]:
                                                   AND year={year} 
                                                   AND version='{version.replace("'", "''")}' """
         except AttributeError:
-            matches = re.search(r"(.*) \((\d+)\)", file_name)
-            name = matches.group(1)
-            year = matches.group(2)
-            sql = f"""SELECT * FROM main.movies WHERE name='{name.replace("'", "''")}' AND year={year}"""
+            try:
+                matches = re.search(r"(.*) \((\d+)\)", file_name)
+                name = matches.group(1)
+                year = matches.group(2)
+                sql = f"""SELECT * FROM main.movies WHERE name='{name.replace("'", "''")}' AND year={year}"""
+            except AttributeError:
+                print(f"Error with {file_name}, moving on")
+                continue
         existing_info = custom_sql(db_path, sql)
         if len(existing_info) > 0:
             last_modified = os.path.getmtime(media)

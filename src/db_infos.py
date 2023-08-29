@@ -98,4 +98,4 @@ def oldest_movie(db: str):
 def num_videos(db: str):
     num_shows = manage_db.custom_sql(db, "SELECT SUM(episodes) FROM main.shows")[0][0]
     num_movies = manage_db.custom_sql(db, "SELECT COUNT(id) FROm main.movies")[0][0]
-    return f" [i] You have {num_movies + num_shows} video files in your library!"
+    return f" [i] You have {num_movies + num_shows:,} video files in your library!"

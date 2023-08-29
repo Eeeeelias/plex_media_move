@@ -50,7 +50,7 @@ def fetch_files(movie_path):
     #            os.path.isdir(os.path.join(movie_path, x))]
     rel_folder = []
     # for folder in movie_path:
-    folder = movie_path
+    folder = re.sub('([\[\]])', '[\\1]', movie_path)
     if os.path.isdir(movie_path + f"{sep}Subs"):
         set_sub_names(movie_path)
     if glob.glob(folder + "/*.srt") or glob.glob(folder + "/*.ass") and not glob.glob(folder + "/.tmp"):

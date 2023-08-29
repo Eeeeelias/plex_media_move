@@ -29,17 +29,19 @@ def create_table(conn, sql_table) -> bool:
 
 # media is 2d array for speed reasons
 def add_to_db(conn, table, media) -> tuple:
-    proper_table = "shows" if table == "show" else "movies"
-    if table == "show":
+    if table == "shows":
         sql = """INSERT INTO shows(id, name, seasons, episodes, runtime, size, modified)
                  VALUES(?,?,?,?,?,?,?)"""
-    else:
+    elif table == "movies":
         sql = """INSERT INTO movies(id, name, year, language, version, runtime, size, modified, type)
                  VALUES(?,?,?,?,?,?,?,?,?)"""
+    else:
+        sql = """INSERT INTO episodes(id, show, season, episode, size, modified, runtime)
+                 VALUES(?,?,?,?,?,?,?)"""
     curse = conn.cursor()
     curse.executemany(sql, media)
     conn.commit()
-    return get_max_id(proper_table, curse)
+    return get_max_id(table, curse)
 
 
 def create_database(plex_path: str, db_path: str, info_shows: list[tuple], info_movies: list[tuple]) -> None:
@@ -66,19 +68,16 @@ def create_database(plex_path: str, db_path: str, info_shows: list[tuple], info_
                                 type text
                             );"""
     connection = create_connection(db_path)
-    shows = create_table(connection, sql_create_shows)
-    if shows:
-        print("[i] Shows created")
-    else:
-        print("[i] There was an error!")
-    movies = create_table(connection, sql_create_movies)
-    if movies:
-        print("[i] Movies created")
-    else:
-        print("[i] There was an error!")
-    last_show_id = add_to_db(connection, "show", info_shows)
+    for i in [sql_create_movies, sql_create_shows]:
+        res = create_table(connection, i)
+        if res:
+            print("[i] Table created")
+        else:
+            print("[i] There was an error!")
+
+    last_show_id = add_to_db(connection, "shows", info_shows)
     # print(f"[i] Show {show[1]} added!")
-    last_movie_id = add_to_db(connection, "movie", info_movies)
+    last_movie_id = add_to_db(connection, "movies", info_movies)
     # print(f"[i] Movie {movie[1]} added!")
     cur = connection.cursor()
     cur.execute("SELECT name FROM shows")
@@ -89,6 +88,27 @@ def create_database(plex_path: str, db_path: str, info_shows: list[tuple], info_
     # completeness_check(plex_path + f"{sep}Movies", list_movies)
     print(f"[i] {last_show_id[0]} Shows now in the database!")
     print(f"[i] {last_movie_id[0]} Movies now in the database!")
+
+
+def create_episodes(db_path: str, info_episodes: list[list]) -> None:
+    sql_create_episodes = """ CREATE TABLE IF NOT EXISTS episodes (
+                                id integer PRIMARY KEY,
+                                show text NOT NULL,
+                                season text,
+                                episode text,
+                                size text,
+                                modified real,
+                                runtime integer
+                            );"""
+    connection = create_connection(db_path)
+    res = create_table(connection, sql_create_episodes)
+    if res:
+        print("[i] Table created")
+    else:
+        print("[i] There was an error!")
+    if info_episodes is None:
+        return
+    add_to_db(connection, "episodes", info_episodes)
 
 
 def update_database(additions: set[str], db) -> None:

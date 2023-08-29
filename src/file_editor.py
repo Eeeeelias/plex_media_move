@@ -92,8 +92,8 @@ def show_all_files(ex):
     print_formatted_text(HTML(display_string), end='')
     print(header_string)
     # files info be like:
-    # [vid_nr, video, media_name, "SXX", "EXX", "N", duration_vid]
-    # [     0,     1,          2,     3,     4,   5,            6]
+    # [vid_nr, video, media_name, "SXX", "EXX", "N", Size, duration_vid]
+    # [     0,     1,          2,     3,     4,   5,    6,            7]
     #  [1]    Show.mp4 Show S01 E01 N 4h 33m
     prev = ""
     for file in ex:
@@ -108,10 +108,10 @@ def show_all_files(ex):
                    f'</ansiyellow>' if fileext != '.mp4' and fileext != '.mkv' else \
             f'{cut_name(os.path.basename(file[1]), name_string, pos="mid").ljust(name_string + 3)}'
         # print the actual line
-        print_formatted_text(
-            HTML(f"    # <ansigreen>{f'[{file[0]}]'.ljust(6)}</ansigreen>{filename}"
-                 f"{cut_name(file[2], name_string).ljust(name_string + 3)}{file[3].ljust(6)}{file[4].ljust(7)}"
-                 f"{size}{convert_seconds(int(file[7])).replace('&', '&amp;').ljust(7)} #"))
+        text = f"    # <ansigreen>{f'[{file[0]}]'.ljust(6)}</ansigreen>{filename}" \
+                 f"{cut_name(file[2], name_string).ljust(name_string + 3)}{file[3].ljust(6)}{file[4].ljust(7)}" \
+                 f"{size}{convert_seconds(int(file[7])).ljust(7)} #"
+        print_formatted_text(HTML(text.replace("&", "&amp;")))
     display_string = f"{border_bar}\n\t"
     # clear()
     print(empty_row)
@@ -223,9 +223,9 @@ def get_files(src_path, list_path):
             media_name = strip_show_name(file_name)
             duration_vid = get_duration_cv2(video)
             size_vid = os.path.getsize(video)
-            season, episode = season_episode_matcher(os.path.basename(video))
-            ep_str = f"E0{episode}" if episode else f"NaN"
-            s_str = f"S0{season}" if season else f"NaN"
+            season, episode = season_episode_matcher(os.path.basename(video), duration=duration_vid)
+            ep_str = f"E{episode}" if episode else f"NaN"
+            s_str = f"S{season}" if season else f"NaN"
 
             videos.append([vid_nr, video, media_name, s_str, ep_str, "N", size_vid, duration_vid])
             vid_nr += 1

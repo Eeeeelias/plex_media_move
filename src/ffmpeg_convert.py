@@ -183,6 +183,8 @@ def convert_general(config: dict, in_file: str, original_infos):
             ffmpeg_command.extend([f'-c:{i}', 'copy'])
             continue
         codec = config.get(f'{i}codec') if 'original' not in config.get(f'{i}codec') else 'copy'
+        # add av1
+        codec = "libsvtav1" if codec == 'av1' else codec
         codec += "_nvenc" if config.get('hw_encode') and i == 'v' and codec != 'copy' else ""
         ffmpeg_command.extend([f'-c:{i}', codec])
         if codec.startswith('h264'):
@@ -198,6 +200,9 @@ def convert_general(config: dict, in_file: str, original_infos):
             if "(original)" not in config.get('dyn_range'):
                 vfilter.append('zscale=t=linear,tonemap=hable,zscale=p=709:t=709:m=709')
             ffmpeg_command.append(",".join(vfilter))
+
+    if config.get('crf'):
+        ffmpeg_command.extend(['-crf', config.get('crf')])
 
     # set disposition and metadata here
     for i in ['v', 'a', 's']:

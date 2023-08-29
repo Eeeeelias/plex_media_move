@@ -125,6 +125,8 @@ def get_source_files(video_folder=None) -> tuple:
         if not os.path.isfile(path):
             continue
         src_path, name = os.path.split(path)
+        if os.path.isfile(src_path + "/.ignore"):
+            continue
         n_files += 1
         if source_files.get(src_path) is None:
             source_files[src_path] = [name]
@@ -349,11 +351,14 @@ def avg_video_size(path) -> float:
 
 def strip_show_name(raw) -> str:
     name = os.path.splitext(raw)[0]
+    name = re.sub(r"\[(.*?)\]", "", name)
+    name = name.replace("  ", " ")
     name = re.sub(r"((Season \d+|\d+(nd|rd|th) Season)? Episode \d+|[sS]\d+[eE]\d+)(.*)", "", name).strip()
     name_dots = re.sub(r"\.", " ", name)
     name_dots = name_dots.lstrip("conv_")
     # if names are written like Show.Name.S01E01.mp4
     if " " in name_dots and "  " not in name_dots:
+        name_dots = re.sub(r' (\d{4}) .*', ' (\\1)', name_dots)
         return name_dots.strip()
     return name
 
@@ -362,7 +367,7 @@ def write_video_list(videos, path) -> None:
     with open(f'{path}/video_list.tmp', 'w') as f:
         for video in videos:
             for info in video:
-                f.write(str(info) + ";")
+                f.write(str(info) + "\t")
             f.write("\n")
 
 
@@ -372,23 +377,35 @@ def remove_video_list(path) -> None:
         os.remove(file)
 
 
-def read_existing_list(src_path: str) -> list:
+def read_existing_list(src_path: str, split="\t") -> list:
     files = []
     with open(f'{src_path}/video_list.tmp', 'r') as f:
         for line in f.readlines():
-            files.append(line.strip().split(";"))
-            files[-1] = files[-1][:-1]
+            files.append(line.strip().split(split))
+            # print(files)
+            # files[-1] = files[-1][:-1]
     return files
 
 
-def season_episode_matcher(filename) -> tuple:
+def season_episode_matcher(filename, duration=5000) -> tuple:
     # when it's easy lol
-    match = re.match(r"(.*)[sS](\d+)[eE](\d+)", filename)
+    match = re.match(r"(.*)[sS](\d+)[eE]((\d+)(-[eE](\d+))?([eE](\d+))?)", filename)
     if match:
-        return int(match.group(2)), int(match.group(3))
+        ep_num = match.group(4)
+        if match.group(6):
+            ep_num = ep_num + "-" + match.group(6)
+        elif match.group(8):
+            ep_num = ep_num + "-" + match.group(8)
+        return match.group(2), ep_num
     # where it starts getting difficult
     match_episode = re.match(r".*Episode (\d+)", filename)
     episode = match_episode.group(1) if match_episode else None
+
+    # for videos less than an hour, it's unlikely they're a movie so this could give reasonable results
+    if not episode and duration < 3600:
+        match_try_2 = re.search(r" (\d{2,3}) ", filename)
+        episode = match_try_2.group(1) if match_try_2 else None
+
     if not episode:
         return None, None
     match_season = re.match(r".*(Season (\d+)|(\d+)(nd|rd|th) Season)", filename)
