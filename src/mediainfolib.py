@@ -139,10 +139,11 @@ def get_source_files(video_folder=None) -> tuple:
 
 
 # return all videos of common file types
-def get_video_files(path: str, subpath=None):
+def get_video_files(path: str, subpath=None, recursive=False):
     full_path = path + f"{seperator}" + subpath if subpath else path
+    full_path = full_path + f"{seperator}**" if recursive else full_path
     video_files = []
-    full_path = full_path.replace('[', '[[]') # character escaping
+    full_path = full_path.replace('[', '[[]')  # character escaping
     video_files.extend(glob.glob(full_path + "/*.mp4"))
     video_files.extend(glob.glob(full_path + "/*.mkv"))
     video_files.extend(glob.glob(full_path + "/*.ts"))
@@ -412,5 +413,5 @@ def season_episode_matcher(filename, duration=5000) -> tuple:
     if match_season:
         season = match_season.group(2) if match_season.group(2) else match_season.group(3)
     else:
-        season = 1
+        season = "01"
     return season, episode

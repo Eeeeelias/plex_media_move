@@ -106,6 +106,8 @@ def sub_in_movie(movie_files, out_path):
     try:
         for sub in subs:
             lan = re.search(r"\.(\w+)\.[^.]+$", sub).group(1)
+            if lan is None:
+                lan = "eng"
             subs_with_lang[lan] = sub
 
     except AttributeError:
@@ -119,7 +121,12 @@ def sub_in_movie(movie_files, out_path):
     codecs = ["-c:v", "copy", "-c:a", "copy", "-c:s", sub_type[1:]]
     metadata = []
     for i, (key, value) in enumerate(subs_with_lang.items()):
-        print_formatted_text(HTML("<ansiyellow>{} Subs</ansiyellow>: {}".format(convert_country(key), os.path.split(value)[1])))
+        try:
+            language = convert_country(key)
+        except AttributeError:
+            language = "English"
+            key = "eng"
+        print_formatted_text(HTML("<ansiyellow>{} Subs</ansiyellow>: {}".format(language, os.path.split(value)[1])))
         sub = ["-f", sub_type[1:], "-i", value]
         new_map = ["-map", f"{i + 1}:s"]
         new_metadata = [f"-metadata:s:s:{i}", f"language={key}"]

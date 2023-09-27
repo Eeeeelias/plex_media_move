@@ -75,7 +75,7 @@ def search_episodes(show: str, used_ids) -> tuple[list[list], list]:
         size = os.path.getsize(episode)
         last_modified = os.path.getmtime(episode)
         runtime = get_duration_cv2(episode)
-        episodes.append([id, parts[0], season, ep_num, size, last_modified, runtime])
+        episodes.append([id, parts[0], season, ep_num, runtime, size, last_modified])
     return episodes, used_ids
 
 
@@ -148,31 +148,6 @@ def write_to_csv(show_infos: List, filename="show_infos") -> None:
         csvwriter.writerow(head)
         for show in show_infos:
             csvwriter.writerow(show.values())
-
-
-def print_show_infos(show_infos: List) -> None:
-    for show in show_infos:
-        print(f"===== SHOW ======")
-        print(f"Name: {show[1]}")
-        print(f"Seasons: {show[2]}")
-        print(f"Episodes: {show[3]}")
-        print(f"Runtime: {convert_seconds(show[4])}")
-        print(f"Last modified: {datetime.datetime.fromtimestamp(show[6]).strftime('%Y-%m-%d, %H:%M')}")
-        print(f"Show size: {round(show[5] / (1024 ** 3), 2)} GB\n")
-    return
-
-
-def print_movie_infos(movie_infos: List) -> None:
-    for movie in movie_infos:
-        print(f"===== MOVIE ======")
-        print(f"Name: {movie[1]}")
-        print(f"Year: {movie[2]}")
-        print(f"Language: {movie[3]}")
-        print(f"Version: {movie[4]}")
-        print(f"Runtime: {convert_seconds(movie[5])}")
-        print(f"Last modified: {datetime.datetime.fromtimestamp(movie[7]).strftime('%Y-%m-%d, %H:%M')}")
-        print(f"Movie size: {round(movie[6] / (1024 ** 3), 2)} GB")
-        print(f"File type: {movie[8]}\n")
 
 
 def fetch_all(overall_path) -> tuple[List[tuple], List[tuple]]:

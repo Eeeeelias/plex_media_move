@@ -253,7 +253,10 @@ def viewer_rename(num_list, src_path, modifier):
             ext = os.path.splitext(file[1])[1]
             paths.append(file[1])
             if file[3] != "NaN":
-                names.append(f"{file[2]} {file[3]}{file[4]}{ext}")
+                if file[9] == "Y":
+                    names.append(f"{file[2]} {file[3]}{file[4]} - {file[8]}{ext}")
+                else:
+                    names.append(f"{file[2]} {file[3]}{file[4]}{ext}")
             else:
                 name_with_year = get_movie_year(os.path.basename(file[2])) + os.path.splitext(file[1])[1]
                 names.append(f"{name_with_year}")
@@ -294,7 +297,7 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
                 if overwrite:
                     logger.info("[mover] Overwriting existing version of movie")
                     new_path = plex_path + "/Movies/" + video_title
-                    shutil.move(video_path, new_path)
+                    shutil.copy(video_path, new_path)
                     moved_videos.add(new_path)
                     continue
                 if not os.path.exists(plex_path + "/Movies/" + movie_title):
