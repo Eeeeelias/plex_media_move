@@ -215,7 +215,8 @@ def get_files(src_path, list_path):
             s_str = f"S{season}" if season else f"NaN"
             episode_name = file_name.split("-")[-1].strip() if len(file_name.split("-")) > 1 else None
 
-            videos.append([vid_nr, video, media_name, s_str, ep_str, "N", size_vid, duration_vid, episode_name, "Y"])
+            # turn off episode names by default
+            videos.append([vid_nr, video, media_name, s_str, ep_str, "N", size_vid, duration_vid, episode_name, "N"])
             vid_nr += 1
             if avg_vid_size and avg_vid_size * 0.6 > os.path.getsize(video):
                 videos[-1][5] = "S"
