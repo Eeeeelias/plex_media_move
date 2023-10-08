@@ -15,7 +15,7 @@ session = PromptSession(history=FileHistory(f"{data_path}{sep}.subcomb"))
 removable_subs = []
 
 # feel free to add to that lol
-countries = {'English': 'eng', 'German': 'deu', 'French': 'fra', 'Japanese': 'jpn', 'Korean': 'kor', 'Eng': 'eng'}
+countries = {'English': 'eng', 'German': 'deu', 'French': 'fra', 'Japanese': 'jpn', 'Korean': 'kor', 'Eng': 'eng', 'ger': 'deu'}
 
 
 def set_sub_names(in_path: str):

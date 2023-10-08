@@ -14,7 +14,7 @@ from src.mediainfolib import get_config, seperator as sep, get_video_files, writ
 
 class InputValidator(Validator):
     def validate(self, document):
-        acc = ['q', 'ok', 's', 'd', 'oke', 'okay']
+        acc = ['q', 'ok', 's', 'd', 'oke', 'okay', 'ffmpeg']
         text = document.text
         if not text:
             raise ValidationError(message='Not a proper command!')
@@ -218,6 +218,8 @@ def convert_general(config: dict, in_file: str, original_infos):
     if os.path.isfile(out_name):
         out_name = config.get('output') + sep + "conv_" + name + config.get('filetype')
     ffmpeg_command.append(out_name)
+    if config.get('ffmpeg'):
+        ffmpeg_command = ['ffmpeg', '-y', '-threads', '0', '-i', in_file] + config.get('ffmpeg').split(" ") + [out_name]
     try:
         logger.debug(f"[converter] Converting file with command: " + " ".join(ffmpeg_command))
         ff = FfmpegProgress(ffmpeg_command)

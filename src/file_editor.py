@@ -1,5 +1,6 @@
 import os.path
 import re
+import time
 
 from prompt_toolkit.validation import Validator, ValidationError
 
@@ -57,7 +58,7 @@ def input_parser(input: str) -> tuple:
     marker_set = False
     funct_and_mod = {}
     for command in input.split(";"):
-        match = re.match(r"(\d+|\d+ ?- ?\d+|\d+((, ?)\d+)*)?([tsemdcrxoq])(.*)?", command)
+        match = re.match(r"(\d+|\d+ ?- ?\d+|\d+((, ?)\d+)*)?([tsemdcrxovq])(.*)?", command)
         marker = match.group(1) if match.group(1) and not marker_set else marker
         marker_set = True
         funct = match.group(4)
@@ -138,6 +139,28 @@ def set_extensions(config: dict, ext: str):
     write_config_to_file(config, config_path)
 
 
+# sort the lines of the file based on the sort_by parameter
+def sort_file_order(src_path: str, sort_by='default'):
+    files = read_existing_list(src_path)
+
+    if sort_by == 'default':
+        files = sorted(files, key=lambda x: x[2])
+    elif sort_by == 'ep':
+        files = sorted(files, key=lambda x: x[4])
+    elif sort_by == 'size':
+        files = sorted(files, key=lambda x: x[6])
+    elif sort_by == 'duration':
+        files = sorted(files, key=lambda x: x[7])
+
+    # since the list files contains the index of each item at position 0, we need to update those values
+    new_files = []
+    for num, line in enumerate(files):
+        line[0] = num
+        new_files.append(line)
+    print("writing new order to file")
+    write_video_list(new_files, src_path)
+
+
 def delete_sussy(nums, src_path, modifier=None):
     try:
         curr_files = read_existing_list(src_path)
@@ -167,6 +190,7 @@ def get_files(src_path, list_path):
     videos = []
     avg_vid_size = None
 
+# TODO: ensure that file numbering stays the same after reordering
     for keys, values in source_files.items():
         # just getting the average show file size
         if "Movies" not in keys and len(values) > 2:
@@ -219,6 +243,7 @@ def toggle_episode_names(num_list: list, src_path: str, modifier: str):
 
     write_video_list(new_files, src_path)
 
+
 def main():
     print("Loading...")
     conf = get_config()
@@ -232,7 +257,7 @@ def main():
         'c': convert_ts.viewer_convert,
         'm': media_mover.viewer_rename,
         'x': set_extensions,
-        'o': toggle_episode_names,
+        'o': toggle_episode_names
     }
     get_files(vid_path, src_path)
     clear()
@@ -270,6 +295,8 @@ def main():
             set_extensions(conf, action[1:])
             clear()
             continue
+        elif action.lower().startswith("v"):
+            sort_file_order(src_path, action[1:])
 
         # if none of the above apply, check for function
         try:

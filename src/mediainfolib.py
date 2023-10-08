@@ -39,7 +39,7 @@ console_handler.setLevel(logging.INFO)
 logger.addHandler(console_handler)
 
 log_file = f"{data_path}/mover.log"
-file_handler = logging.FileHandler(log_file)
+file_handler = logging.FileHandler(log_file, 'w', 'utf-8')
 file_handler.setLevel(logging.DEBUG)
 logger.addHandler(file_handler)
 
@@ -256,9 +256,12 @@ def clear() -> int:
 
 # returns the audio language of the given file
 def get_language(filename: str) -> list:
-    audio_info = subprocess.check_output(
-        ["ffprobe", "-loglevel", "0", "-show_streams", "-select_streams", "a", filename]).decode()
-    langs = re.findall(r"(?<=language=).*(?=\n)", audio_info)
+    try:
+        audio_info = subprocess.check_output(
+            ["ffprobe", "-loglevel", "0", "-show_streams", "-select_streams", "a", filename]).decode()
+        langs = re.findall(r"(?<=language=).*(?=\n)", audio_info)
+    except subprocess.CalledProcessError:
+        return ["Undefined"]
     # ez windows compatibility
     return [lang.rstrip("\r") for lang in langs]
 

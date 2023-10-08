@@ -35,11 +35,11 @@ def print_logs(media: List, length=20, filter=None):
             for j in range(num_cuts):
                 cuts.append(i[1][j + curr:j + max_size + curr])
                 curr += max_size - 1
-            print_formatted_text(HTML(f"    # <ansigreen>[{i[0]}]</ansigreen> {cuts[0].ljust(max_size)} #"))
+            print_formatted_text(HTML(f"    # <ansigreen>[{i[0]}]</ansigreen> {cuts[0].ljust(max_size)} #".replace("&", "&amp;")))
             for j in cuts[1:]:
                 print_formatted_text(HTML(f"    # {j.ljust(max_size + (len(i[0] ) + 3))} #"))
             continue
-        print_formatted_text(HTML(f"    # <ansigreen>[{i[0]}]</ansigreen> {i[1].ljust(max_size)} #"))
+        print_formatted_text(HTML(f"    # <ansigreen>[{i[0]}]</ansigreen> {i[1].ljust(max_size)} #".replace("&", "&amp;")))
     print(top)
 
 
