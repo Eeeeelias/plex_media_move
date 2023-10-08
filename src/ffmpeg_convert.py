@@ -202,7 +202,10 @@ def convert_general(config: dict, in_file: str, original_infos):
             ffmpeg_command.append(",".join(vfilter))
 
     if config.get('crf'):
-        ffmpeg_command.extend(['-crf', config.get('crf')])
+        if "_nvenc" in " ".join(ffmpeg_command):
+            ffmpeg_command.extend(['-rc:v', 'vbr', '-cq:v', config.get('crf')])
+        else:
+            ffmpeg_command.extend(['-crf', config.get('crf')])
 
     # set disposition and metadata here
     for i in ['v', 'a', 's']:

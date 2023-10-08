@@ -213,7 +213,10 @@ def get_files(src_path, list_path):
             season, episode = season_episode_matcher(os.path.basename(video), duration=duration_vid)
             ep_str = f"E{episode}" if episode else f"NaN"
             s_str = f"S{season}" if season else f"NaN"
-            episode_name = file_name.split("-")[-1].strip() if len(file_name.split("-")) > 1 else None
+            episode_name = file_name.split(" - ")[-1].strip() if len(file_name.split(" - ")) > 1 else None
+            if episode_name:
+                episode_name = episode_name.split("(")[0].strip() if len(episode_name.split("(")) > 1 else episode_name
+
 
             # turn off episode names by default
             videos.append([vid_nr, video, media_name, s_str, ep_str, "N", size_vid, duration_vid, episode_name, "N"])

@@ -355,9 +355,10 @@ def avg_video_size(path) -> float:
 
 def strip_show_name(raw) -> str:
     name = os.path.splitext(raw)[0]
-    name = re.sub(r"\[(.*?)\]", "", name)
+    name = re.sub(r"\[(.*?)]", "", name)
     name = name.replace("  ", " ")
     name = re.sub(r"((Season \d+|\d+(nd|rd|th) Season)? Episode \d+|[sS]\d+[eE]\d+)(.*)", "", name).strip()
+    name = name.replace(" -", "")
     name_dots = re.sub(r"\.", " ", name)
     name_dots = name_dots.lstrip("conv_")
     # if names are written like Show.Name.S01E01.mp4
