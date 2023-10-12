@@ -94,7 +94,8 @@ def set_season(num_list: list, src_path: str, season: str):
         # if num list is empty, all values should be considered
         if int(file[0]) in num_list or num_list == []:
             # converting to an int here to get rid of leading zeroes
-            file[3] = f"S0{season_int}"
+            file[3] = f"S0{season_int}" if season_int < 10 else f"S{season_int}"
+
         new_files.append(tuple(file))
 
     write_video_list(new_files, src_path)

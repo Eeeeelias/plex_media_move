@@ -222,7 +222,10 @@ def convert_general(config: dict, in_file: str, original_infos):
         out_name = config.get('output') + sep + "conv_" + name + config.get('filetype')
     ffmpeg_command.append(out_name)
     if config.get('ffmpeg'):
-        ffmpeg_command = ['ffmpeg', '-y', '-threads', '0', '-i', in_file] + config.get('ffmpeg').split(" ") + [out_name]
+        ffmpeg_command = ['ffmpeg', '-y', '-threads', '0']
+        if bool(config.get('hw_encode')) and original_infos[0] != 'Error':
+            ffmpeg_command.extend(['-c:v', original_infos[0] + "_cuvid"])
+        ffmpeg_command.extend(['-i', in_file] + config.get('ffmpeg').split(" ") + [out_name])
     try:
         logger.debug(f"[converter] Converting file with command: " + " ".join(ffmpeg_command))
         ff = FfmpegProgress(ffmpeg_command)

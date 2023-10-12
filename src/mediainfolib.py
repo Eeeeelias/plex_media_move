@@ -39,7 +39,7 @@ console_handler.setLevel(logging.INFO)
 logger.addHandler(console_handler)
 
 log_file = f"{data_path}/mover.log"
-file_handler = logging.FileHandler(log_file, 'w', 'utf-8')
+file_handler = logging.FileHandler(log_file, 'a', 'utf-8')
 file_handler.setLevel(logging.DEBUG)
 logger.addHandler(file_handler)
 
