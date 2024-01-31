@@ -10,13 +10,13 @@ def show_all_files(ex):
     empty_row = f"    #{' '.ljust(term_size - 2)}#"
     display_string = f"""{border_bar}\n"""
     # name string is for filename and show name, and will be cut or extended based on size of terminal
-    name_string = int((term_size - 6 - 6 - 7 - 10 - 7 - 5) / 2) - 5
+    name_string = int((term_size - 6 - 6 - 7 - 10 - 7 - 5) / 2) - 5 - 2
 
     ep_header = " - Episode Name" if any([e[8] for e in ex if e[8] != "None" and e[9] == "Y"]) else ""
 
 
-    header_string = f"    # {'Nr.'.ljust(6)}{'Filename'.ljust(name_string + 3)}{f'Title{ep_header}'.ljust(name_string + 3)}" \
-                    f"{'S.'.ljust(6)}{'Ep.'.ljust(7)}{'Size'.ljust(10)}{'Dur.'.ljust(8)}{'EN.'.ljust(5)} #"
+    header_string = f"    # {'Nr.'.ljust(6)}{'Filename'.ljust(name_string + 4)}{f'Title{ep_header}'.ljust(name_string + 3)}" \
+                    f"{'S.'.ljust(6)}{'Ep.'.ljust(7)}{'Size'.ljust(10)}{'Dur.'.ljust(8)}{'EN.'.ljust(5)}{'A'.ljust(3)} #"
     print_formatted_text(HTML(display_string), end='')
     print(header_string)
     # files info be like:
@@ -43,7 +43,7 @@ def show_all_files(ex):
         text = f"    # <ansigreen>{f'[{file[0]}]'.ljust(6)}</ansigreen>{filename}" \
                  f"{cut_name(file[2] + ep_name, name_string).ljust(name_string + 3)}" \
                  f"{file[3].ljust(6)}{file[4].ljust(7)}" \
-                 f"{size}{convert_seconds(int(file[7])).ljust(8)} {file[9].ljust(4)} #"
+                 f"{size}{convert_seconds(int(file[7])).ljust(8)} {file[9].ljust(4)} {file[10].ljust(3)} #"
         try:
             print_formatted_text(HTML(text.replace("&", "&amp;")))
         except:

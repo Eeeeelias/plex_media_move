@@ -26,7 +26,7 @@ def latest_modified(show):
 def get_show_infos(plex_path: str, nr=1) -> list[tuple]:
     _info_shows = []
     info_shows = []
-    if os.path.basename(plex_path) != "TV Shows":
+    if os.path.basename(plex_path) != "TV Shows" and os.path.basename(plex_path) != "Anime":
         _info_shows = [search_show(plex_path)]
     else:
         shows_to_check = [plex_path + sep + i for i in os.listdir(plex_path)]
@@ -41,7 +41,7 @@ def get_show_infos(plex_path: str, nr=1) -> list[tuple]:
             id += 1
     return info_shows
 
-
+# doesn't work with anime
 def get_episode_infos(plex_path: str) -> list[list]:
     _info_episodes = []
     used_ids = []
@@ -57,15 +57,15 @@ def get_episode_infos(plex_path: str) -> list[list]:
 
 
 def search_episodes(show: str, used_ids) -> tuple[list[list], list]:
-    from src.manage_db import custom_sql
     show_name = os.path.basename(show)
+    _show_type = "TV Shows" if os.path.basename(os.path.dirname(show)) == "TV Shows" else "Anime"
     print("[i] Show: {}".format(show_name))
     episodes = []
     db = get_config(config_path)['database']['db_path'] + "\\media_database.db"
     # used_ids = []
 
     for episode in glob.glob(show + f"{sep}**{sep}*.mp4") + glob.glob(show + f"{sep}**{sep}*.mkv"):
-        parts = list(dropwhile(lambda x: x != "TV Shows", episode.split(sep)))[1:]
+        parts = list(dropwhile(lambda x: x != _show_type, episode.split(sep)))[1:]
         # parts gives [show, season, episode]
         id = str(random.randint(10000000, 99999999))
         while int(id) in used_ids:
@@ -81,14 +81,15 @@ def search_episodes(show: str, used_ids) -> tuple[list[list], list]:
 
 def search_show(show):
     show_name = os.path.basename(show)
-    print("[i] Show: {}".format(show_name))
+    _show_type = "TV Shows" if os.path.basename(os.path.dirname(show)) == "TV Shows" else "Anime"
+    print("[i] Show: {}".format(show_name) if _show_type == "TV Shows" else "[i] Anime: {}".format(show_name))
     episodes = 0
     seasons = 0
     size = 0
     last_modified = 0
     runtime = 0
     for episode in glob.glob(show + f"{sep}**{sep}*.mp4") + glob.glob(show + f"{sep}**{sep}*.mkv"):
-        parts = list(dropwhile(lambda x: x != "TV Shows", episode.split(sep)))[1:]
+        parts = list(dropwhile(lambda x: x != _show_type, episode.split(sep)))[1:]
         # parts gives [show, season, episode]
         try:
             seasons = max(seasons, int(re.search(r"\d+", parts[1]).group()))
@@ -150,33 +151,35 @@ def write_to_csv(show_infos: List, filename="show_infos") -> None:
             csvwriter.writerow(show.values())
 
 
-def fetch_all(overall_path) -> tuple[List[tuple], List[tuple]]:
+def fetch_all(overall_path) -> tuple[List[tuple], List[tuple], List[tuple]]:
     overall_path = overall_path.rstrip(sep)
     if not check_ffmpeg():
         exit(1)
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(x, y) for x, y in zip([get_show_infos, get_movie_infos],
+        futures = [executor.submit(x, y) for x, y in zip([get_show_infos, get_show_infos, get_movie_infos],
                                                          [overall_path + f"{sep}TV Shows",
+                                                          overall_path + f"{sep}Anime",
                                                           overall_path + f"{sep}Movies"])]
         results = [f.result() for f in futures]
     # info_shows = get_show_infos(overall_path + f"{sep}TV Shows")
     # info_movies = get_movie_infos(overall_path + f"{sep}Movies")
-    return results[0], results[1]
+    return results[0], results[1], results[2]
 
 
-def reindex_shows(db_path: str, plex_path: str) -> List[tuple]:
+def reindex_shows(db_path: str, plex_path: str, type: str) -> List[tuple]:
     from src.manage_db import custom_sql
+    _show_type = "TV Shows" if type == "shows" else "Anime"
     _info_shows = []
     info_shows = []
-    show_dirs = glob.glob(plex_path + f"{sep}TV Shows{sep}*")
+    show_dirs = glob.glob(plex_path + f"{sep}{_show_type}{sep}*")
     for show in show_dirs:
         name = os.path.split(show)[1]
-        sql = f"""SELECT * FROM shows WHERE name='{name.replace("'", "''")}'"""
+        sql = f"""SELECT * FROM {type} WHERE name='{name.replace("'", "''")}'"""
         existing_info = custom_sql(db_path, sql)
         if len(existing_info) > 0:
             last_modified = latest_modified(show)
             if existing_info[0][6] == last_modified:
-                print("[i] Show: {}".format(name))
+                print("[i] Show: {}".format(name) if _show_type == "TV Shows" else "[i] Anime: {}".format(name))
                 _info_shows.append(list(existing_info[0]))
                 continue
         _info_shows.append(search_show(show))

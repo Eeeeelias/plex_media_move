@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 import time
@@ -89,8 +88,8 @@ def set_config():
     if create_db.lower() == "y":
         db_path = database['db_path'] + f"{seperator}media_database.db"
         plex_path = mover['dest_path']
-        info_shows, info_movies = fetch_infos.fetch_all(plex_path)
-        manage_db.create_database(plex_path, db_path, info_shows, info_movies)
+        info_shows, info_anime, info_movies = fetch_infos.fetch_all(plex_path)
+        manage_db.create_database(plex_path, db_path, info_shows, info_movies, info_anime)
     print_formatted_text("[i] All done!")
     exit(0)
 
@@ -107,13 +106,14 @@ def redo_db(reindex=False):
     db_path = conf['database']['db_path'] + f"{seperator}media_database.db"
     if os.path.getsize(db_path) == 0 or not reindex:
         print("[i] Rebuilding database... (this could take a while)")
-        info_shows, info_movies = fetch_infos.fetch_all(plex_path)
+        info_shows, info_anime, info_movies = fetch_infos.fetch_all(plex_path)
     else:
-        info_shows = fetch_infos.reindex_shows(db_path, plex_path)
+        info_shows = fetch_infos.reindex_shows(db_path, plex_path, 'shows')
+        info_anime = fetch_infos.reindex_shows(db_path, plex_path, 'anime')
         info_movies = fetch_infos.reindex_movies(db_path, plex_path)
     if os.path.exists(db_path):
         os.remove(db_path)
-    manage_db.create_database(plex_path, db_path, info_shows, info_movies)
+    manage_db.create_database(plex_path, db_path, info_shows, info_movies, info_anime)
     end = time.time()
     total_time, scale = (round((end - start) / 60.0, 2), "minutes") if (end - start) > 60 \
         else (round(end - start, 2), "seconds")

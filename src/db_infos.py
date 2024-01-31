@@ -37,7 +37,8 @@ def _quality_score(episodes: int, duration: int, size: int):
 def media_size(db: str):
     show_size = manage_db.custom_sql(db, "SELECT SUM(size) FROM main.shows")[0][0]
     movie_size = manage_db.custom_sql(db, "SELECT SUM(size) FROM main.movies")[0][0]
-    size_tb = mediainfolib.convert_size(show_size + movie_size, unit='tb')
+    anime_size = manage_db.custom_sql(db, "SELECT SUM(size) FROM main.anime")[0][0]
+    size_tb = mediainfolib.convert_size(show_size + movie_size + anime_size, unit='tb')
     if size_tb > 2:
         return f" [i] Your Media library is {size_tb} TB! (woah that's big)"
     else:
@@ -78,14 +79,16 @@ def worst_quality(db: str):
 
 
 def database_size(db: str):
-    return " [i] {} shows and {} movies in your database.".format(get_count_ids("shows", db)[0],
+    return " [i] {} shows and {} movies in your database.".format(get_count_ids("shows", db)[0] +
+                                                                  get_count_ids("anime", db)[0],
                                                                   get_count_ids("movies", db)[0])
 
 
 def total_watchtime(db: str):
     show_wt = manage_db.custom_sql(db, "SELECT SUM(runtime) FROM main.shows")[0][0]
     movie_wt = manage_db.custom_sql(db, "SELECT SUM(runtime) FROM main.movies")[0][0]
-    total_wt = mediainfolib.convert_millis((show_wt * 1000) + movie_wt, day=True)
+    anime_wt = manage_db.custom_sql(db, "SELECT SUM(runtime) FROM main.anime")[0][0]
+    total_wt = mediainfolib.convert_millis((show_wt * 1000) + (anime_wt * 1000) + movie_wt, day=True)
     return f" [i] You could watch through all your media in {total_wt}!"
 
 
@@ -98,4 +101,5 @@ def oldest_movie(db: str):
 def num_videos(db: str):
     num_shows = manage_db.custom_sql(db, "SELECT SUM(episodes) FROM main.shows")[0][0]
     num_movies = manage_db.custom_sql(db, "SELECT COUNT(id) FROm main.movies")[0][0]
-    return f" [i] You have {num_movies + num_shows:,} video files in your library!"
+    num_anime = manage_db.custom_sql(db, "SELECT SUM(episodes) FROM main.anime")[0][0]
+    return f" [i] You have {num_movies + num_shows + num_anime:,} video files in your library!"

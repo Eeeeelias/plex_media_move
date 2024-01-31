@@ -4,7 +4,7 @@ import re
 import subprocess
 from sys import exit
 from src import mediainfolib
-from src.mediainfolib import seperator as sep, data_path, get_config, FileValidator
+from src.mediainfolib import seperator as sep, data_path, get_config, FileValidator, PathAndTextValidator
 from prompt_toolkit import print_formatted_text, PromptSession, HTML
 from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit.history import FileHistory
@@ -34,12 +34,12 @@ def greeting():
 
 
 def interactive():
-    song_file = session.prompt(HTML("<ansiblue>Paste the .mp3 file you downloaded from youtube: </ansiblue>"),
+    song_file = session.prompt(HTML("<ansiblue>Paste the audio file you downloaded from youtube: </ansiblue>"),
                                completer=PathCompleter(), validator=FileValidator()).lstrip('"').rstrip('"')
     if song_file == "q":
         return [None, None, None, None]
-    album = session.prompt(HTML("<ansiblue>Specify the album name ([ENTER] to take from file): </ansiblue>"))
-    info = session.prompt(HTML("<ansiblue>Paste the timestamps from youtube (or give a file): </ansiblue>")).lstrip(
+    album = session.prompt(HTML("<ansiblue>Specify the album name ([ENTER] to take from file): </ansiblue>"), validator=PathAndTextValidator())
+    info = session.prompt(HTML("<ansiblue>Paste the timestamps from youtube (or give a file): </ansiblue>"), validator=PathAndTextValidator()).lstrip(
         '"').rstrip('"')
     print_formatted_text(HTML("[i] If the info is not in the right format the Artist might not be recognized.\n"
                               " You can specify the artist here or press [ENTER] to skip"))
@@ -115,7 +115,8 @@ def exec_ffmpeg(input_media, song):
     output_path = os.path.split(input_media)[0] + f"{sep}{album}"
     if not os.path.exists(output_path):
         os.mkdir(output_path)
-    output_name = f"{output_path}{sep}{filename}.mp3"
+    ext = os.path.splitext(input_media)[1]
+    output_name = f"{output_path}{sep}{filename}{ext}"
     ffmpeg = ["ffmpeg", "-loglevel", "error", "-i", input_media, "-map_metadata", "-1", "-ss", start, "-to", end,
               "-metadata", f"album={album}", "-metadata", f"title={name}", "-metadata", f"TPE2={artist}", "-c", "copy",
               output_name]

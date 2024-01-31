@@ -216,6 +216,7 @@ def rename_files(path, special):
 def viewer_rename(num_list, src_path, modifier):
     paths = []
     names = []
+    libraries = []
     files = read_existing_list(src_path)
 
     for file in files:
@@ -223,6 +224,7 @@ def viewer_rename(num_list, src_path, modifier):
         if int(file[0]) in num_list or num_list == []:
             ext = os.path.splitext(file[1])[1]
             paths.append(file[1])
+            libraries.append(file[10])
             if file[3] != "NaN":
                 if file[9] == "Y":
                     names.append(f"{file[2]} {file[3]}{file[4]} - {file[8]}{ext}")
@@ -231,7 +233,7 @@ def viewer_rename(num_list, src_path, modifier):
             else:
                 name_with_year = get_movie_year(os.path.basename(file[2])) + os.path.splitext(file[1])[1]
                 names.append(f"{name_with_year}")
-    return paths, names
+    return paths, names, libraries
 
 
 def get_show_name_season(show_dir, video_title):
@@ -252,17 +254,21 @@ def get_show_name_season(show_dir, video_title):
     return new_show_name, new_season
 
 
-def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
+def move_files(video_paths, video_titles_new, plex_path, libraries, overwrite) -> set[str]:
     moved_videos = set()
     if len(video_paths) > 0:
         logger.debug(f"\n[mover] {time.strftime('%Y-%m-%d %H:%M:%S')} - received {len(video_paths)} files to move")
-    for video_path, video_title in zip(video_paths, video_titles_new):
+    for video_path, video_title, library in zip(video_paths, video_titles_new, libraries):
         logger.info("[mover] Original title: {}".format(os.path.basename(video_path)))
         # Taking care of movies here
         if re.search("[sS][0-9]+[eE][0-9]+", video_title) is None:
             # delete the file extension
             movie_title = re.sub(r"(?<=\(\d{4}\)).*", "", video_title)
-            ext = re.search(r"(\.mp4)|(\.mkv)", video_title).group()
+            try:
+                ext = re.search(r"(\.mp4)|(\.mkv)", video_title).group()
+            except AttributeError:
+                # get the file extension from the file itself
+                ext = os.path.splitext(video_path)[1]
             if not os.path.exists(plex_path + "/Movies/" + movie_title):
                 os.mkdir(plex_path + "/Movies/" + movie_title)
             # If the movie is a specific version of that movie, make a new folder and put the movie in there
@@ -309,16 +315,16 @@ def move_files(video_paths, video_titles_new, plex_path, overwrite) -> set[str]:
             continue
 
         # check for show name similarity here and change if needed?
-        show_name, season = get_show_name_season(plex_path + "/TV Shows/", video_title)
+        show_name, season = get_show_name_season(plex_path + f"/{library}/", video_title)
         video_title = re.sub(r"[sS]\d+(?=[eE]\d)", f"S{season}", video_title)
-        show_path = plex_path + "/TV Shows/" + show_name + "/Season {}/".format(season)
+        show_path = plex_path + f"/{library}/" + show_name + "/Season {}/".format(season)
         # for db check
-        show_path_without_season = plex_path + f"{seperator}TV Shows{seperator}" + show_name
+        show_path_without_season = plex_path + f"{seperator}{library}{seperator}" + show_name
 
         # make folder for show if it doesn't exist
-        if not os.path.exists(plex_path + "/TV Shows/" + show_name):
+        if not os.path.exists(plex_path + f"/{library}/" + show_name):
             logger.info("[mover] New Show, making new folder ({})".format(show_name))
-            os.makedirs(plex_path + "/TV Shows/" + show_name)
+            os.makedirs(plex_path + f"/{library}/" + show_name)
 
         # make folder for season if it doesn't exist
         if not os.path.exists(show_path):

@@ -35,8 +35,8 @@ def add_to_db(conn, table, media) -> tuple:
     elif table == "movies":
         sql = """INSERT INTO movies(id, name, year, language, version, runtime, size, modified, type)
                  VALUES(?,?,?,?,?,?,?,?,?)"""
-    else:
-        sql = """INSERT INTO episodes(id, show, season, episode, size, modified, runtime)
+    elif table == "anime":
+        sql = """INSERT INTO anime(id, name, seasons, episodes, runtime, size, modified)
                  VALUES(?,?,?,?,?,?,?)"""
     curse = conn.cursor()
     curse.executemany(sql, media)
@@ -44,7 +44,8 @@ def add_to_db(conn, table, media) -> tuple:
     return get_max_id(table, curse)
 
 
-def create_database(plex_path: str, db_path: str, info_shows: list[tuple], info_movies: list[tuple]) -> None:
+def create_database(plex_path: str, db_path: str, info_shows: list[tuple], info_movies: list[tuple],
+                    info_anime: list[tuple]) -> None:
     if not os.path.exists(db_path):
         open(db_path, 'a').close()
     sql_create_shows = """ CREATE TABLE IF NOT EXISTS shows (
@@ -67,27 +68,44 @@ def create_database(plex_path: str, db_path: str, info_shows: list[tuple], info_
                                 modified real,
                                 type text
                             );"""
+    sql_create_anime = """ CREATE TABLE IF NOT EXISTS anime (
+                                id integer PRIMARY KEY,
+                                name text NOT NULL,
+                                seasons integer,
+                                episodes integer,
+                                runtime integer,
+                                size integer,
+                                modified real
+                            );"""
     connection = create_connection(db_path)
-    for i in [sql_create_movies, sql_create_shows]:
+    for i in [sql_create_movies, sql_create_shows, sql_create_anime]:
         res = create_table(connection, i)
         if res:
             print("[i] Table created")
         else:
             print("[i] There was an error!")
-
-    last_show_id = add_to_db(connection, "shows", info_shows)
-    # print(f"[i] Show {show[1]} added!")
-    last_movie_id = add_to_db(connection, "movies", info_movies)
-    # print(f"[i] Movie {movie[1]} added!")
-    cur = connection.cursor()
-    cur.execute("SELECT name FROM shows")
-    list_shows = list(cur.fetchall())
-    completeness_check(plex_path + f"{sep}TV Shows", [x[0] for x in list_shows])
-    # cur.execute("SELECT name FROM movies")
-    # list_movies = list(cur.fetchall())
-    # completeness_check(plex_path + f"{sep}Movies", list_movies)
-    print(f"[i] {last_show_id[0]} Shows now in the database!")
-    print(f"[i] {last_movie_id[0]} Movies now in the database!")
+    try:
+        last_show_id = add_to_db(connection, "shows", info_shows)
+        last_anime_id = add_to_db(connection, "anime", info_anime)
+        # print(f"[i] Show {show[1]} added!")
+        last_movie_id = add_to_db(connection, "movies", info_movies)
+        # print(f"[i] Movie {movie[1]} added!")
+        cur = connection.cursor()
+        cur.execute("SELECT name FROM shows")
+        list_shows = list(cur.fetchall())
+        completeness_check(plex_path + f"{sep}TV Shows", [x[0] for x in list_shows])
+        cur.execute("SELECT name FROM anime")
+        list_anime = list(cur.fetchall())
+        completeness_check(plex_path + f"{sep}Anime", [x[0] for x in list_anime])
+        # cur.execute("SELECT name FROM movies")
+        # list_movies = list(cur.fetchall())
+        # completeness_check(plex_path + f"{sep}Movies", list_movies)
+        print(f"[i] {last_show_id[0]} Shows now in the database!")
+        print(f"[i] {last_anime_id[0]} Anime now in the database!")
+        print(f"[i] {last_movie_id[0]} Movies now in the database!")
+    except Error as e:
+        print(e)
+        print("[i] There was an error when adding media to db!")
 
 
 def create_episodes(db_path: str, info_episodes: list[list]) -> None:
@@ -116,6 +134,7 @@ def update_database(additions: set[str], db) -> None:
     cur = conn.cursor()
     mov_new_cha = float('inf')
     sho_new_cha = float('inf')
+    table = ""
     for added in additions:
         if f"Movies" in added:
             info = fetch_infos.get_movie_infos(added, nr=get_max_id("movies", cur)[0] + 1)[0]
@@ -128,25 +147,26 @@ def update_database(additions: set[str], db) -> None:
                 update_sql("movies", cur, info)
                 continue
             add_sql("movies", cur, info)
-        else:
-            info = fetch_infos.get_show_infos(added, nr=get_max_id("shows", cur)[0] + 1)[0]
+        if f"TV Shows" in added or f"Anime" in added:
+            table = "shows" if f"TV Shows" in added else "anime"
+            info = fetch_infos.get_show_infos(added, nr=get_max_id(table, cur)[0] + 1)[0]
             sho_new_cha = info[6] if sho_new_cha > info[6] else sho_new_cha
 
-            pos_ex = check_entry_ex("shows", cur, info)
+            pos_ex = check_entry_ex(table, cur, info)
             if pos_ex is not None:
                 tmp = list(info)
                 tmp[0] = pos_ex
                 info = tuple(tmp)
-                update_sql("shows", cur, info)
+                update_sql(table, cur, info)
                 continue
-            add_sql("shows", cur, info)
+            add_sql(table, cur, info)
     conn.commit()
     if mov_new_cha < float('inf'):
         print("[i] New/Changed movies in the database:\n")
         res = prettify_out("movies", get_newest("movies", mov_new_cha, db))
         print(res)
     if sho_new_cha < float('inf'):
-        print("[i] New/Changed shows in the database:\n")
+        print(f"[i] New/Changed {table} in the database:\n")
         res = prettify_out("shows", get_newest("shows", sho_new_cha, db))
         print(res)
     return
@@ -157,6 +177,8 @@ def get_max_id(table, cursor: sqlite3.Cursor) -> tuple[int]:
         return cursor.execute("SELECT MAX(id) FROM movies").fetchone()
     elif table == "shows":
         return cursor.execute("SELECT MAX(id) FROM shows").fetchone()
+    elif table == "anime":
+        return cursor.execute("SELECT MAX(id) FROM anime").fetchone()
     return (1,)
 
 
@@ -166,6 +188,8 @@ def get_count_ids(table: str, db_path: str) -> tuple[int]:
         return cursor.execute("SELECT COUNT(id) FROM movies").fetchone()
     elif table == "shows":
         return cursor.execute("SELECT COUNT(id) FROM shows").fetchone()
+    elif table == "anime":
+        return cursor.execute("SELECT COUNT(id) FROM anime").fetchone()
     return (1,)
 
 
@@ -177,6 +201,8 @@ def check_entry_ex(table: str, cursor: sqlite3.Cursor, info: tuple):
         possible_ex = cursor.execute(f"SELECT * FROM movies WHERE name='{info[1]}' AND version='{info[4]}'").fetchone()
     elif table == "shows":
         possible_ex = cursor.execute(f"SELECT * FROM shows WHERE name='{info[1]}'").fetchone()
+    elif table == "anime":
+        possible_ex = cursor.execute(f"SELECT * FROM anime WHERE name='{info[1]}'").fetchone()
     if possible_ex is not None:
         print("[i] Entry already found, updating existing")
         return possible_ex[0]
@@ -199,6 +225,13 @@ def update_sql(table: str, cur: sqlite3.Cursor, info: tuple) -> None:
                      size = ?,
                      modified = ?
                  WHERE id = ?"""
+    sql_anime = """UPDATE anime
+                      SET seasons = ?,
+                          episodes = ?,
+                          runtime = ?,
+                          size = ?,
+                          modified = ?
+                      WHERE id = ?"""
 
     if table == "movies":
         info_sql = (info[3], info[5], info[7], info[6], info[8], info[0])
@@ -206,6 +239,9 @@ def update_sql(table: str, cur: sqlite3.Cursor, info: tuple) -> None:
     elif table == "shows":
         info_sql = (info[2], info[3], info[4], info[5], info[6], info[0])
         cur.execute(sql_show, info_sql)
+    elif table == "anime":
+        info_sql = (info[2], info[3], info[4], info[5], info[6], info[0])
+        cur.execute(sql_anime, info_sql)
 
 
 def add_sql(table: str, cur: sqlite3.Cursor, info: tuple) -> None:
@@ -214,6 +250,8 @@ def add_sql(table: str, cur: sqlite3.Cursor, info: tuple) -> None:
     if table == "movies":
         cur.execute(sql_movie, info)
     elif table == "shows":
+        cur.execute(sql_shows, info)
+    elif table == "anime":
         cur.execute(sql_shows, info)
 
 
@@ -231,6 +269,11 @@ def delete_entry(table: str, db_file, id: int) -> None:
             print("[i] Deleting \'{}\'.".format(cur.fetchone()[0]))
             time.sleep(3)
             cur.execute("DELETE FROM shows WHERE id= ?", (id,))
+        elif table == "anime":
+            cur.execute("SELECT name FROM anime where id=?", (id,))
+            print("[i] Deleting \'{}\'.".format(cur.fetchone()[0]))
+            time.sleep(3)
+            cur.execute("DELETE FROM anime WHERE id= ?", (id,))
     except TypeError:
         print("ID doesn't exist.")
         return
@@ -252,6 +295,7 @@ def get_movies(search: str, db_path: str, order='name', desc=True) -> list[tuple
 def get_shows(search: str, db_path: str, order='name', desc=True) -> list[tuple]:
     search = search.replace("'", "''")
     sort = "ASC" if not desc else "DESC"
+    # include both shows and anime
     sql = f"SELECT * FROM shows WHERE name like '%{search}%' ORDER BY {order} {sort}"
     conn = create_connection(db_path)
     cur = conn.cursor()
@@ -263,11 +307,14 @@ def get_shows(search: str, db_path: str, order='name', desc=True) -> list[tuple]
 def get_newest(table: str, search: float, db_path: str):
     cur = create_connection(db_path).cursor()
     sql_show = f"SELECT * FROM shows WHERE modified >= '{search}' ORDER BY modified"
+    sql_anime = f"SELECT * FROM anime WHERE modified >= '{search}' ORDER BY modified"
     sql_movie = f"SELECT * FROM movies WHERE modified >= '{search}' ORDER BY modified"
     if table == "movies":
         cur.execute(sql_movie)
     elif table == "shows":
         cur.execute(sql_show)
+    elif table == "anime":
+        cur.execute(sql_anime)
     return cur.fetchall()
 
 
@@ -291,6 +338,8 @@ def prettify_out(table: str, rows: list[tuple]) -> str:
     if table == 'movies':
         return prettify_movies(rows)
     elif table == 'shows':
+        return prettify_shows(rows)
+    elif table == 'anime':
         return prettify_shows(rows)
     return ""
 

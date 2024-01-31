@@ -1,6 +1,5 @@
 import os.path
 import re
-import time
 
 from prompt_toolkit.validation import Validator, ValidationError
 
@@ -9,7 +8,7 @@ from src import manage_db, convert_ts
 from src.mediainfolib import get_source_files, \
     seperator as sep, avg_video_size, clear, remove_video_list, get_config, write_video_list, read_existing_list, \
     season_episode_matcher, check_database_ex, strip_show_name, config_path, get_duration_cv2, \
-    write_config_to_file, logger
+    write_config_to_file, logger, library_names
 from prompt_toolkit import print_formatted_text, HTML, prompt
 from src.window_file_editor import show_all_files
 
@@ -58,7 +57,7 @@ def input_parser(input: str) -> tuple:
     marker_set = False
     funct_and_mod = {}
     for command in input.split(";"):
-        match = re.match(r"(\d+|\d+ ?- ?\d+|\d+((, ?)\d+)*)?([tsemdcrxovq])(.*)?", command)
+        match = re.match(r"(\d+|\d+ ?- ?\d+|\d+((, ?)\d+)*)?([tsemdcrxovqa])(.*)?", command)
         marker = match.group(1) if match.group(1) and not marker_set else marker
         marker_set = True
         funct = match.group(4)
@@ -220,7 +219,7 @@ def get_files(src_path, list_path):
 
 
             # turn off episode names by default
-            videos.append([vid_nr, video, media_name, s_str, ep_str, "N", size_vid, duration_vid, episode_name, "N"])
+            videos.append([vid_nr, video, media_name, s_str, ep_str, "N", size_vid, duration_vid, episode_name, "N", "S"])
             vid_nr += 1
             if avg_vid_size and avg_vid_size * 0.6 > os.path.getsize(video):
                 videos[-1][5] = "S"
@@ -249,6 +248,17 @@ def toggle_episode_names(num_list: list, src_path: str, modifier: str):
     write_video_list(new_files, src_path)
 
 
+def set_anime(num_list: list, src_path: str, modifier: str):
+    new_files = []
+    files = read_existing_list(src_path)
+
+    for i, file in enumerate(files):
+        if int(file[0]) in num_list or num_list == []:
+            file[10] = "A" if file[10] == "S" else "S"
+        new_files.append(tuple(file))
+
+    write_video_list(new_files, src_path)
+
 def main():
     print("Loading...")
     conf = get_config()
@@ -262,7 +272,8 @@ def main():
         'c': convert_ts.viewer_convert,
         'm': media_mover.viewer_rename,
         'x': set_extensions,
-        'o': toggle_episode_names
+        'o': toggle_episode_names,
+        'a': set_anime
     }
     get_files(vid_path, src_path)
     clear()
@@ -315,8 +326,9 @@ def main():
             funct = funcs.get(funct_name)
             if funct:
                 if funct_name == "m":
-                    paths, names = media_mover.viewer_rename(nums, src_path, modifier)
-                    moved = media_mover.move_files(paths, names, conf['mover']['dest_path'], conf['mover']['overwrite'])
+                    paths, names, libraries = media_mover.viewer_rename(nums, src_path, modifier)
+                    libraries = [library_names(conf['mover']['dest_path'], x) for x in libraries]
+                    moved = media_mover.move_files(paths, names, conf['mover']['dest_path'], libraries, conf['mover']['overwrite'])
                     data_path = conf['database']['db_path']
                     db_path = data_path + f"{sep}media_database.db"
                     if check_database_ex(db_path):

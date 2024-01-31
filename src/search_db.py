@@ -43,6 +43,8 @@ def search_other(db_path):
                    "modified": float, "type": str}
     shows_vals = {"id": int, "name": str, "seasons": int, "episodes": int, "runtime": int, "modified": float,
                   "size": int}
+    anime_vals = {"id": int, "name": str, "seasons": int, "episodes": int, "runtime": int, "modified": float,
+                  "size": int}
     sql = "SELECT * FROM {} WHERE {}{}'{}' ORDER BY {} {}"
     db = "movies"
     col = ""

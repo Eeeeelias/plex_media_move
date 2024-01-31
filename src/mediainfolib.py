@@ -54,6 +54,15 @@ class PathValidator(Validator):
             raise ValidationError(message='This is not a directory!')
 
 
+class PathAndTextValidator(Validator):
+    def validate(self, document):
+        text = document.text
+        if text and not os.path.isfile(text.lstrip('"').rstrip('"')):
+            disallowed_chars = ['/', '\\', ':', '*', '?', '"', '<', '>', '|']
+            if any(char in text for char in disallowed_chars):
+                raise ValidationError(message='This is not a valid name!')
+
+
 class FileValidator(Validator):
     def validate(self, document):
         text = document.text
@@ -277,7 +286,10 @@ def convert_country(alpha: str) -> str:
     langs = []
     # country codes are either 2 or 3 chars long
     if len(alpha[0]) > 3:
-        return pycountry.languages.search_fuzzy(alpha[0])
+        try:
+            return pycountry.languages.search_fuzzy(alpha[0])
+        except AttributeError:
+            return "Und"
     if alpha[0] != "und":
         try:
             for al in alpha:
@@ -390,6 +402,14 @@ def read_existing_list(src_path: str, split="\t") -> list:
             # print(files)
             # files[-1] = files[-1][:-1]
     return files
+
+
+def library_names(out_path, library_name: str) -> str:
+    # library_name is either S or anime path doesn't exist
+    if library_name == "S" or not os.path.exists(out_path + f"{seperator}Anime"):
+        return "TV Shows"
+    if library_name == "A":
+        return "Anime"
 
 
 def season_episode_matcher(filename, duration=5000) -> tuple:
