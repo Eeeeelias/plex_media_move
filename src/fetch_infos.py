@@ -24,6 +24,8 @@ def latest_modified(show):
 
 
 def get_show_infos(plex_path: str, nr=1) -> list[tuple]:
+    if not os.path.exists(plex_path):
+        return []
     _info_shows = []
     info_shows = []
     if os.path.basename(plex_path) != "TV Shows" and os.path.basename(plex_path) != "Anime":

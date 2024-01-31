@@ -87,21 +87,18 @@ def create_database(plex_path: str, db_path: str, info_shows: list[tuple], info_
     try:
         last_show_id = add_to_db(connection, "shows", info_shows)
         last_anime_id = add_to_db(connection, "anime", info_anime)
-        # print(f"[i] Show {show[1]} added!")
         last_movie_id = add_to_db(connection, "movies", info_movies)
-        # print(f"[i] Movie {movie[1]} added!")
+
         cur = connection.cursor()
-        cur.execute("SELECT name FROM shows")
-        list_shows = list(cur.fetchall())
-        completeness_check(plex_path + f"{sep}TV Shows", [x[0] for x in list_shows])
-        cur.execute("SELECT name FROM anime")
-        list_anime = list(cur.fetchall())
-        completeness_check(plex_path + f"{sep}Anime", [x[0] for x in list_anime])
-        # cur.execute("SELECT name FROM movies")
-        # list_movies = list(cur.fetchall())
-        # completeness_check(plex_path + f"{sep}Movies", list_movies)
+        for i, j in zip(["shows", "anime"], ["TV Shows", "Anime"]):
+            cur.execute(f"SELECT COUNT(id) FROM {i}")
+            list_table = list(cur.fetchall())
+            if os.path.exists(plex_path + f"{sep}{j}"):
+                completeness_check(plex_path + f"{sep}{j}", list_table)
+
         print(f"[i] {last_show_id[0]} Shows now in the database!")
-        print(f"[i] {last_anime_id[0]} Anime now in the database!")
+        if last_anime_id[0] is not None:
+            print(f"[i] {last_anime_id[0]} Anime now in the database!")
         print(f"[i] {last_movie_id[0]} Movies now in the database!")
     except Error as e:
         print(e)
@@ -282,21 +279,14 @@ def delete_entry(table: str, db_file, id: int) -> None:
 
 # returns movies that contain the search word
 def get_movies(search: str, db_path: str, order='name', desc=True) -> list[tuple]:
-    search = search.replace("'", "''")
-    sort = "ASC" if not desc else "DESC"
-    sql = f"SELECT * FROM movies WHERE name like '%{search}%' ORDER BY {order} {sort}"
-    conn = create_connection(db_path)
-    cur = conn.cursor()
-    cur.execute(sql)
-    rows = cur.fetchall()
-    return rows
+    return get_shows(search, db_path, order, desc, 'movies')
 
 
-def get_shows(search: str, db_path: str, order='name', desc=True) -> list[tuple]:
+def get_shows(search: str, db_path: str, order='name', desc=True, table='shows') -> list[tuple]:
     search = search.replace("'", "''")
     sort = "ASC" if not desc else "DESC"
     # include both shows and anime
-    sql = f"SELECT * FROM shows WHERE name like '%{search}%' ORDER BY {order} {sort}"
+    sql = f"SELECT * FROM {table} WHERE name like '%{search}%' ORDER BY {order} {sort}"
     conn = create_connection(db_path)
     cur = conn.cursor()
     cur.execute(sql)
