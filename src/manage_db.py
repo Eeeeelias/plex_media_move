@@ -91,10 +91,11 @@ def create_database(plex_path: str, db_path: str, info_shows: list[tuple], info_
 
         cur = connection.cursor()
         for i, j in zip(["shows", "anime"], ["TV Shows", "Anime"]):
-            cur.execute(f"SELECT COUNT(id) FROM {i}")
+            cur.execute(f"SELECT name FROM {i}")
             list_table = list(cur.fetchall())
             if os.path.exists(plex_path + f"{sep}{j}"):
-                completeness_check(plex_path + f"{sep}{j}", list_table)
+                print(f"[i] Checking for completeness in {plex_path + f'{sep}{j}'}")
+                completeness_check(plex_path + f"{sep}{j}", [x[0] for x in list_table])
 
         print(f"[i] {last_show_id[0]} Shows now in the database!")
         if last_anime_id[0] is not None:

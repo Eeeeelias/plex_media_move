@@ -220,7 +220,7 @@ def reindex_movies(db_path: str, plex_path: str) -> List[tuple]:
                 year = matches.group(2)
                 sql = f"""SELECT * FROM main.movies WHERE name='{name.replace("'", "''")}' AND year={year}"""
             except AttributeError:
-                print(f"Error with {file_name}, moving on")
+                print(f"[w] Error with {file_name}, moving on")
                 continue
         existing_info = custom_sql(db_path, sql)
         if len(existing_info) > 0:

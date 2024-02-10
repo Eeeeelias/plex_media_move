@@ -35,6 +35,8 @@ strings_to_match = {
     "Episode ": "E0",
 }
 
+# save fuzzy matches here so user choice is remembered for current session
+matches = {}
 
 def make_parser():
     parser = argparse.ArgumentParser()
@@ -243,6 +245,8 @@ def get_show_name_season(show_dir, video_title):
     new_season = orig_season
     fuzzy_match = fuzzy_matching(show_dir, orig_show_name)
     if fuzzy_match is not None:
+        if fuzzy_match in matches.keys():
+            return matches[fuzzy_match]
         keep_original = prompt(HTML("<ansiblue>[a] Do you want to keep the original name? [y/N] </ansiblue>")).lower()
         if keep_original == "n":
             new_show_name = fuzzy_match
@@ -251,6 +255,7 @@ def get_show_name_season(show_dir, video_title):
             if keep_season.isdigit():
                 # making sure the leading zero is there
                 new_season = keep_season if keep_season.startswith("0") else f"0{keep_season}"
+        matches[fuzzy_match] = (new_show_name, new_season)
     return new_show_name, new_season
 
 
@@ -316,7 +321,12 @@ def move_files(video_paths, video_titles_new, plex_path, libraries, overwrite) -
 
         # check for show name similarity here and change if needed?
         show_name, season = get_show_name_season(plex_path + f"/{library}/", video_title)
+
+        # add this so the changed show name is in the file name for consistency
         video_title = re.sub(r"[sS]\d+(?=[eE]\d)", f"S{season}", video_title)
+        orig_show_name = re.sub(" [sS][0-9]+[eE][0-9]+.*", "", string=video_title)
+        video_title = re.sub(orig_show_name, show_name, video_title)
+
         show_path = plex_path + f"/{library}/" + show_name + "/Season {}/".format(season)
         # for db check
         show_path_without_season = plex_path + f"{seperator}{library}{seperator}" + show_name
@@ -330,6 +340,7 @@ def move_files(video_paths, video_titles_new, plex_path, libraries, overwrite) -
         if not os.path.exists(show_path):
             logger.info("[mover] New Season, making new folder ({}, Season {})".format(show_name, season))
             os.makedirs(show_path)
+
         # if file exists (file_ex_check returns false) add 2 to the file
         duplicate_num = file_ex_check(show_path + video_title, overwrite)
         if duplicate_num != 0:
@@ -388,7 +399,7 @@ def main():
         trash_video(orig_path + "/Audials/Audials Other Videos")
         for path in paths:
             video_path_list, video_titles_renamed = rename_files(path, special)
-            moved_files = move_files(video_path_list, video_titles_renamed, plex_path, overwrite)
+            moved_files = move_files(video_path_list, video_titles_renamed, plex_path, ["TV Shows"]*len(video_path_list), overwrite)
             if check_database_ex(db_path) and use_db:
                 manage_db.update_database(moved_files, db_path)
 
