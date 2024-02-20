@@ -341,7 +341,8 @@ def split_shows(seq, size):
     return (seq[i::size] for i in range(size))
 
 
-def fuzzy_matching(input_dir, u_show) -> str:
+def fuzzy_matching(input_dir, u_show) -> (str, float):
+    ratio = 0
     try:
         threshold = get_config()['mover']['fuzzy_match']
     except KeyError:
@@ -352,12 +353,10 @@ def fuzzy_matching(input_dir, u_show) -> str:
     matched_show = None
     for show in os.listdir(input_dir):
         ratio = SM(None, show, u_show).ratio()
-        if 1 > ratio > float(threshold):
-            print(
-                "[i] \'{}\' and \'{}\' might be the same show. ({:.0f}% similarity)".format(show, u_show, ratio * 100))
+        if ratio > float(threshold):
             matched_show = show
             break
-    return matched_show
+    return matched_show, ratio
 
 
 def avg_video_size(path) -> float:
@@ -410,6 +409,19 @@ def library_names(out_path, library_name: str) -> str:
         return "TV Shows"
     if library_name == "A":
         return "Anime"
+
+
+def show_exists(show, path, threshold) -> (str, bool):
+    # search normally first
+    for folder_type, abbreviation in zip(["Anime", "TV Shows"], ["A", "S"]):
+        if os.path.exists(path + f"{seperator}{folder_type}{seperator}{show}"):
+            return abbreviation, True
+    # if that fails, do fuzzy search
+    for folder_type, abbreviation in zip(["Anime", "TV Shows"], ["A", "S"]):
+        _, ratio = fuzzy_matching(path + f"{seperator}{folder_type}", show)
+        if ratio > float(threshold):
+            return abbreviation, False
+    return "N", False
 
 
 def season_episode_matcher(filename, duration=5000) -> tuple:

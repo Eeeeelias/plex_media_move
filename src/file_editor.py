@@ -1,5 +1,6 @@
 import os.path
 import re
+import time
 
 from prompt_toolkit.validation import Validator, ValidationError
 
@@ -8,7 +9,7 @@ from src import manage_db, convert_ts
 from src.mediainfolib import get_source_files, \
     seperator as sep, avg_video_size, clear, remove_video_list, get_config, write_video_list, read_existing_list, \
     season_episode_matcher, check_database_ex, strip_show_name, config_path, get_duration_cv2, \
-    write_config_to_file, logger, library_names
+    write_config_to_file, logger, library_names, show_exists
 from prompt_toolkit import print_formatted_text, HTML, prompt
 from src.window_file_editor import show_all_files
 
@@ -183,7 +184,19 @@ def delete_sussy(nums, src_path, modifier=None):
         return
 
 
-def get_files(src_path, list_path):
+def show_name_colour(media_name, out_path, fuzzy_threshold):
+    show_type, is_certain = show_exists(media_name, out_path, fuzzy_threshold)
+    found = "red"
+    if not is_certain:
+        if show_type == "A" or show_type == "S":
+            found = "yellow"
+    else:
+        found = "green"
+    show_type = "S" if show_type == "N" else show_type
+    return show_type, found
+
+
+def get_files(src_path, out_path, list_path, fuzzy_threshold):
     source_files, n_videos, n_folders = get_source_files(src_path)
     ex_videos = read_existing_list(list_path) if os.path.isfile(f"{list_path}/video_list.tmp") else []
     vid_nr = 0
@@ -202,6 +215,10 @@ def get_files(src_path, list_path):
             for ex in ex_videos:
                 if video == ex[1]:
                     found = True
+                    # update show type and certainty color if the title has changed
+                    show_type, certainty_color = show_name_colour(ex[2], out_path, fuzzy_threshold)
+                    ex[10] = show_type
+                    ex[11] = certainty_color
                     videos.append(ex)
                     break
             if found:
@@ -216,10 +233,11 @@ def get_files(src_path, list_path):
             episode_name = file_name.split(" - ")[-1].strip() if len(file_name.split(" - ")) > 1 else None
             if episode_name:
                 episode_name = episode_name.split("(")[0].strip() if len(episode_name.split("(")) > 1 else episode_name
-
+            # check if media_name exists and if it does, what type of show it is and how certain the match is
+            show_type, certainty_color = show_name_colour(media_name, out_path, fuzzy_threshold)
 
             # turn off episode names by default
-            videos.append([vid_nr, video, media_name, s_str, ep_str, "N", size_vid, duration_vid, episode_name, "N", "S"])
+            videos.append([vid_nr, video, media_name, s_str, ep_str, "N", size_vid, duration_vid, episode_name, "N", show_type, certainty_color])
             vid_nr += 1
             if avg_vid_size and avg_vid_size * 0.6 > os.path.getsize(video):
                 videos[-1][5] = "S"
@@ -263,7 +281,9 @@ def main():
     print("Loading...")
     conf = get_config()
     src_path = conf['mover']['orig_path']
+    out_path = conf['mover']['dest_path']
     vid_path = conf['viewer']['default_view']
+    fuzzy_threshold = conf['mover']['fuzzy_match']
     funcs = {
         'd': delete_sussy,
         's': set_season,
@@ -275,13 +295,13 @@ def main():
         'o': toggle_episode_names,
         'a': set_anime
     }
-    get_files(vid_path, src_path)
+    get_files(vid_path, out_path, src_path, fuzzy_threshold)
     clear()
     show_all_files(read_existing_list(src_path))
     window_draw = False
     while True:
         if window_draw:
-            get_files(vid_path, src_path)
+            get_files(vid_path, out_path, src_path, fuzzy_threshold)
             ex = read_existing_list(src_path)
             show_all_files(ex)
         window_draw = True

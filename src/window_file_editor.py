@@ -20,8 +20,8 @@ def show_all_files(ex):
     print_formatted_text(HTML(display_string), end='')
     print(header_string)
     # files info be like:
-    # [vid_nr, video, media_name, "SXX", "EXX", "N", Size, duration_vid, episode_name, enable_ep_name]
-    # [     0,     1,          2,     3,     4,   5,    6,            7,            8,              9]
+    # [vid_nr, video, media_name, s_str, ep_str, "N", size_vid, duration_vid, episode_name, "N", show_type, found]
+    # [     0,     1,          2,     3,     4,   5,         6,            7,            8,   9,        10,    11]
     #  [1]    Show.mp4 Show S01 E01 N 4h 33m (hidden) Y
     prev = ""
     for file in ex:
@@ -38,10 +38,15 @@ def show_all_files(ex):
             f'{cut_name(os.path.basename(file[1]), name_string, pos="mid").ljust(name_string + 3)}'
 
         ep_name = "" if file[8] == "None" or file[9] != "Y" else f" - {file[8]}"
+        title_name = cut_name(file[2] + ep_name, name_string).ljust(name_string + 2)
+        ex_colour = f"ansi{file[11]}"
+        # color only the string before the - if - is present
+        title_name = f'<{ex_colour}>{title_name}</{ex_colour}>' if " - " not in title_name else \
+            f'<{ex_colour}>{title_name.split(" - ")[0]}</{ex_colour}> - {title_name.split(" - ")[1]}'
 
         # print the actual line
         text = f"    # <ansigreen>{f'[{file[0]}]'.ljust(6)}</ansigreen>{filename}" \
-                 f"{cut_name(file[2] + ep_name, name_string).ljust(name_string + 3)}" \
+                 f" {title_name}" \
                  f"{file[3].ljust(6)}{file[4].ljust(7)}" \
                  f"{size}{convert_seconds(int(file[7])).ljust(8)} {file[9].ljust(4)} {file[10].ljust(3)} #"
         try:

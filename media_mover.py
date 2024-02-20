@@ -243,8 +243,10 @@ def get_show_name_season(show_dir, video_title):
     orig_season = re.search(r"\d+(?=[eE]\d{1,4})", video_title).group()
     new_show_name = orig_show_name
     new_season = orig_season
-    fuzzy_match = fuzzy_matching(show_dir, orig_show_name)
-    if fuzzy_match is not None:
+    fuzzy_match, ratio = fuzzy_matching(show_dir, orig_show_name)
+    if fuzzy_match is not None and ratio < 1:
+        print(
+            "[i] \'{}\' and \'{}\' might be the same show. ({:.0f}% similarity)".format(fuzzy_match, orig_show_name, ratio * 100))
         if fuzzy_match in matches.keys():
             return matches[fuzzy_match]
         keep_original = prompt(HTML("<ansiblue>[a] Do you want to keep the original name? [y/N] </ansiblue>")).lower()
