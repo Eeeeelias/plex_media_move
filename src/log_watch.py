@@ -9,7 +9,7 @@ from prompt_toolkit import HTML, print_formatted_text, prompt
 def read_log():
     log_file = data_path + f"{sep}mover.log"
     entries = []
-    with open(log_file, 'r') as f:
+    with open(log_file, 'r', encoding='utf-8') as f:
         for line in f.readlines():
             matches = re.match(r"\[(.*?)] (.*)", line)
             try:

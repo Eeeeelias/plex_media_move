@@ -186,7 +186,7 @@ def delete_sussy(nums, src_path, modifier=None):
 
 def show_name_colour(media_name, out_path, fuzzy_threshold):
     show_type, is_certain = show_exists(media_name, out_path, fuzzy_threshold)
-    found = "red"
+    found = "blue"
     if not is_certain:
         if show_type == "A" or show_type == "S":
             found = "yellow"
@@ -217,7 +217,8 @@ def get_files(src_path, out_path, list_path, fuzzy_threshold):
                     found = True
                     # update show type and certainty color if the title has changed
                     show_type, certainty_color = show_name_colour(ex[2], out_path, fuzzy_threshold)
-                    ex[10] = show_type
+                    if ex[12] == 'a':
+                        ex[10] = show_type
                     ex[11] = certainty_color
                     videos.append(ex)
                     break
@@ -237,7 +238,7 @@ def get_files(src_path, out_path, list_path, fuzzy_threshold):
             show_type, certainty_color = show_name_colour(media_name, out_path, fuzzy_threshold)
 
             # turn off episode names by default
-            videos.append([vid_nr, video, media_name, s_str, ep_str, "N", size_vid, duration_vid, episode_name, "N", show_type, certainty_color])
+            videos.append([vid_nr, video, media_name, s_str, ep_str, "N", size_vid, duration_vid, episode_name, "N", show_type, certainty_color, 'a'])
             vid_nr += 1
             if avg_vid_size and avg_vid_size * 0.6 > os.path.getsize(video):
                 videos[-1][5] = "S"
@@ -273,9 +274,11 @@ def set_anime(num_list: list, src_path: str, modifier: str):
     for i, file in enumerate(files):
         if int(file[0]) in num_list or num_list == []:
             file[10] = "A" if file[10] == "S" else "S"
+            file[12] = "m"
         new_files.append(tuple(file))
 
     write_video_list(new_files, src_path)
+
 
 def main():
     print("Loading...")
