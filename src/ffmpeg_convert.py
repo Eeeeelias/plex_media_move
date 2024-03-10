@@ -42,6 +42,7 @@ def input_parser(input: str, conf: dict):
             new_val = False
         else:
             new_val = in_vals.group(2).strip("\"")
+            new_val = new_val if not "_hevc" in new_val else new_val.strip("_hevc")
         conf.update({in_vals.group(1): new_val})
     except AttributeError:
         print_formatted_text(HTML("<ansired>    Not a proper command!</ansired>"))
@@ -72,7 +73,10 @@ def greetings(conv_conf: dict):
     # {gs}{'bitrate'.ljust(max_space)}{ge}{cut_name(conv_conf.get('bitrate'), half_adj).ljust(half_adj)} # {gs}{
     'sstreams'.ljust(max_space)}{ge}{cut_name(conv_conf.get('sstreams'), half_adj-1).ljust(half_adj-1)} #
     # {gs}{'dyn_range'.ljust(max_space)}{ge}{cut_name(conv_conf.get('dyn_range'), half_adj).ljust(half_adj)} # {
+    
     gs}{'hw_encode'.ljust(max_space)}{ge}{cut_name(str(conv_conf.get('hw_encode')), half_adj-1).ljust(half_adj-1)} #
+    # {gs}{'scodec'.ljust(max_space)}{ge}{cut_name(conv_conf.get('scodec'), half_adj).ljust(half_adj)} # {gs}{
+    ' '.ljust(max_space)}{ge}{cut_name(" ", half_adj-1).ljust(half_adj-1)} #
     # {' '* (size-4)} #\n"""
     # for i, j in conv_conf.items():
     #    if i == 'input' and os.path.isdir(j):
@@ -102,8 +106,15 @@ def ffprobe_info(vid: str):
         result[4] = 'SDR' if result[4] != 'smpte2084' else 'HDR'
     except IndexError:
         result = []
+    # honestly don't care at this point
+    result_sub = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "s", "-show_entries", "stream=codec_name",
+         "-of", "default=noprint_wrappers=1:nokey=1", vid], stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT)
+    result_sub = result_sub.stdout.decode('utf-8').strip().split("\r\n")
+    result_sub = 'None' if result_sub[0] == '' else result_sub[0]
     # result should be [codec_name, width, height, pix_fmt, color_transfer, bit_rate, codec_name, bit_rate, ...]
-    return result[:8]
+    return result[:7] + [result_sub]
 
 
 def get_stream_num(vid: str) -> list:
@@ -135,6 +146,7 @@ def hw_encoding():
 def init_conversion(config: dict, vid=None):
     video = config['mover']['orig_path'] if vid is None else vid
     out_path = config['combiner']['default_out']
+    expected_length = 8
 
     if out_path is None:
         out_path = video
@@ -145,14 +157,15 @@ def init_conversion(config: dict, vid=None):
         all_files = get_video_files(video)
         infos = ffprobe_info(all_files[0]) if len(all_files) > 0 else []
         streams = get_stream_num(all_files[0]) if len(all_files) > 0 else ['all', 'all', 'all']
-    if len(infos) < 7:
+    if len(infos) < expected_length:
         print_formatted_text(HTML("<ansired>    ffprobe could not be invoked properly!</ansired>"))
-        infos = ['Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error']
+        infos = ['Error'] * expected_length
     conversion_config = {'input': video, 'output': out_path, 'resolution': f'{infos[1]}:{infos[2]} (original)',
                          'vcodec': infos[0] + " (original)", 'acodec': infos[6] + " (original)",
                          'bitrate': infos[5] + " (original)", "dyn_range": infos[4] + " (original)",
                          'filetype': '.mkv', 'vstreams': streams[0] + " (all)", 'astreams': streams[1] + " (all)",
-                         'sstreams': streams[2] + " (all)", 'hw_encode': hw_encoding()}
+                         'sstreams': streams[2] + " (all)", 'hw_encode': hw_encoding(), 'scodec':
+                             infos[7] + " (original)", 'special': {}}
     # add possibility to save config
     return conversion_config, infos
 
@@ -244,7 +257,11 @@ def main():
         _, orig_conf = init_conversion(config, conversion_conf.get('input'))
     else:
         conversion_conf, orig_conf = init_conversion(config)
-    greetings(conversion_conf)
+    try:
+        greetings(conversion_conf)
+    except (AttributeError, KeyError, TypeError):
+        conversion_conf, orig_conf = init_conversion(config)
+        greetings(conversion_conf)
     confirm = session.prompt(HTML("<ansiblue>=> </ansiblue>"), validator=InputValidator())
     curr_input = conversion_conf['input']
     while confirm != 'ok':
