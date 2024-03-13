@@ -351,6 +351,8 @@ def fuzzy_matching(input_dir, u_show) -> (str, float):
         add_to_config({'mover': {'fuzzy_match': "0.8"}}, append=True)
         threshold = 0.8
     matched_show = None
+    if not os.path.exists(input_dir):
+        return matched_show, ratio
     for show in os.listdir(input_dir):
         ratio = SM(None, show, u_show).ratio()
         if ratio > float(threshold):
