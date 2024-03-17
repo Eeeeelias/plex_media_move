@@ -101,20 +101,26 @@ def file_ex_check(new_file, overwrite=False):
 def movie_checker(movie_title, path, ext=".mp4"):
     movie_moves = []
     invalid_exts = ['.nfo', '.jpg', '.png', '.srt', '.svg', '.txt', '.url', '.xml']
+    name_version = False
     for movie in glob.glob(path + "/*"):
         if os.path.isfile(movie) and os.path.splitext(movie)[1] in invalid_exts:
             continue
         # replace or not if the current one has the exact same name as the existing one
-        if os.path.isfile(movie) and movie_title == os.path.basename(os.path.splitext(movie)[0]):
-            print_formatted_text(HTML('<ansired>[w] "{}" exists already. Overwrite [y/N]?</ansired>'.format(movie_title)))
+        if os.path.isfile(movie):
+            print_formatted_text(HTML('<ansired>[w] "{}" exists already. Overwrite [y], Version [v] or Ignore [n]?'
+                                      '</ansired>'.format(movie_title.replace('&', '&amp;'))))
             overwrite = prompt(HTML("<ansiblue>=></ansiblue>"))
             if overwrite.lower() == "y":
                 movie_moves.append(path + "/" + movie_title + ext)
-            continue
+                continue
+            elif overwrite.lower() == "v":
+                name_version = True
+            else:
+                return None
 
-        if os.path.isfile(movie) and movie_title in os.path.basename(movie):
+        if name_version:
             print_formatted_text(
-                HTML('<ansired>[w] Versions of "{}" exist. Please name this version</ansired>'.format(movie_title)))
+                HTML('<ansired>[w] Please name this version</ansired>'.format(movie_title.replace('&', '&amp;'))))
             version_name = prompt(HTML("<ansiblue>[a] Version name: </ansiblue>"))
             if version_name == "":
                 movie_title_version = movie_title + ext
@@ -124,8 +130,10 @@ def movie_checker(movie_title, path, ext=".mp4"):
                 version_name = prompt(
                     HTML("<ansiblue>[a] This version already exists! Give a valid name: </ansiblue>"))
                 movie_title_version = movie_title + " - " + version_name + ext
-            print_formatted_text("[i] Movie is now called: {}".format(movie_title_version))
-            movie_moves.append(movie + "/" + movie_title_version)
+            print_formatted_text("[i] Movie is now called: {}".format(movie_title_version.replace('&', '&amp;')))
+            movie_moves.append(path + "/" + movie_title_version)
+            print(movie_moves)
+            time.sleep(3)
 
     return movie_moves
 
