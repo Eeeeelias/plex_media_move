@@ -256,7 +256,7 @@ def get_show_name_season(show_dir, video_title):
         print(
             "[i] \'{}\' and \'{}\' might be the same show. ({:.0f}% similarity)".format(fuzzy_match, orig_show_name, ratio * 100))
         if fuzzy_match in matches.keys():
-            return matches[fuzzy_match]
+            return matches[fuzzy_match], new_season
         keep_original = prompt(HTML("<ansiblue>[a] Do you want to keep the original name? [y/N] </ansiblue>")).lower()
         if keep_original == "n":
             new_show_name = fuzzy_match
@@ -265,7 +265,7 @@ def get_show_name_season(show_dir, video_title):
             if keep_season.isdigit():
                 # making sure the leading zero is there
                 new_season = keep_season if keep_season.startswith("0") else f"0{keep_season}"
-        matches[fuzzy_match] = (new_show_name, new_season)
+        matches[fuzzy_match] = new_show_name
     return new_show_name, new_season
 
 

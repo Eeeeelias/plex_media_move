@@ -73,6 +73,9 @@ def interactive():
     #           | <ansiblue>~~~~~~~ Audio Track 1 ~~~~~~~~~</ansiblue> |                            #
     #           | <ansicyan>~~~~~~~ Audio Track 2 ~~~~~~~~~</ansicyan> |                            #
     #                                                                          #
+    # (i) If you provide paths instead of files, the script will merge videos  #
+    #     with the same name.                                                  #
+    #                                                                          #
     ############################################################################ 
 """
 
@@ -157,8 +160,12 @@ def match_videos(movie_en, movie_de) -> dict:
     movie_de_files = get_video_files(movie_de)
     for i in get_video_files(movie_en):
         base_name = os.path.splitext(os.path.basename(i))[0]
-        match = [x for x in movie_de_files if base_name in x][0]
-        matches[i] = match
+        try:
+            match = [x for x in movie_de_files if base_name in x][0]
+            matches[i] = match
+        except IndexError:
+            print_formatted_text(f"[w] Could not find a match for {i} in {movie_de}")
+            continue
     return matches
 
 

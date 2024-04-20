@@ -286,7 +286,11 @@ def main():
     src_path = conf['mover']['orig_path']
     out_path = conf['mover']['dest_path']
     vid_path = conf['viewer']['default_view']
-    fuzzy_threshold = conf['mover']['fuzzy_match']
+    # TODO: make sure this exists
+    try:
+        fuzzy_threshold = conf['mover']['fuzzy_match']
+    except KeyError:
+        fuzzy_threshold = 0.8
     funcs = {
         'd': delete_sussy,
         's': set_season,
