@@ -42,6 +42,7 @@ def help_window():
     #                                                                                                                #
     # Available functions are:                                                                                       #
     # {bs}t{be} - set title, {bs}s{be} - set season, {bs}e{be} - set episode, {bs}m{be} - move files, {bs}d{be} - delete, {bs}c{be} - convert, {bs}r{be} - refresh           #
+    # {bs}x{be} - set extensions, {bs}o{be} - toggle episode names, {bs}a{be} - set anime                                                    #
     #                                                                                                                #
     # Tip: Using {bs}d{be} without other specifiers deletes all suspiciously small files (marked in <ansired>red</ansired>)                     #
     ##################################################################################################################
@@ -286,11 +287,7 @@ def main():
     src_path = conf['mover']['orig_path']
     out_path = conf['mover']['dest_path']
     vid_path = conf['viewer']['default_view']
-    # TODO: make sure this exists
-    try:
-        fuzzy_threshold = conf['mover']['fuzzy_match']
-    except KeyError:
-        fuzzy_threshold = 0.8
+    fuzzy_threshold = conf['mover'].get('fuzzy_match', 0.8)
     funcs = {
         'd': delete_sussy,
         's': set_season,

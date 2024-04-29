@@ -87,7 +87,10 @@ def get_config(conf_path=config_path) -> dict:
     """
     defaults = None
     if os.path.exists(conf_path):
-        defaults = json.load(open(conf_path, 'r'))
+        try:
+            defaults = json.load(open(conf_path, 'r'))
+        except json.JSONDecodeError:
+            return defaults
     return defaults
 
 
